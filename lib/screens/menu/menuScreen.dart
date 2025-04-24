@@ -38,71 +38,91 @@ class Menuscreen extends StatelessWidget {
     );
   }
 
+
+
+  
+
   Widget itemcard(context, index) => Padding(
     padding: EdgeInsets.only(bottom: 5.h),
-    child: SizedBox(
-      height: 120.h,
-      width: double.infinity.w,
-      child: GestureDetector(
-        onTap: () {
- 
-          navigateTo(context, Itemscreen());
-        },
-        child: Card(
-          clipBehavior: Clip.antiAlias,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    child: GestureDetector(
+      onTap: () {
+        navigateTo(context, Itemscreen());
+      },
+      child: Stack(
+        children: [
+          Container(
+            width: double.infinity,
+            height: 130.h,
+            color: Colors.transparent,
+          ),
 
-            children: [
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 10.w),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.max,
-                  children: [
-                    SizedBox(height: 5.h),
-                    Expanded(
-                      child: Text(
-                        "dish name",
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                    ),
-                    SizedBox(
-                      height: 55.h,
-                      width: 230.w,
-                      child: Text(
-                        "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
-                        style: Theme.of(context).textTheme.bodySmall,
-                        maxLines: 3,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    Expanded(
-                      child: Row(
+          Positioned(
+            top: 5.h,
+            right: 10.w, // Adjust position as needed
+            child: SizedBox(
+              width: 305.w,
+              height: 120.h,
+              child: Card(
+                child: Padding(
+                  padding: EdgeInsets.all(8),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(width: 45.w),
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            "1000 egp",
-                            style: Theme.of(context).textTheme.labelMedium,
+                            "dish name",
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                          SizedBox(height: 10),
+                          SizedBox(
+                            height: 45.h,
+                            width: 230.w,
+                            child: Text(
+                              "Lorem Ipsum is simply dummy text of the printdummy text of the prinorem Ipsum is simply dummy text of the printdummy text of the printt",
+                              style: Theme.of(context).textTheme.bodySmall,
+                              maxLines: 3,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          SizedBox(height: 10),
+                          Expanded(
+                            child: Row(
+                              children: [
+                                Text(
+                                  "1000 egp",
+                                  style:
+                                      Theme.of(context).textTheme.labelMedium,
+                                ),
+                              ],
+                            ),
                           ),
                         ],
                       ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                width: 75.w,
-                height: double.infinity.h,
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    fit: BoxFit.cover,
-                    image: AssetImage("assets/images/burger.png"),
+                    ],
                   ),
                 ),
               ),
-            ],
+            ),
           ),
-        ),
+          Positioned(
+            top: 30.h,
+            left: -15, // Adjust position as needed
+            child: Container(
+              width: 100,
+              height: 80,
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  fit: BoxFit.cover,
+                  image: AssetImage("assets/images/burger.png"),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     ),
   );

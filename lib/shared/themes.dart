@@ -40,7 +40,7 @@ ThemeData lightTheme = ThemeData(
       fontWeight: FontWeight.bold,
     ),
 
-     bodySmall: TextStyle(fontSize: 14.sp, color: Colors.grey),
+     bodySmall: TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
 
 
     //headline
@@ -142,7 +142,7 @@ ThemeData darkTheme = ThemeData(
       color: AppColors.primarydark,
     ),
     bodyMedium: TextStyle(fontSize: 14.sp, color: AppColors.primarydark),
-    bodySmall: TextStyle(fontSize: 14.sp, color: Colors.grey),
+    bodySmall: TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
     labelMedium: TextStyle(fontSize: 14.sp, color: Colors.white),
     labelLarge: TextStyle(
       fontSize: 18.sp,

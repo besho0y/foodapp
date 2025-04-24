@@ -6,6 +6,7 @@ import 'package:foodapp/layout/layout.dart';
 import 'package:foodapp/screens/item%20des/itemScreen.dart';
 import 'package:foodapp/screens/login/loginScreen.dart';
 import 'package:foodapp/screens/menu/menuScreen.dart';
+import 'package:foodapp/screens/resturants/cubit.dart';
 import 'package:foodapp/screens/signup/signupScreen.dart';
 import 'package:foodapp/shared/blocObserver.dart';
 import 'package:foodapp/shared/themes.dart';
@@ -21,8 +22,15 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (BuildContext context) => Layoutcubit(),
+    return MultiBlocProvider(
+     providers: [
+      BlocProvider(
+      create: ( context) => Layoutcubit(),),
+      BlocProvider(
+        create: (context) => (Restuarantscubit()),
+       
+      )
+     ],
       child: ScreenUtilInit(
         designSize: const Size(360, 690),
         minTextAdapt: true,
