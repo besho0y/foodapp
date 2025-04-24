@@ -45,28 +45,32 @@ class Resturantscreen extends StatelessWidget {
                   scrollDirection: Axis.horizontal,
                   child: Row(
                     children: List.generate(5, (index) {
-                      return Container(
-                        height: 40.h,
-
-                        margin: EdgeInsets.symmetric(horizontal: 5.w),
-                        decoration: BoxDecoration(
-                          color: AppColors.primarylight,
-                          borderRadius: BorderRadius.circular(10.r),
-                          border: Border.all(
-                            color: Colors.grey[500]!,
-                            width: 2.w,
+                      return GestureDetector(
+                        onTap: () {
+                          
+                        },
+                        child: Container(
+                          height: 35.h,
+                          margin: EdgeInsets.symmetric(horizontal: 5.w),
+                          decoration: BoxDecoration(
+                            color: AppColors.primarylight,
+                            borderRadius: BorderRadius.circular(25.r),
+                            border: Border.all(
+                              color: Colors.grey[500]!,
+                              width: 1.w,
+                            ),
                           ),
-                        ),
-                        child: Center(
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Text(
-                              "Category $index",
-                              style: Theme.of(
-                                context,
-                              ).textTheme.labelMedium!.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
+                          child: Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Text(
+                                "Category $index",
+                                style: Theme.of(
+                                  context,
+                                ).textTheme.labelMedium!.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                           ),

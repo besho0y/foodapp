@@ -10,6 +10,7 @@ ThemeData lightTheme = ThemeData(
   appBarTheme: AppBarTheme(
     color: Colors.white,
     elevation: 0,
+    scrolledUnderElevation: 0,
     iconTheme: IconThemeData(color: AppColors.primarylight),
     titleTextStyle: TextStyle(
       color: AppColors.primarylight,
@@ -30,7 +31,6 @@ ThemeData lightTheme = ThemeData(
     elevation: 10,
   ),
   textTheme: TextTheme(
-
     //body
     bodyLarge: TextStyle(fontSize: 16.0, color: Colors.black87),
 
@@ -40,11 +40,10 @@ ThemeData lightTheme = ThemeData(
       fontWeight: FontWeight.bold,
     ),
 
-     bodySmall: TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
-
+    bodySmall: TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
 
     //headline
-     headlineLarge: TextStyle(
+    headlineLarge: TextStyle(
       fontSize: 30.sp,
       fontWeight: FontWeight.bold,
       color: AppColors.primarylight,
@@ -55,25 +54,24 @@ ThemeData lightTheme = ThemeData(
       fontWeight: FontWeight.bold,
       color: AppColors.primarylight,
     ),
-    
-   
 
-   //label
-   labelLarge: TextStyle(
-      fontSize: 18.sp,
+    //label
+    labelLarge: TextStyle(
+      fontSize: 16.sp,
       color: Colors.black,
       fontWeight: FontWeight.bold,
     ),
 
     labelMedium: TextStyle(fontSize: 14.sp, color: Colors.black),
- 
-    labelSmall: TextStyle(fontSize: 14.sp, color: AppColors.primarylight,fontWeight: FontWeight.bold),
 
+    labelSmall: TextStyle(
+      fontSize: 14.sp,
+      color: AppColors.primarylight,
+      fontWeight: FontWeight.bold,
+    ),
 
     //title
     titleMedium: TextStyle(fontSize: 16.sp, color: Colors.white),
-
-
   ),
   cardColor: Colors.white,
   elevatedButtonTheme: ElevatedButtonThemeData(
@@ -90,20 +88,6 @@ ThemeData lightTheme = ThemeData(
   cardTheme: CardTheme(color: Colors.white, elevation: 5),
 );
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ThemeData darkTheme = ThemeData(
   brightness: Brightness.dark,
   primaryColor: AppColors.primarylight,
@@ -111,6 +95,7 @@ ThemeData darkTheme = ThemeData(
   appBarTheme: AppBarTheme(
     color: Color(0xFF1E1E1E),
     elevation: 1,
+    scrolledUnderElevation: 0,
     iconTheme: IconThemeData(color: AppColors.primarydark),
     titleTextStyle: TextStyle(
       color: AppColors.primarydark,
@@ -145,7 +130,7 @@ ThemeData darkTheme = ThemeData(
     bodySmall: TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
     labelMedium: TextStyle(fontSize: 14.sp, color: Colors.white),
     labelLarge: TextStyle(
-      fontSize: 18.sp,
+      fontSize: 16.sp,
       color: Colors.black,
       fontWeight: FontWeight.bold,
     ),

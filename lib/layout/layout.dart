@@ -20,8 +20,7 @@ class Layout extends StatelessWidget {
                   ? PreferredSize(
                     preferredSize: Size(double.infinity.w, 120.h),
                     child: AppBar(
-                      elevation: 0,
-                      scrolledUnderElevation: 0,
+                    
                       toolbarHeight: double.infinity.h,
                       title: Column(
                         children: [
@@ -96,6 +95,7 @@ class Layout extends StatelessWidget {
           ),
           floatingActionButtonLocation:
               FloatingActionButtonLocation.centerDocked,
+              
           body: cubit.screens[cubit.currentindex],
 
           bottomNavigationBar: AnimatedBottomNavigationBar(

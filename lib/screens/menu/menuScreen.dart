@@ -9,38 +9,81 @@ class Menuscreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Menu"),
-        leading: IconButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          icon: Icon(
-            Icons.arrow_back_ios_new_rounded,
-            color: AppColors.primarylight,
-            size: 23.sp,
+    return SafeArea(
+      child: Scaffold(
+        appBar: PreferredSize(
+          preferredSize: Size(double.infinity.w, 120.h),
+          child: Stack(
+            children: [
+              Opacity(
+                opacity: 0.9,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(15.r),
+                  ),
+                  child: Image.asset(
+                    "assets/images/banner2.png",
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 10.h,
+                left: 0,
+                child: IconButton(
+                  onPressed: () {
+                    backarrow(context);
+                  },
+                  icon: Icon(
+                    Icons.arrow_back_ios_new_rounded,
+                    color: AppColors.primarylight,
+                    size: 30.sp,
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: -8.h,
+                right: -1.w,
+                child: Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey[500]!, width: 2),
+                    color: Colors.grey[200],
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(15.r),
+                    ),
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.only(
+                      bottom: 8.h,
+                      left: 8.w,
+                      right: 8.w,
+                    ),
+                    child: Text(
+                      "Name of kitchen",
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
-      ),
-      body: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 10.h),
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              SizedBox(height: 5.h),
-              itemcard(context, 1),
-              itemcard(context, 2),
-            ],
+        body: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 10.h),
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                SizedBox(height: 5.h),
+                itemcard(context, 1),
+                itemcard(context, 2),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
-
-
-
-  
 
   Widget itemcard(context, index) => Padding(
     padding: EdgeInsets.only(bottom: 5.h),
@@ -58,9 +101,9 @@ class Menuscreen extends StatelessWidget {
 
           Positioned(
             top: 5.h,
-            right: 10.w, // Adjust position as needed
+            right: -5.w, // Adjust position as needed
             child: SizedBox(
-              width: 305.w,
+              width: 320.w,
               height: 120.h,
               child: Card(
                 child: Padding(
@@ -77,27 +120,22 @@ class Menuscreen extends StatelessWidget {
                             "dish name",
                             style: Theme.of(context).textTheme.bodyMedium,
                           ),
-                          SizedBox(height: 10),
+
                           SizedBox(
-                            height: 45.h,
+                            height: 40.h,
                             width: 230.w,
                             child: Text(
                               "Lorem Ipsum is simply dummy text of the printdummy text of the prinorem Ipsum is simply dummy text of the printdummy text of the printt",
                               style: Theme.of(context).textTheme.bodySmall,
-                              maxLines: 3,
+                              maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          SizedBox(height: 10),
+                          SizedBox(height: 10.h),
                           Expanded(
-                            child: Row(
-                              children: [
-                                Text(
-                                  "1000 egp",
-                                  style:
-                                      Theme.of(context).textTheme.labelMedium,
-                                ),
-                              ],
+                            child: Text(
+                              "1000 egp",
+                              style: Theme.of(context).textTheme.labelMedium,
                             ),
                           ),
                         ],
