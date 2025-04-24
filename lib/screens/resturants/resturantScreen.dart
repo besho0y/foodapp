@@ -26,39 +26,33 @@ class Resturantscreen extends StatelessWidget {
           resturantbox(context),
           resturantbox(context),
           resturantbox(context),
-          ],
+        ],
       ),
     );
   }
 
   Widget resturantbox(context) => GestureDetector(
-    onDoubleTap: () {
+    onTap: () {
       navigateTo(context, Menuscreen());
     },
-    child: Container(
-      decoration: BoxDecoration(
-        color: Colors.amber,
-        borderRadius: BorderRadius.circular(15.r),
-      ),
+    child: Card(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Expanded(
-            child: Image(
-              image: NetworkImage(
-                "https://img.freepik.com/free-photo/elegant-smartphone-composition_23-2149437106.jpg?t=st=1744895966~exp=1744899566~hmac=c6e1f2eb501dd80252ce3dd685caa0b164d32111764f94e100c3089a38b1143e&w=740",
-              ),
-              width: double.infinity.w,
+          Container(
+            height: 120.h,
+            width: 130.w,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.grey[300],
             ),
+            child: Image.asset("assets/images/burger.png", fit: BoxFit.cover),
           ),
-          Padding(
-            padding: EdgeInsets.symmetric(vertical: 3.0.h),
-            child: Text(
-              "home kitchen",
-              style: TextStyle(color: Colors.black),
-              overflow: TextOverflow.ellipsis,
-              maxLines: 2,
-            ),
+          Text(
+            "home kitchen",
+            style: Theme.of(context).textTheme.labelLarge,
+            overflow: TextOverflow.ellipsis,
+            maxLines: 2,
           ),
         ],
       ),

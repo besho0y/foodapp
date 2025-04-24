@@ -3,7 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:foodapp/layout/cubit.dart';
 import 'package:foodapp/layout/layout.dart';
+import 'package:foodapp/screens/item%20des/itemScreen.dart';
+import 'package:foodapp/screens/login/loginScreen.dart';
 import 'package:foodapp/screens/menu/menuScreen.dart';
+import 'package:foodapp/screens/signup/signupScreen.dart';
 import 'package:foodapp/shared/blocObserver.dart';
 import 'package:foodapp/shared/themes.dart';
 
@@ -32,7 +35,7 @@ class MyApp extends StatelessWidget {
             // You can use the library anywhere in the app even in theme
             theme: lightTheme,
 
-            home: Layout(),
+            home:Layout(),
           );
         },
       ),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:foodapp/shared/constants.dart';
+import 'package:foodapp/shared/colors.dart';
 
 class Settingsscreen extends StatelessWidget {
   const Settingsscreen({super.key});
@@ -8,40 +8,51 @@ class Settingsscreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(15.0),
+      padding: EdgeInsets.symmetric(horizontal: 10.w),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: EdgeInsets.symmetric(vertical: 5.h),
-            child: Row(
-              children: [
-                Icon(Icons.person),
-                SizedBox(width: 5.w),
-                Text("Profile", style: Theme.of(context).textTheme.bodyMedium),
-              ],
+          SizedBox(height: 10.h),
+          Card(
+            child: Padding(
+              padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 5.w),
+              child: Row(
+                children: [
+                  Icon(Icons.person, color: AppColors.primarylight),
+                  SizedBox(width: 5.w),
+                  Text(
+                    "Profile",
+                    style: Theme.of(context).textTheme.labelLarge,
+                  ),
+                ],
+              ),
             ),
           ),
-          mydivider(context),
-          Padding(
-            padding: EdgeInsets.symmetric(vertical: 5.h),
-            child: Row(
-              children: [
-                Icon(Icons.shopping_cart_outlined),
-                SizedBox(width: 5.w),
-                Text("Cart", style: Theme.of(context).textTheme.bodyMedium),
-              ],
+          Card(
+            child: Padding(
+              padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 5.w),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.shopping_cart_outlined,
+                    color: AppColors.primarylight,
+                  ),
+                  SizedBox(width: 5.w),
+                  Text("Cart", style: Theme.of(context).textTheme.labelLarge),
+                ],
+              ),
             ),
           ),
-          mydivider(context),
-          Padding(
-            padding: EdgeInsets.symmetric(vertical: 5.h),
-            child: Row(
-              children: [
-                Icon(Icons.logout),
-                SizedBox(width: 5.w),
-                Text("Logout", style: Theme.of(context).textTheme.bodyMedium),
-              ],
+          Card(
+            child: Padding(
+              padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 5.w),
+              child: Row(
+                children: [
+                  Icon(Icons.logout, color: AppColors.primarylight),
+                  SizedBox(width: 5.w),
+                  Text("Logout", style: Theme.of(context).textTheme.labelLarge),
+                ],
+              ),
             ),
           ),
         ],

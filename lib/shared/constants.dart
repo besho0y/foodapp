@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:foodapp/shared/colors.dart';
 
 Widget defaultTextFormField({
   required String label,
   required IconData prefix,
   required TextEditingController controller,
   required String? Function(String?) validator,
+  required context,
   IconData? suffix,
   TextInputType inputType = TextInputType.text,
   VoidCallback? suffixPressed,
@@ -16,11 +18,32 @@ Widget defaultTextFormField({
     style: const TextStyle(color: Colors.black),
     decoration: InputDecoration(
       labelText: label,
-      prefixIcon: Icon(prefix),
-      border: const OutlineInputBorder(),
+      labelStyle: TextStyle(
+        color:AppColors.primarylight,
+           
+      ),
+      prefixIcon: Icon(prefix, color: Colors.grey),
+      border: OutlineInputBorder(),
+      enabledBorder: OutlineInputBorder(
+        borderSide: BorderSide(
+          color: Colors.grey,
+          width: 1.0.w,
+        ), // Optional: default border
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: BorderSide(
+          color:AppColors.primarylight
+              ,
+          width: 2.0.w,
+        ),
+      ),
       suffixIcon:
           suffix != null
-              ? IconButton(onPressed: suffixPressed, icon: Icon(suffix))
+              ? IconButton(
+                onPressed: suffixPressed,
+                icon: Icon(suffix, color: Colors.grey),
+              )
               : null,
     ),
     controller: controller,
@@ -28,21 +51,25 @@ Widget defaultTextFormField({
     validator: validator,
     readOnly: readOnly,
     obscureText: isPassword,
+    cursorColor:
+        AppColors.primarylight
   );
 }
 
 Widget defaultbutton({
   double width = double.infinity,
-  Color backgroundcolor = Colors.blue,
+
   required String text,
   required VoidCallback function,
+  required context,
 }) {
   return Container(
+    color:
+        AppColors.primarylight,
     width: width,
-    color: backgroundcolor,
     child: MaterialButton(
       onPressed: function,
-      child: Text(text, style: TextStyle(color: Colors.white)),
+      child: Text(text, style: Theme.of(context).textTheme.titleMedium),
     ),
   );
 }
@@ -57,6 +84,10 @@ navigateAndFinish(BuildContext context, Widget widget) {
     MaterialPageRoute(builder: (context) => widget),
     (route) => false,
   );
+}
+
+void backarrow(context) {
+  Navigator.pop(context);
 }
 
 Widget mycheckbox({
@@ -76,6 +107,6 @@ Widget mydivider(BuildContext context) => Padding(
     color:
         Theme.of(context).brightness == Brightness.dark
             ? Colors.white
-            : Colors.black,                 
+            : Colors.black,
   ),
 );
