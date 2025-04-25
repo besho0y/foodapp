@@ -5,6 +5,7 @@ import 'package:foodapp/layout/cubit.dart';
 import 'package:foodapp/layout/layout.dart';
 import 'package:foodapp/screens/item%20des/itemScreen.dart';
 import 'package:foodapp/screens/login/loginScreen.dart';
+import 'package:foodapp/screens/menu/cubit.dart';
 import 'package:foodapp/screens/menu/menuScreen.dart';
 import 'package:foodapp/screens/resturants/cubit.dart';
 import 'package:foodapp/screens/signup/signupScreen.dart';
@@ -28,6 +29,10 @@ class MyApp extends StatelessWidget {
       create: ( context) => Layoutcubit(),),
       BlocProvider(
         create: (context) => (Restuarantscubit()),
+       
+      ),
+        BlocProvider(
+        create: (context) => (Menucubit()),
        
       )
      ],

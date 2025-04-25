@@ -10,7 +10,7 @@ class Favouritsscreen extends StatelessWidget {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 10.w),
       child: SingleChildScrollView(
-        child: Column(children: [itemcard(context, true)]),
+        // child: Column(children: [itemcard(context, true,)]),
       ),
     );
   }

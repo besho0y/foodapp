@@ -4,8 +4,17 @@ import 'package:foodapp/shared/colors.dart';
 import 'package:foodapp/shared/constants.dart';
 
 class Itemscreen extends StatelessWidget {
-  const Itemscreen({super.key});
-
+  const Itemscreen({
+    super.key,
+    required this.name,
+    required this.description,
+    required this.price,
+    required this.img,
+  });
+  final String name;
+  final String description;
+  final double price;
+  final String img;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -24,10 +33,7 @@ class Itemscreen extends StatelessWidget {
                           SizedBox(
                             height: 300.h,
                             width: double.infinity,
-                            child: Image.asset(
-                              "assets/images/burger.png",
-                              fit: BoxFit.cover,
-                            ),
+                            child: Image.asset(img, fit: BoxFit.cover),
                           ),
                           Positioned(
                             top: 40.h,
@@ -63,13 +69,26 @@ class Itemscreen extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  "Dish Name",
+                                  name,
                                   style: Theme.of(context).textTheme.bodyMedium,
                                 ),
                                 SizedBox(height: 10.h),
                                 Text(
-                                  "Survived not only five centuries, but also the leap into electronic typesetting...",
+                                  description,
                                   style: Theme.of(context).textTheme.bodySmall,
+                                ),
+                                SizedBox(height: 10.h),
+                                Row(
+                                  children: [
+                                    Spacer(),
+                                    Text(
+                                      "$price egp",
+                                      style:
+                                          Theme.of(
+                                            context,
+                                          ).textTheme.labelMedium,
+                                    ),
+                                  ],
                                 ),
                                 SizedBox(height: 20.h),
                                 TextButton(
