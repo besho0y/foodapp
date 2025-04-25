@@ -1,21 +1,26 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:foodapp/models/item.dart';
+import 'package:foodapp/screens/favourits/cubit.dart';
+import 'package:foodapp/screens/favourits/states.dart';
 
-import 'package:foodapp/screens/menu/cubit.dart';
-import 'package:foodapp/screens/menu/states.dart';
 import 'package:foodapp/shared/colors.dart';
 import 'package:foodapp/shared/constants.dart';
 import 'package:foodapp/widgets/itemcard.dart';
 
 class Menuscreen extends StatelessWidget {
-  const Menuscreen({super.key});
+  const Menuscreen({super.key, required this.items});
+  final List<Item> items;
 
   @override
   Widget build(BuildContext context) {
-    var cubit = Menucubit.get(context);
-    return BlocConsumer<Menucubit, MenuStates>(
-      listener: (context, state) {},
+    var cubit = Favouritecubit.get(context);
+    return BlocConsumer<Favouritecubit, FavouriteState>(
+      listener: (context, state) {
+        // TODO: implement listener
+      },
       builder: (context, state) {
         return SafeArea(
           child: Scaffold(
@@ -85,10 +90,9 @@ class Menuscreen extends StatelessWidget {
                   Expanded(
                     child: ListView.builder(
                       itemBuilder: (context, index) {
-                        return itemcard(context, false,cubit.menuitems[index]);
+                        return itemcard(context, false, items[index]);
                       },
-                      itemCount: cubit.menuitems.length,
-                                  
+                      itemCount: items.length,
                     ),
                   ),
                 ],

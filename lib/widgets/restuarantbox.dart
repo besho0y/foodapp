@@ -3,9 +3,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:foodapp/screens/menu/menuScreen.dart';
 import 'package:foodapp/shared/constants.dart';
 
-Widget resturantbox(context) => GestureDetector(
+Widget resturantbox(context,model) => GestureDetector(
     onTap: () {
-      navigateTo(context, Menuscreen());
+      navigateTo(context, Menuscreen(items: model.menuItems,));
     },
     child: Container(
       decoration: BoxDecoration(
@@ -18,7 +18,7 @@ Widget resturantbox(context) => GestureDetector(
           ClipRRect(
             borderRadius: BorderRadius.vertical(top: Radius.circular(13)),
             child: Image.asset(
-              "assets/images/restuarants/store.jpg",
+              "${model.img}",
               fit: BoxFit.cover,
               height: 80.h,
               width: double.infinity,
@@ -38,14 +38,14 @@ Widget resturantbox(context) => GestureDetector(
                   ],
                 ),
                 Text(
-                  "Home Kitchen",
+                  "${model.name}",
                   style: Theme.of(context).textTheme.labelLarge,
                 ),
                 Row(
                   children: [
                     Icon(Icons.star_rate_rounded, color: Colors.amber),
                     SizedBox(width: 5.w),
-                    Text("4.5", style: Theme.of(context).textTheme.bodySmall),
+                    Text("${model.rating}", style: Theme.of(context).textTheme.bodySmall),
                   ],
                 ),
               ],

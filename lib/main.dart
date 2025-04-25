@@ -3,9 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:foodapp/layout/cubit.dart';
 import 'package:foodapp/layout/layout.dart';
+import 'package:foodapp/screens/favourits/cubit.dart';
 import 'package:foodapp/screens/item%20des/itemScreen.dart';
 import 'package:foodapp/screens/login/loginScreen.dart';
-import 'package:foodapp/screens/menu/cubit.dart';
+
 import 'package:foodapp/screens/menu/menuScreen.dart';
 import 'package:foodapp/screens/resturants/cubit.dart';
 import 'package:foodapp/screens/signup/signupScreen.dart';
@@ -31,10 +32,11 @@ class MyApp extends StatelessWidget {
         create: (context) => (Restuarantscubit()),
        
       ),
-        BlocProvider(
-        create: (context) => (Menucubit()),
+      BlocProvider(
+        create: (context) => (Favouritecubit()),
        
-      )
+      ),
+  
      ],
       child: ScreenUtilInit(
         designSize: const Size(360, 690),

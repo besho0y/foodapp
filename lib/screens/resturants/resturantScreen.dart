@@ -88,7 +88,9 @@ class Resturantscreen extends StatelessWidget {
                   crossAxisSpacing: 5.w,
                   shrinkWrap: true,
                   physics: NeverScrollableScrollPhysics(),
-                  children: List.generate(11, (_) => resturantbox(context)),
+                  children: cubit.restuarants.map((model) {
+                    return resturantbox(context, model);
+                  }).toList(),
                 ),
               ],
             ),

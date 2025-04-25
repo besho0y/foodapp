@@ -4,6 +4,7 @@ class Item {
   String description;
   double price;
   String img;
+  bool isfavourite=false;
 
   Item({
     required this.id,
@@ -14,7 +15,13 @@ class Item {
   });
 
   Map<String, dynamic> toJson() {
-    return {'id': id, 'name': name, 'description': description, 'price': price ,"img":img};
+    return {
+      'id': id,
+      'name': name,
+      'description': description,
+      'price': price,
+      "img": img,
+    };
   }
 
   factory Item.fromJson(Map<String, dynamic> json) {
@@ -23,7 +30,7 @@ class Item {
       name: json['name'],
       description: json['description'],
       price: json['price'],
-      img:json["img"],
+      img: json["img"],
     );
   }
 }
