@@ -48,6 +48,21 @@ class Settingsscreen extends StatelessWidget {
               padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 5.w),
               child: Row(
                 children: [
+                  Icon(Icons.call, color: AppColors.primarylight),
+                  SizedBox(width: 5.w),
+                  Text(
+                    "Contact Us",
+                    style: Theme.of(context).textTheme.labelLarge,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Card(
+            child: Padding(
+              padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 5.w),
+              child: Row(
+                children: [
                   Icon(Icons.logout, color: AppColors.primarylight),
                   SizedBox(width: 5.w),
                   Text("Logout", style: Theme.of(context).textTheme.labelLarge),

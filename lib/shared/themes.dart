@@ -14,7 +14,7 @@ ThemeData lightTheme = ThemeData(
     iconTheme: IconThemeData(color: AppColors.primarylight),
     titleTextStyle: TextStyle(
       color: AppColors.primarylight,
-      fontSize: 22.0,
+      fontSize: 22.sp,
       fontWeight: FontWeight.bold,
     ),
     systemOverlayStyle: SystemUiOverlayStyle(
@@ -32,7 +32,7 @@ ThemeData lightTheme = ThemeData(
   ),
   textTheme: TextTheme(
     //body
-    bodyLarge: TextStyle(fontSize: 16.0, color: Colors.black87),
+    bodyLarge: TextStyle(fontSize: 16.sp, color: Colors.black87),
 
     bodyMedium: TextStyle(
       fontSize: 20.sp,
@@ -50,7 +50,7 @@ ThemeData lightTheme = ThemeData(
     ),
 
     headlineSmall: TextStyle(
-      fontSize: 22.0,
+      fontSize: 22.sp,
       fontWeight: FontWeight.bold,
       color: AppColors.primarylight,
     ),
@@ -99,7 +99,7 @@ ThemeData darkTheme = ThemeData(
     iconTheme: IconThemeData(color: AppColors.primarydark),
     titleTextStyle: TextStyle(
       color: AppColors.primarydark,
-      fontSize: 22.0,
+      fontSize: 22.sp,
       fontWeight: FontWeight.bold,
     ),
     systemOverlayStyle: SystemUiOverlayStyle(
@@ -117,12 +117,12 @@ ThemeData darkTheme = ThemeData(
   ),
   textTheme: TextTheme(
     bodyLarge: TextStyle(
-      fontSize: 16.0,
+      fontSize: 16.sp,
       color: Colors.white,
       fontWeight: FontWeight.bold,
     ),
     headlineSmall: TextStyle(
-      fontSize: 22.0,
+      fontSize: 22.sp,
       fontWeight: FontWeight.bold,
       color: AppColors.primarydark,
     ),
