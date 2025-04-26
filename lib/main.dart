@@ -8,6 +8,7 @@ import 'package:foodapp/screens/item%20des/itemScreen.dart';
 import 'package:foodapp/screens/login/loginScreen.dart';
 
 import 'package:foodapp/screens/menu/menuScreen.dart';
+import 'package:foodapp/screens/oredrs/cubit.dart';
 import 'package:foodapp/screens/resturants/cubit.dart';
 import 'package:foodapp/screens/signup/signupScreen.dart';
 import 'package:foodapp/shared/blocObserver.dart';
@@ -29,11 +30,15 @@ class MyApp extends StatelessWidget {
       BlocProvider(
       create: ( context) => Layoutcubit(),),
       BlocProvider(
-        create: (context) => (Restuarantscubit()),
+        create: (context) => (Restuarantscubit()..getRestuarants()),
        
       ),
       BlocProvider(
         create: (context) => (Favouritecubit()),
+       
+      ),
+      BlocProvider(
+        create: (context) => (OrderCubit()),
        
       ),
   

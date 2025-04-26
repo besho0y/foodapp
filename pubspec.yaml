@@ -40,6 +40,7 @@ dependencies:
   conditional_builder_null_safety: ^0.0.6
   carousel_slider: ^5.0.0
   animated_bottom_navigation_bar: ^1.4.0
+  fluttertoast: ^8.2.12
 
 dev_dependencies:
   flutter_test:
@@ -68,6 +69,7 @@ flutter:
     - assets/images/banners/
     - assets/images/items/
     - assets/images/restuarants/
+    - assets/images/categories/
     
 
   # An image asset can refer to one or more resolution-specific "variants", see

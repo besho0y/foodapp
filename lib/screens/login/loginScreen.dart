@@ -6,9 +6,9 @@ import 'package:foodapp/shared/constants.dart';
 
 class Loginscreen extends StatelessWidget {
   Loginscreen({super.key});
-  var emailcontroller = TextEditingController();
-  var passwordcontroller = TextEditingController();
-  var formKey = GlobalKey<FormState>();
+  final emailcontroller = TextEditingController();
+  final passwordcontroller = TextEditingController();
+  final formKey = GlobalKey<FormState>();
   @override
   Widget build(BuildContext context) {
     return Scaffold(

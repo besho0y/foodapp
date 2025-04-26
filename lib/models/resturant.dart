@@ -1,4 +1,5 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
+
 import 'package:foodapp/models/item.dart';
 
 class HomeData {
@@ -16,11 +17,13 @@ class Restuarants {
   List<Item> menuItems = [];
   String img;
   double rating;
+  String category;
   Restuarants({
     required this.name,
     required this.menuItems,
     required this.img,
     required this.rating,
+    required this.category,
   });
 
   Restuarants.fromJson(Map<String, dynamic> json)
@@ -31,5 +34,6 @@ class Restuarants {
               .toList() ??
           [],
       img = json['img'] ?? 'assets/images/restuarants/store.jpg',
-      rating = (json['rating'] as num?)?.toDouble() ?? 0.0;
+      rating = (json['rating'] as num?)?.toDouble() ?? 0.0,
+      category = json["category"] ?? "fast food";
 }

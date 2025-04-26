@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:foodapp/layout/cubit.dart';
 import 'package:foodapp/shared/colors.dart';
 import 'package:foodapp/shared/constants.dart';
 
-class Itemscreen extends StatelessWidget {
+class Itemscreen extends StatefulWidget {
   const Itemscreen({
     super.key,
     required this.name,
@@ -11,12 +13,57 @@ class Itemscreen extends StatelessWidget {
     required this.price,
     required this.img,
   });
+
   final String name;
   final String description;
   final double price;
   final String img;
+
+  @override
+  State<Itemscreen> createState() => _ItemscreenState();
+}
+
+class _ItemscreenState extends State<Itemscreen> {
+  int quantity = 1;
+
+  void incrementQuantity() {
+    setState(() {
+      quantity++;
+    });
+  }
+
+  void decrementQuantity() {
+    if (quantity > 1) {
+      setState(() {
+        quantity--;
+      });
+    }
+  }
+
+  void addToCart(Layoutcubit cubit) {
+    cubit.addToCart(
+      name: widget.name,
+      price: widget.price,
+      quantity: quantity,
+      img: widget.img,
+    );
+    Navigator.pop(context);
+    Fluttertoast.showToast(
+        msg: 'Added ${quantity}x ${widget.name} to cart',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        timeInSecForIosWeb: 3,
+        backgroundColor: Colors.green,
+        textColor: Colors.white,
+        fontSize: 14.0
+    );
+
+  }
+
   @override
   Widget build(BuildContext context) {
+    final cubit = Layoutcubit.get(context); // <-- FIX: now inside build()
+
     return Scaffold(
       body: Stack(
         children: [
@@ -33,7 +80,7 @@ class Itemscreen extends StatelessWidget {
                           SizedBox(
                             height: 300.h,
                             width: double.infinity,
-                            child: Image.asset(img, fit: BoxFit.cover),
+                            child: Image.asset(widget.img, fit: BoxFit.cover),
                           ),
                           Positioned(
                             top: 40.h,
@@ -51,8 +98,6 @@ class Itemscreen extends StatelessWidget {
                           ),
                         ],
                       ),
-
-                      // Card takes remaining space
                       Container(
                         width: double.infinity,
                         constraints: BoxConstraints(
@@ -69,12 +114,12 @@ class Itemscreen extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  name,
+                                  widget.name,
                                   style: Theme.of(context).textTheme.bodyMedium,
                                 ),
                                 SizedBox(height: 10.h),
                                 Text(
-                                  description,
+                                  widget.description,
                                   style: Theme.of(context).textTheme.bodySmall,
                                 ),
                                 SizedBox(height: 10.h),
@@ -82,7 +127,7 @@ class Itemscreen extends StatelessWidget {
                                   children: [
                                     Spacer(),
                                     Text(
-                                      "$price egp",
+                                      "${widget.price} EGP",
                                       style:
                                           Theme.of(
                                             context,
@@ -113,7 +158,6 @@ class Itemscreen extends StatelessWidget {
               );
             },
           ),
-          // Fixed bottom row
           Positioned(
             bottom: 0,
             left: 0,
@@ -132,7 +176,7 @@ class Itemscreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(10.r),
                     ),
                     child: TextButton(
-                      onPressed: () {},
+                      onPressed: () => addToCart(cubit),
                       child: Text(
                         "Add to cart",
                         style: Theme.of(context).textTheme.bodyMedium,
@@ -144,7 +188,7 @@ class Itemscreen extends StatelessWidget {
                     child: Row(
                       children: [
                         IconButton(
-                          onPressed: () {},
+                          onPressed: decrementQuantity,
                           icon: Icon(
                             Icons.remove,
                             color: AppColors.primarylight,
@@ -152,11 +196,11 @@ class Itemscreen extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          "1",
+                          "$quantity",
                           style: Theme.of(context).textTheme.bodyMedium,
                         ),
                         IconButton(
-                          onPressed: () {},
+                          onPressed: incrementQuantity,
                           icon: Icon(
                             Icons.add,
                             color: AppColors.primarylight,

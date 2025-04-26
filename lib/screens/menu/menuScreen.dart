@@ -1,4 +1,5 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -11,15 +12,15 @@ import 'package:foodapp/shared/constants.dart';
 import 'package:foodapp/widgets/itemcard.dart';
 
 class Menuscreen extends StatelessWidget {
-  const Menuscreen({super.key, required this.items});
+  const Menuscreen({super.key, required this.items,required this.name});
   final List<Item> items;
-
+  final String? name;
   @override
   Widget build(BuildContext context) {
-    var cubit = Favouritecubit.get(context);
+
     return BlocConsumer<Favouritecubit, FavouriteState>(
       listener: (context, state) {
-        // TODO: implement listener
+       
       },
       builder: (context, state) {
         return SafeArea(
@@ -73,7 +74,7 @@ class Menuscreen extends StatelessWidget {
                           right: 8.w,
                         ),
                         child: Text(
-                          "Name of kitchen",
+                          "${name}",
                           style: Theme.of(context).textTheme.headlineSmall,
                         ),
                       ),

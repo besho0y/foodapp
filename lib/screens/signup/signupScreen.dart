@@ -5,12 +5,12 @@ import 'package:foodapp/shared/constants.dart';
 
 class Signupscreen extends StatelessWidget {
   Signupscreen({super.key});
-  var firstnamecontroller = TextEditingController();
-  var lastnamecontroller = TextEditingController();
-  var emailcontroller = TextEditingController();
-  var phonecontroller = TextEditingController();
-  var passwordcontroller = TextEditingController();
-  var formkey = GlobalKey<FormState>();
+  final firstnamecontroller = TextEditingController();
+  final lastnamecontroller = TextEditingController();
+  final emailcontroller = TextEditingController();
+  final phonecontroller = TextEditingController();
+  final passwordcontroller = TextEditingController();
+  final formkey = GlobalKey<FormState>();
 
   @override
   Widget build(BuildContext context) {

@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:foodapp/screens/favourits/cubit.dart';
 import 'package:foodapp/screens/favourits/states.dart';
-import 'package:foodapp/shared/constants.dart';
+
 import 'package:foodapp/widgets/itemcard.dart';
 
 class Favouritsscreen extends StatelessWidget {

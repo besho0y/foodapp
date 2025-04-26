@@ -8,42 +8,88 @@ import 'package:foodapp/screens/resturants/states.dart';
 class Restuarantscubit extends Cubit<ResturantsStates> {
   Restuarantscubit() : super(ResturantsInitialState());
   static Restuarantscubit get(context) => BlocProvider.of(context);
+  List<Restuarants> restaurants = [];
+  
+
+
   List<String> banners = [
     "assets/images/banners/banner1.png",
     "assets/images/banners/banner2.png",
     "assets/images/banners/banner3.png",
   ];
-  List<Restuarants> restuarants = [
-    Restuarants(name: "kitchen 1",img: "assets/images/restuarants/store.jpg",rating: 3.5,
+  List<Restuarants> allRestuarants = [
+    Restuarants(name: "kitchen 1",img: "assets/images/restuarants/store.jpg",rating: 3.5,category: "fast food",
+     menuItems: [   Item(id: "1", name: "burger", description: "best burger", price: 210,img: "assets/images/items/burger.png"),
+    Item(id: "2", name: "pizza", description: "best pizza", price: 210,img: "assets/images/items/pizza.png"),
+    Item(id: "3", name: "sushi", description: "best sushi", price: 210,img: "assets/images/items/sushi.png"),
+    Item(id: "4", name: "pasta", description: "best pasta", price: 210,img: "assets/images/items/pasta.png"),
+    Item(id: "5", name: "rice", description: "best rice", price: 210,img: "assets/images/items/rice.png")]),
+    Restuarants(name: "kitchen 2",img: "assets/images/restuarants/store.jpg",rating: 4.5,category: "sea food",
      menuItems: [   Item(id: "1", name: "burger", description: "best burger", price: 210,img: "assets/images/items/burger.png"),
     Item(id: "2", name: "pizza", description: "best pizza", price: 210,img: "assets/images/items/pizza.png"),
     Item(id: "3", name: "sushi", description: "best sushi", price: 210,img: "assets/images/items/sushi.png"),
     Item(id: "4", name: "pasta", description: "best pasta", price: 210,img: "assets/images/items/pasta.png"),
     Item(id: "5", name: "rice", description: "best rice", price: 210,img: "assets/images/items/rice.png"),]),
-    Restuarants(name: "kitchen 2",img: "assets/images/restuarants/store.jpg",rating: 4.5,
-     menuItems: [   Item(id: "1", name: "burger", description: "best burger", price: 210,img: "assets/images/items/burger.png"),
-    Item(id: "2", name: "pizza", description: "best pizza", price: 210,img: "assets/images/items/pizza.png"),
-    Item(id: "3", name: "sushi", description: "best sushi", price: 210,img: "assets/images/items/sushi.png"),
-    Item(id: "4", name: "pasta", description: "best pasta", price: 210,img: "assets/images/items/pasta.png"),
-    Item(id: "5", name: "rice", description: "best rice", price: 210,img: "assets/images/items/rice.png"),]),
-    Restuarants(name: "kitchen 3",img: "assets/images/restuarants/store.jpg",rating: 3.5, 
+    Restuarants(name: "kitchen 3",img: "assets/images/restuarants/store.jpg",rating: 3.5, category: "sweets",
     menuItems: [   Item(id: "1", name: "burger", description: "best burger", price: 210,img: "assets/images/items/burger.png"),
     Item(id: "2", name: "pizza", description: "best pizza", price: 210,img: "assets/images/items/pizza.png"),
     Item(id: "3", name: "sushi", description: "best sushi", price: 210,img: "assets/images/items/sushi.png"),
     Item(id: "4", name: "pasta", description: "best pasta", price: 210,img: "assets/images/items/pasta.png"),
     Item(id: "5", name: "rice", description: "best rice", price: 210,img: "assets/images/items/rice.png"),]),
-    Restuarants(name: "kitchen 4",img: "assets/images/restuarants/store.jpg",rating: 4.0, 
+    Restuarants(name: "kitchen 4",img: "assets/images/restuarants/store.jpg",rating: 4.0,category: "drinks", 
     menuItems: [   Item(id: "1", name: "burger", description: "best burger", price: 210,img: "assets/images/items/burger.png"),
     Item(id: "2", name: "pizza", description: "best pizza", price: 210,img: "assets/images/items/pizza.png"),
     Item(id: "3", name: "sushi", description: "best sushi", price: 210,img: "assets/images/items/sushi.png"),
     Item(id: "4", name: "pasta", description: "best pasta", price: 210,img: "assets/images/items/pasta.png"),
     Item(id: "5", name: "rice", description: "best rice", price: 210,img: "assets/images/items/rice.png"),]),
-    Restuarants(name: "kitchen 5",img: "assets/images/restuarants/store.jpg",rating: 3.4, 
+    Restuarants(name: "kitchen 5",img: "assets/images/restuarants/store.jpg",rating: 3.4, category: "fast food",
     menuItems: [   Item(id: "1", name: "burger", description: "best burger", price: 210,img: "assets/images/items/burger.png"),
     Item(id: "2", name: "pizza", description: "best pizza", price: 210,img: "assets/images/items/pizza.png"),
     Item(id: "3", name: "sushi", description: "best sushi", price: 210,img: "assets/images/items/sushi.png"),
     Item(id: "4", name: "pasta", description: "best pasta", price: 210,img: "assets/images/items/pasta.png"),
     Item(id: "5", name: "rice", description: "best rice", price: 210,img: "assets/images/items/rice.png"),]),
   ];
+ List<Map<String, dynamic>> categories = [
+  {"name": "All", "img": "assets/images/categories/all.png"},
+
+  {
+    "name": "fast food",
+    "img": "assets/images/categories/fastfood.png",
+  },
+  {
+    "name": "sea food",
+    "img": "assets/images/categories/seafood.PNG",
+  },
+  {
+    "name": "sweets",
+    "img": "assets/images/categories/sweets.png",
+  },
+  {
+    "name": "drinks",
+    "img": "assets/images/categories/drinks.png",
+  },
+];
+
+  void getRestuarants() {
+    restaurants = List.from(allRestuarants);
+    emit(RestuarantsGetDataSuccessState());
+  }
+
+
+
+  // filter the restaurants by category
+
+
+void filterRestaurants(String categoryName) {
+  if (categoryName == "All") {
+    restaurants = List.from(allRestuarants);
+  } else {
+    restaurants = allRestuarants
+        .where((restaurant) => restaurant.category == categoryName)
+        .toList();
+  }
+  emit(RestaurantsFilteredState());
+}
+
 
 }

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:foodapp/models/item.dart';
+
 import 'package:foodapp/shared/colors.dart';
-import 'package:foodapp/widgets/itemcard.dart';
+
 
 
 
