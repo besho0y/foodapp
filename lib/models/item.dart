@@ -4,7 +4,8 @@ class Item {
   String description;
   double price;
   String img;
-  bool isfavourite=false;
+  bool isfavourite = false;
+  String category;
 
   Item({
     required this.id,
@@ -12,6 +13,7 @@ class Item {
     required this.description,
     required this.price,
     required this.img,
+    required this.category
   });
 
   Map<String, dynamic> toJson() {
@@ -21,6 +23,7 @@ class Item {
       'description': description,
       'price': price,
       "img": img,
+      "category":category
     };
   }
 
@@ -31,6 +34,7 @@ class Item {
       description: json['description'],
       price: json['price'],
       img: json["img"],
+      category: json["category"],
     );
   }
 }

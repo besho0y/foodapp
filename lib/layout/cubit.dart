@@ -6,10 +6,12 @@ import 'package:foodapp/screens/favourits/favouritsScreen.dart';
 import 'package:foodapp/screens/oredrs/ordersScreeen.dart';
 import 'package:foodapp/screens/resturants/resturantScreen.dart';
 import 'package:foodapp/screens/settings/settingsScreen.dart';
+import 'package:foodapp/shared/themes.dart';
 
 class Layoutcubit extends Cubit<Layoutstates> {
   Layoutcubit() : super(LayoutInitState());
   static Layoutcubit get(context) => BlocProvider.of(context);
+  ThemeData isdark = lightTheme;
   int currentindex = 0;
   List<IconData> bottomnav = [
     Icons.home,
@@ -83,4 +85,14 @@ class Layoutcubit extends Cubit<Layoutstates> {
     }
     return total;
   }
+
+void toggletheme() {
+  if (isdark == lightTheme) {
+    isdark = darkTheme;
+  } else {
+    isdark = lightTheme;
+  }
+  emit(LayoutChangeThemeState()); // ✅ emit a new theme state
+}
+
 }

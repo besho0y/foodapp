@@ -116,7 +116,7 @@ class _OrderCardState extends State<OrderCard> {
                         children: [
                           Icon(
                             Icons.receipt_long,
-                            color: AppColors.primarylight,
+                            
                             size: 20.sp,
                           ),
                           SizedBox(width: 5.w),
@@ -126,7 +126,7 @@ class _OrderCardState extends State<OrderCard> {
                               context,
                             ).textTheme.titleMedium!.copyWith(
                               fontWeight: FontWeight.bold,
-                              color: AppColors.primarylight,
+                            
                             ),
                           ),
                         ],
@@ -191,7 +191,7 @@ class _OrderCardState extends State<OrderCard> {
                             ? Icons.keyboard_arrow_up_rounded
                             : Icons.keyboard_arrow_down_rounded,
                         size: 25.sp,
-                        color: AppColors.primarylight,
+                    
                       ),
                     ),
                   ],

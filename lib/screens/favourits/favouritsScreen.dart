@@ -31,7 +31,7 @@ class Favouritsscreen extends StatelessWidget {
           padding: EdgeInsets.symmetric(horizontal: 10.w),
           child: ListView.builder(
             itemBuilder: (context, index) {
-              return itemcard(context, true,cubit.favourites[index] );
+              return itemcard(context, true,cubit.favourites[index],[]);
             },
             itemCount:cubit.favourites.length,
           ),

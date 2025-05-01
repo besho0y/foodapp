@@ -13,115 +13,101 @@ class Resturantscreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var cubit = Restuarantscubit.get(context);
+
     return BlocConsumer<Restuarantscubit, ResturantsStates>(
       listener: (context, state) {},
       builder: (context, state) {
         return Padding(
-          padding: EdgeInsets.symmetric(horizontal: 5.0.w, vertical: 5.h),
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                CarouselSlider.builder(
+          padding: EdgeInsets.all(12.0.w),
+          child: CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(
+                child: CarouselSlider.builder(
                   itemCount: cubit.banners.length,
-                  itemBuilder:
-                      (
-                        BuildContext context,
-                        int itemindex,
-                        int pageviewindex,
-                      ) => Image.asset(cubit.banners[itemindex]),
+                  itemBuilder: (context, index, realIdx) =>
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(16.r),
+                        child: Image.asset(
+                          cubit.banners[index],
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                        ),
+                      ),
                   options: CarouselOptions(
-                    initialPage: 0,
-                    enableInfiniteScroll: true,
-                    viewportFraction: 1.0,
-                    reverse: false,
-                    enlargeCenterPage: true,
-                    height: 150.h,
-                    aspectRatio: 1,
+                    height: 160.h,
                     autoPlay: true,
-                    autoPlayCurve: Curves.fastOutSlowIn,
+                    enlargeCenterPage: true,
+                    viewportFraction: 0.9,
+                    autoPlayCurve: Curves.easeInOut,
                   ),
                 ),
-                SizedBox(height: 10.w),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: List.generate(cubit.categories.length, (index) {
+              ),
+              SliverToBoxAdapter(child: SizedBox(height: 16.h)),
+
+              // Categories
+              SliverToBoxAdapter(
+                child: SizedBox(
+                  height: 100.h,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: cubit.categories.length,
+                    separatorBuilder: (_, __) => SizedBox(width: 10.w),
+                    itemBuilder: (context, index) {
+                      var category = cubit.categories[index];
                       return GestureDetector(
                         onTap: () {
-                         cubit.filterRestaurants(cubit.categories[index]["name"]);
+                          cubit.filterRestaurants(category["name"]);
                         },
-                        child: Container(
-                          width: 90.w,
-                          margin: EdgeInsets.symmetric(horizontal: 6.w),
-                          padding: EdgeInsets.symmetric(
-                            vertical: 8.h,
-                            horizontal: 8.w,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.primarylight,
-                            borderRadius: BorderRadius.circular(20.r),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black12,
-                                blurRadius: 4,
-                                offset: Offset(2, 2),
+                        child: Column(
+                          children: [
+                            Container(
+                              height: 60.h,
+                              width: 60.w,
+                              padding: EdgeInsets.all(6.w),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? AppColors.darkCard
+                                    : Colors.orange.shade100,
+                                shape: BoxShape.circle,
                               ),
-                            ],
-                          ),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                height: 50.h,
-                                width: 50.w,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: Colors.white,
-                                ),
-                                child: Padding(
-                                  padding: EdgeInsets.all(5.w),
-                                  child: Image.asset(
-                                    "${cubit.categories[index]["img"]}",
-                                    fit: BoxFit.contain,
-                                  ),
-                                ),
+                              child: Image.asset(
+                                category["img"],
+                                fit: BoxFit.contain,
                               ),
-                              SizedBox(height: 6.h),
-                              Text(
-                                "${cubit.categories[index]["name"]}",
-                                textAlign: TextAlign.center,
-                                style: Theme.of(
-                                  context,
-                                ).textTheme.labelMedium!.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 12.sp,
-                                ),
-                              ),
-                            ],
-                          ),
+                            ),
+                            SizedBox(height: 6.h),
+                            Text(
+                              category["name"],
+                              style:
+                                  Theme.of(context).textTheme.labelMedium,
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
                         ),
                       );
-                    }),
+                    },
                   ),
                 ),
+              ),
+              SliverToBoxAdapter(child: SizedBox(height: 16.h)),
 
-                SizedBox(height: 10.w),
-
-                GridView.count(
-                  crossAxisCount: 2,
-                  mainAxisSpacing: 10.h,
-                  crossAxisSpacing: 5.w,
-                  shrinkWrap: true,
-                  physics: NeverScrollableScrollPhysics(),
-                  childAspectRatio: 1 / 1.1,
-                  children:
-                      cubit.restaurants.map((model) {
-                        return resturantbox(context, model);
-                      }).toList(),
+              // Restaurant Grid
+              SliverGrid(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    return resturantbox(context, cubit.restaurants[index]);
+                  },
+                  childCount: cubit.restaurants.length,
                 ),
-              ],
-            ),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 12.h,
+                  crossAxisSpacing: 10.w,
+                  childAspectRatio: 0.8,
+                ),
+              ),
+            ],
           ),
         );
       },

@@ -5,7 +5,7 @@ import 'package:foodapp/screens/favourits/cubit.dart';
 import 'package:foodapp/screens/item%20des/itemScreen.dart';
 import 'package:foodapp/shared/constants.dart';
 
-Widget itemcard(context, bool fromFavourites, Item model) {
+Widget itemcard(context, bool fromFavourites, Item model,dynamic items) {
   var cubit = Favouritecubit.get(context);
   return Padding(
     padding: EdgeInsets.only(bottom: 5.h),
@@ -18,6 +18,7 @@ Widget itemcard(context, bool fromFavourites, Item model) {
             description: model.description,
             price: model.price,
             img: model.img,
+            items:items,
           ),
         );
       },
@@ -50,7 +51,7 @@ Widget itemcard(context, bool fromFavourites, Item model) {
                             style: Theme.of(context).textTheme.bodyMedium,
                           ),
                           SizedBox(
-                            height: 30.h,
+                            height: 20.h,
                             width: 230.w,
                             child: Text(
                               model.description,
@@ -66,7 +67,8 @@ Widget itemcard(context, bool fromFavourites, Item model) {
                               children: [
                                 Text(
                                   "${model.price} egp",
-                                  style: Theme.of(context).textTheme.labelMedium,
+                                  style:
+                                      Theme.of(context).textTheme.labelMedium,
                                 ),
                                 IconButton(
                                   onPressed: () {
@@ -76,7 +78,8 @@ Widget itemcard(context, bool fromFavourites, Item model) {
                                     model.isfavourite
                                         ? Icons.favorite
                                         : Icons.favorite_border,
-                                    color: model.isfavourite ? Colors.red : null,
+                                    color:
+                                        model.isfavourite ? Colors.red : null,
                                   ),
                                   padding: EdgeInsets.zero,
                                 ),

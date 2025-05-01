@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:foodapp/shared/colors.dart';
+
+import 'colors.dart';
 
 ThemeData lightTheme = ThemeData(
   brightness: Brightness.light,
-  primaryColor: AppColors.primarylight,
-  scaffoldBackgroundColor: Colors.grey[200],
+  primaryColor: AppColors.primaryLight,
+  scaffoldBackgroundColor: AppColors.lightBackground,
   appBarTheme: AppBarTheme(
-    color: Colors.white,
+    backgroundColor: Colors.white,
     elevation: 0,
     scrolledUnderElevation: 0,
-    iconTheme: IconThemeData(color: AppColors.primarylight),
+    iconTheme: IconThemeData(color: AppColors.primaryLight),
     titleTextStyle: TextStyle(
-      color: AppColors.primarylight,
-      fontSize: 22.sp,
+      color: AppColors.primaryLight,
+      fontSize: 22,
       fontWeight: FontWeight.bold,
     ),
     systemOverlayStyle: SystemUiOverlayStyle(
@@ -22,135 +23,117 @@ ThemeData lightTheme = ThemeData(
       statusBarIconBrightness: Brightness.dark,
     ),
   ),
-  colorScheme: ColorScheme.fromSwatch().copyWith(secondary: Colors.white),
-  bottomNavigationBarTheme: BottomNavigationBarThemeData(
-    backgroundColor: Colors.white,
-    selectedItemColor: AppColors.primarylight,
-    unselectedItemColor: Colors.grey.shade600,
-    type: BottomNavigationBarType.fixed,
-    elevation: 10,
+  colorScheme: ColorScheme.fromSwatch().copyWith(
+    secondary: AppColors.accentLight,
   ),
+
   textTheme: TextTheme(
-    //body
-    bodyLarge: TextStyle(fontSize: 16.sp, color: Colors.black87),
-
+    bodyLarge: TextStyle(fontSize: 16, color: Color(0xFF333333)),
     bodyMedium: TextStyle(
-      fontSize: 20.sp,
-      color: AppColors.primarylight,
+      fontSize: 20,
+      color: AppColors.primaryLight,
       fontWeight: FontWeight.bold,
     ),
-
-    bodySmall: TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
-
-    //headline
+    bodySmall: TextStyle(fontSize: 14, color: Colors.grey[600]),
     headlineLarge: TextStyle(
-      fontSize: 30.sp,
+      fontSize: 30,
       fontWeight: FontWeight.bold,
-      color: AppColors.primarylight,
+      color: AppColors.primaryLight,
     ),
-
     headlineSmall: TextStyle(
-      fontSize: 22.sp,
+      fontSize: 22,
       fontWeight: FontWeight.bold,
-      color: AppColors.primarylight,
+      color: AppColors.primaryLight,
     ),
-
-    //label
     labelLarge: TextStyle(
-      fontSize: 16.sp,
+      fontSize: 16,
       color: Colors.black,
       fontWeight: FontWeight.bold,
     ),
-
-    labelMedium: TextStyle(fontSize: 14.sp, color: Colors.black),
-
+    labelMedium: TextStyle(fontSize: 14, color: Colors.black),
     labelSmall: TextStyle(
-      fontSize: 14.sp,
-      color: AppColors.primarylight,
+      fontSize: 14,
+      color: AppColors.primaryLight,
       fontWeight: FontWeight.bold,
     ),
-
-    //title
-    titleMedium: TextStyle(fontSize: 16.sp, color: Colors.white),
+    titleMedium: TextStyle(fontSize: 16, color: Colors.white),
   ),
   cardColor: Colors.white,
   elevatedButtonTheme: ElevatedButtonThemeData(
     style: ElevatedButton.styleFrom(
-      backgroundColor: AppColors.primarylight,
+      backgroundColor: AppColors.primaryLight,
       foregroundColor: Colors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     ),
   ),
-
   floatingActionButtonTheme: FloatingActionButtonThemeData(
-    backgroundColor: AppColors.primarylight,
+    backgroundColor: AppColors.primaryLight,
   ),
   cardTheme: CardTheme(color: Colors.white, elevation: 5),
 );
 
 ThemeData darkTheme = ThemeData(
   brightness: Brightness.dark,
-  primaryColor: AppColors.primarylight,
-  scaffoldBackgroundColor: Color(0xFF121212),
+  primaryColor: AppColors.primaryDark,
+  scaffoldBackgroundColor: AppColors.darkBackground,
   appBarTheme: AppBarTheme(
-    color: Color(0xFF1E1E1E),
+    backgroundColor: AppColors.darkCard,
     elevation: 1,
     scrolledUnderElevation: 0,
-    iconTheme: IconThemeData(color: AppColors.primarydark),
+    iconTheme: IconThemeData(color: AppColors.primaryDark),
     titleTextStyle: TextStyle(
-      color: AppColors.primarydark,
-      fontSize: 22.sp,
+      color: AppColors.primaryDark,
+      fontSize: 22,
       fontWeight: FontWeight.bold,
     ),
     systemOverlayStyle: SystemUiOverlayStyle(
-      statusBarColor: Color(0xFF121212),
+      statusBarColor: AppColors.darkBackground,
       statusBarIconBrightness: Brightness.light,
     ),
   ),
-  colorScheme: ColorScheme.dark().copyWith(secondary: Colors.greenAccent),
-  bottomNavigationBarTheme: BottomNavigationBarThemeData(
-    backgroundColor: Color(0xFF1E1E1E),
-    selectedItemColor: AppColors.primarydark,
-    unselectedItemColor: Colors.grey.shade600,
-    type: BottomNavigationBarType.fixed,
-    elevation: 10,
-  ),
+  colorScheme: ColorScheme.dark().copyWith(secondary: AppColors.accentDark),
+
   textTheme: TextTheme(
     bodyLarge: TextStyle(
-      fontSize: 16.sp,
+      fontSize: 16,
+      color: Color(0xFFE0E0E0),
+      fontWeight: FontWeight.bold,
+    ),
+    bodyMedium: TextStyle(fontSize: 14, color: AppColors.primaryDark),
+    bodySmall: TextStyle(fontSize: 14, color: Colors.grey[600]),
+    headlineLarge: TextStyle(
+      fontSize: 30,
+      fontWeight: FontWeight.bold,
+      color: AppColors.primaryDark,
+    ),
+    headlineSmall: TextStyle(
+      fontSize: 22,
+      fontWeight: FontWeight.bold,
+      color: AppColors.primaryDark,
+    ),
+    labelLarge: TextStyle(
+      fontSize: 16,
       color: Colors.white,
       fontWeight: FontWeight.bold,
     ),
-    headlineSmall: TextStyle(
-      fontSize: 22.sp,
-      fontWeight: FontWeight.bold,
-      color: AppColors.primarydark,
-    ),
-    bodyMedium: TextStyle(fontSize: 14.sp, color: AppColors.primarydark),
-    bodySmall: TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
-    labelMedium: TextStyle(fontSize: 14.sp, color: Colors.white),
-    labelLarge: TextStyle(
-      fontSize: 16.sp,
-      color: Colors.black,
+    labelMedium: TextStyle(fontSize: 14, color: Colors.white),
+    labelSmall: TextStyle(
+      fontSize: 14,
+      color: AppColors.primaryDark,
       fontWeight: FontWeight.bold,
     ),
-    headlineLarge: TextStyle(
-      fontSize: 30.sp,
-      fontWeight: FontWeight.bold,
-      color: AppColors.primarydark,
-    ),
-    titleMedium: TextStyle(fontSize: 16.sp, color: Colors.white),
+    titleMedium: TextStyle(fontSize: 16, color: Colors.white),
   ),
-  cardColor: Color(0xFF1F1F1F),
+  cardColor: AppColors.darkCard,
   elevatedButtonTheme: ElevatedButtonThemeData(
     style: ElevatedButton.styleFrom(
-      backgroundColor: AppColors.primarydark,
+      backgroundColor: AppColors.primaryDark,
       foregroundColor: Colors.black,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     ),
   ),
   floatingActionButtonTheme: FloatingActionButtonThemeData(
-    backgroundColor: AppColors.primarydark,
+    backgroundColor: AppColors.primaryDark,
   ),
-  cardTheme: CardTheme(color: Colors.grey[900]),
+  cardTheme: CardTheme(color: Colors.grey[900], elevation: 5),
 );

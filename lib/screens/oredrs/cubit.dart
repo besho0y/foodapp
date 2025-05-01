@@ -21,6 +21,7 @@ class OrderCubit extends Cubit<OrdersStates> {
           price: 50.0,
           description: 'das',
           img: 'asset/images/burger.png',
+          category: "Burger"
         ),
         Item(
           id: "1",
@@ -28,6 +29,7 @@ class OrderCubit extends Cubit<OrdersStates> {
           price: 50.0,
           description: 'das',
           img: 'asset/images/burger.png',
+         category: "Burger"
         ),
       ],
     ),

@@ -5,12 +5,19 @@ import 'package:foodapp/shared/constants.dart';
 
 Widget resturantbox(context, model) => GestureDetector(
   onTap: () {
-    navigateTo(context, Menuscreen(items: model.menuItems,name: model.name,));
+    navigateTo(context, Menuscreen(items: model.menuItems, name: model.name,img: model.img,));
+    
   },
   child: Container(
     decoration: BoxDecoration(
-      border: Border.all(color: Colors.grey[500]!, width: 2.w),
-      color: Colors.white,
+      border: Border.all(
+        color:
+            Theme.of(context).brightness == Brightness.dark
+                ? Colors.grey[800]!
+                : Colors.grey[400]!,
+        width: 2.w,
+      ),
+      color: Theme.of(context).cardColor,
       borderRadius: BorderRadius.circular(15.r),
     ),
     child: Column(
@@ -24,7 +31,7 @@ Widget resturantbox(context, model) => GestureDetector(
             width: double.infinity,
           ),
         ),
-        SizedBox(height: 15.h),
+        SizedBox(height: 5.h),
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 5.w),
           child: Column(

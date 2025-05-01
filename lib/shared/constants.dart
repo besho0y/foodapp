@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-
 import 'package:foodapp/shared/colors.dart';
-
-
-
 
 Widget defaultTextFormField({
   required String label,
@@ -20,9 +16,11 @@ Widget defaultTextFormField({
 }) {
   return TextFormField(
     style: const TextStyle(color: Colors.black),
+    cursorColor: AppColors.primaryLight,
     decoration: InputDecoration(
       labelText: label,
-      labelStyle: TextStyle(color: AppColors.primarylight),
+
+      labelStyle: TextStyle(color: AppColors.primaryLight),
       prefixIcon: Icon(prefix, color: Colors.grey),
       border: OutlineInputBorder(),
       enabledBorder: OutlineInputBorder(
@@ -33,8 +31,9 @@ Widget defaultTextFormField({
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
-        borderSide: BorderSide(color: AppColors.primarylight, width: 2.0.w),
+        borderSide: BorderSide(color: AppColors.primaryLight, width: 1.0.w),
       ),
+
       suffixIcon:
           suffix != null
               ? IconButton(
@@ -48,7 +47,6 @@ Widget defaultTextFormField({
     validator: validator,
     readOnly: readOnly,
     obscureText: isPassword,
-    cursorColor: AppColors.primarylight,
   );
 }
 
@@ -60,8 +58,8 @@ Widget defaultbutton({
   required context,
 }) {
   return Container(
-    color: AppColors.primarylight,
     width: width,
+    color: AppColors.primaryLight,
     child: MaterialButton(
       onPressed: function,
       child: Text(text, style: Theme.of(context).textTheme.titleMedium),

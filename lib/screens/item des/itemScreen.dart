@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:foodapp/layout/cubit.dart';
-import 'package:foodapp/shared/colors.dart';
 import 'package:foodapp/shared/constants.dart';
 
 class Itemscreen extends StatefulWidget {
@@ -12,12 +11,14 @@ class Itemscreen extends StatefulWidget {
     required this.description,
     required this.price,
     required this.img,
+    this.items = const [],
   });
 
   final String name;
   final String description;
   final double price;
   final String img;
+  final dynamic items;
 
   @override
   State<Itemscreen> createState() => _ItemscreenState();
@@ -25,6 +26,19 @@ class Itemscreen extends StatefulWidget {
 
 class _ItemscreenState extends State<Itemscreen> {
   int quantity = 1;
+  late dynamic displayedItems;
+
+  @override
+  void initState() {
+    super.initState();
+
+    if (widget.items.length <= 3) {
+      displayedItems = widget.items;
+    } else {
+      widget.items.shuffle();
+      displayedItems = widget.items.take(3).toList();
+    }
+  }
 
   void incrementQuantity() {
     setState(() {
@@ -49,20 +63,19 @@ class _ItemscreenState extends State<Itemscreen> {
     );
     Navigator.pop(context);
     Fluttertoast.showToast(
-        msg: 'Added ${quantity}x ${widget.name} to cart',
-        toastLength: Toast.LENGTH_SHORT,
-        gravity: ToastGravity.BOTTOM,
-        timeInSecForIosWeb: 3,
-        backgroundColor: Colors.green,
-        textColor: Colors.white,
-        fontSize: 14.0
+      msg: 'Added ${quantity}x ${widget.name} to cart',
+      toastLength: Toast.LENGTH_SHORT,
+      gravity: ToastGravity.BOTTOM,
+      timeInSecForIosWeb: 3,
+      backgroundColor: Colors.green,
+      textColor: Colors.white,
+      fontSize: 14.0,
     );
-
   }
 
   @override
   Widget build(BuildContext context) {
-    final cubit = Layoutcubit.get(context); // <-- FIX: now inside build()
+    final cubit = Layoutcubit.get(context);
 
     return Scaffold(
       body: Stack(
@@ -91,7 +104,6 @@ class _ItemscreenState extends State<Itemscreen> {
                               },
                               icon: Icon(
                                 Icons.arrow_back_ios_new_rounded,
-                                color: AppColors.primarylight,
                                 size: 30.sp,
                               ),
                             ),
@@ -125,7 +137,7 @@ class _ItemscreenState extends State<Itemscreen> {
                                 SizedBox(height: 10.h),
                                 Row(
                                   children: [
-                                    Spacer(),
+                                    const Spacer(),
                                     Text(
                                       "${widget.price} EGP",
                                       style:
@@ -147,6 +159,99 @@ class _ItemscreenState extends State<Itemscreen> {
                                     ),
                                   ),
                                 ),
+                                if (displayedItems.isNotEmpty) ...[
+                                  SizedBox(height: 20.h),
+                                  Text(
+                                    "You may also like",
+                                    style:
+                                        Theme.of(context).textTheme.bodyMedium,
+                                  ),
+                                  SizedBox(height: 10.h),
+                                  SingleChildScrollView(
+                                    scrollDirection: Axis.horizontal,
+                                    child: Row(
+                                      children:
+                                          displayedItems.map<Widget>((item) {
+                                            return Container(
+                                              width: 120.w,
+                                              margin: EdgeInsets.only(
+                                                right: 10.w,
+                                              ),
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  ClipRRect(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          10.r,
+                                                        ),
+                                                    child: Image.asset(
+                                                      item.img,
+                                                      height: 80.h,
+                                                      width: 120.w,
+                                                      fit: BoxFit.cover,
+                                                    ),
+                                                  ),
+                                                  SizedBox(height: 5.h),
+                                                  Text(
+                                                    item.name,
+                                                    style:
+                                                        Theme.of(
+                                                          context,
+                                                        ).textTheme.bodySmall,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                  ),
+                                                  Text(
+                                                    "${item.price} EGP",
+                                                    style:
+                                                        Theme.of(
+                                                          context,
+                                                        ).textTheme.labelSmall,
+                                                  ),
+                                                  Align(
+                                                    alignment:
+                                                        Alignment.centerRight,
+                                                    child: IconButton(
+                                                      onPressed: () {
+                                                        cubit.addToCart(
+                                                          name: item.name,
+                                                          price: item.price,
+                                                          quantity: 1,
+                                                          img: item.img,
+                                                        );
+                                                        Fluttertoast.showToast(
+                                                          msg:
+                                                              'Added ${item.name} to cart',
+                                                          toastLength:
+                                                              Toast
+                                                                  .LENGTH_SHORT,
+                                                          gravity:
+                                                              ToastGravity
+                                                                  .BOTTOM,
+                                                          timeInSecForIosWeb: 3,
+                                                          backgroundColor:
+                                                              Colors.green,
+                                                          textColor:
+                                                              Colors.white,
+                                                          fontSize: 14.0,
+                                                        );
+                                                      },
+                                                      icon: Icon(
+                                                        Icons.add_shopping_cart,
+                                                        size: 20.sp,
+                                                        color: Colors.green,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            );
+                                          }).toList(),
+                                    ),
+                                  ),
+                                ],
                               ],
                             ),
                           ),
@@ -165,16 +270,11 @@ class _ItemscreenState extends State<Itemscreen> {
             child: Container(
               padding: EdgeInsets.symmetric(horizontal: 15.w, vertical: 10.h),
               decoration: BoxDecoration(
-                color: Colors.white,
                 boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10.r)],
               ),
               child: Row(
                 children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.grey[200],
-                      borderRadius: BorderRadius.circular(10.r),
-                    ),
+                  Card(
                     child: TextButton(
                       onPressed: () => addToCart(cubit),
                       child: Text(
@@ -183,17 +283,13 @@ class _ItemscreenState extends State<Itemscreen> {
                       ),
                     ),
                   ),
-                  Spacer(),
+                  const Spacer(),
                   Card(
                     child: Row(
                       children: [
                         IconButton(
                           onPressed: decrementQuantity,
-                          icon: Icon(
-                            Icons.remove,
-                            color: AppColors.primarylight,
-                            size: 30.sp,
-                          ),
+                          icon: Icon(Icons.remove, size: 30.sp),
                         ),
                         Text(
                           "$quantity",
@@ -201,11 +297,7 @@ class _ItemscreenState extends State<Itemscreen> {
                         ),
                         IconButton(
                           onPressed: incrementQuantity,
-                          icon: Icon(
-                            Icons.add,
-                            color: AppColors.primarylight,
-                            size: 30.sp,
-                          ),
+                          icon: Icon(Icons.add, size: 30.sp),
                         ),
                       ],
                     ),
