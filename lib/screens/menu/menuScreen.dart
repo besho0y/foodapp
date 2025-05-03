@@ -6,6 +6,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:foodapp/models/item.dart';
 import 'package:foodapp/screens/favourits/cubit.dart';
 import 'package:foodapp/screens/favourits/states.dart';
+import 'package:foodapp/screens/resturants/cubit.dart';
 import 'package:foodapp/shared/constants.dart';
 import 'package:foodapp/widgets/itemcard.dart';
 
@@ -26,7 +27,8 @@ class Menuscreen extends StatefulWidget {
 }
 
 class _MenuscreenState extends State<Menuscreen> {
-  final List<String> categories = ["For you", "Burger", "Pizza", "Sushi"];
+  // final List<String> categories = ["For you", "Burger", "Pizza", "Sushi"];
+
   String selectedCategory = "For you";
 
   List<Item> get filteredItems {
@@ -43,6 +45,7 @@ class _MenuscreenState extends State<Menuscreen> {
     return BlocConsumer<Favouritecubit, FavouriteState>(
       listener: (context, state) {},
       builder: (context, state) {
+        var cubit = Restuarantscubit.get(context);
         return SafeArea(
           child: Scaffold(
             body: Column(
@@ -53,7 +56,7 @@ class _MenuscreenState extends State<Menuscreen> {
                     SizedBox(
                       height: 180.h,
                       width: double.infinity,
-                      child: Image.asset(widget.img, fit: BoxFit.cover),
+                      child: Image.network(widget.img, fit: BoxFit.cover),
                     ),
                     Positioned(
                       top: 10.h,
@@ -122,9 +125,9 @@ class _MenuscreenState extends State<Menuscreen> {
                   child: ListView.builder(
                     scrollDirection: Axis.horizontal,
                     padding: EdgeInsets.symmetric(horizontal: 10.w),
-                    itemCount: categories.length,
+                    itemCount: cubit.itemcategories.length,
                     itemBuilder: (context, index) {
-                      final category = categories[index];
+                      final category = cubit.itemcategories[index];
                       final isSelected = category == selectedCategory;
                       return Padding(
                         padding: EdgeInsets.symmetric(horizontal: 8.w),
@@ -136,12 +139,11 @@ class _MenuscreenState extends State<Menuscreen> {
                           },
                           child: Chip(
                             label: Text(category),
-                            backgroundColor:
-                                isSelected
-                                    ? Colors.green
-                                    : Theme.of(
-                                      context,
-                                    ).chipTheme.backgroundColor,
+                            backgroundColor: isSelected
+                                ? Colors.green
+                                : Theme.of(
+                                    context,
+                                  ).chipTheme.backgroundColor,
                             labelStyle: TextStyle(
                               color: isSelected ? Colors.white : null,
                             ),
@@ -177,7 +179,7 @@ class _MenuscreenState extends State<Menuscreen> {
   }
 
   Widget dot() => Padding(
-    padding: EdgeInsets.symmetric(horizontal: 6.w),
-    child: Text("•", style: TextStyle(fontSize: 18.sp)),
-  );
+        padding: EdgeInsets.symmetric(horizontal: 6.w),
+        child: Text("•", style: TextStyle(fontSize: 18.sp)),
+      );
 }

@@ -12,7 +12,7 @@ class Settingsscreen extends StatelessWidget {
 
   Future<void> _signOut(BuildContext context) async {
     try {
-      print('Attempting to sign out...');
+  
       final currentUser = FirebaseAuth.instance.currentUser;
       print('Current user before sign out: ${currentUser?.email}');
 

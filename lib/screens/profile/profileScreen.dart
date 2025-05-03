@@ -1,12 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:foodapp/models/user.dart';
 import 'package:foodapp/screens/profile/cubit.dart';
 import 'package:foodapp/screens/profile/states.dart';
-import 'package:geocoding/geocoding.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class Profilescreen extends StatefulWidget {
   const Profilescreen({super.key});
@@ -16,195 +12,304 @@ class Profilescreen extends StatefulWidget {
 }
 
 class _ProfilescreenState extends State<Profilescreen> {
+  late ProfileCubit cubit;
+
+  @override
+  void initState() {
+    super.initState();
+    cubit = BlocProvider.of<ProfileCubit>(context);
+    cubit.getuserdata();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => ProfileCubit(),
-      child: BlocConsumer<ProfileCubit, ProfileState>(
-        listener: (context, state) {},
-        builder: (context, state) {
-          final cubit = ProfileCubit.get(context);
-          if (state is ProfileLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (state is ProfileError) {
-            return Center(child: Text(state.message));
-          }
-          if (state is ProfileLoaded) {
-            final user = state.user;
-            return SafeArea(
-              child: Scaffold(
-                body: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      // Profile Header
-                      Container(
-                        height: 200.h,
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).primaryColor,
-                          borderRadius: BorderRadius.only(
-                            bottomLeft: Radius.circular(30.r),
-                            bottomRight: Radius.circular(30.r),
+    return BlocConsumer<ProfileCubit, ProfileState>(
+      listener: (context, state) {},
+      builder: (context, state) {
+        var cubit = ProfileCubit.get(context);
+
+        // Add loading and error states
+        if (state is ProfileLoading) {
+          return Scaffold(
+            appBar: AppBar(
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back_ios_new),
+                onPressed: () => Navigator.pop(context),
+              ),
+              title: Text("Profile"),
+            ),
+            body: const Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        if (state is ProfileError) {
+          return Scaffold(
+            appBar: AppBar(
+              leading: IconButton(
+                icon: Icon(Icons.arrow_back_ios_new),
+                onPressed: () => Navigator.pop(context),
+              ),
+              title: Text("Profile"),
+            ),
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text("Error loading profile data"),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () => cubit.getuserdata(),
+                    child: const Text("Retry"),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        // Normal profile display when data is loaded
+        return SafeArea(
+          child: Scaffold(
+            body: SingleChildScrollView(
+              child: Column(
+                children: [
+                  // Profile Header
+                  Container(
+                    height: 200.h,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).primaryColor,
+                      borderRadius: BorderRadius.only(
+                        bottomLeft: Radius.circular(30.r),
+                        bottomRight: Radius.circular(30.r),
+                      ),
+                    ),
+                    child: Stack(
+                      children: [
+                        Positioned(
+                          top: 10.h,
+                          left: 10.w,
+                          child: IconButton(
+                            onPressed: () => Navigator.pop(context),
+                            icon: Icon(
+                              Icons.arrow_back_ios_new,
+                              color: Colors.white,
+                              size: 24.sp,
+                            ),
                           ),
                         ),
-                        child: Stack(
-                          children: [
-                            Positioned(
-                              top: 10.h,
-                              left: 10.w,
-                              child: IconButton(
-                                onPressed: () => Navigator.pop(context),
-                                icon: Icon(
-                                  Icons.arrow_back_ios_new,
-                                  color: Colors.white,
-                                  size: 24.sp,
-                                ),
-                              ),
+                        Positioned(
+                          top: 10.h,
+                          right: 10.w,
+                          child: IconButton(
+                            onPressed: () =>
+                                _showUpdateUserBottomSheet(context),
+                            icon: Icon(
+                              Icons.edit,
+                              color: Colors.white,
+                              size: 24.sp,
                             ),
-                            Positioned(
-                              top: 10.h,
-                              right: 10.w,
-                              child: IconButton(
-                                onPressed: () => _showUpdateUserBottomSheet(
-                                  context,
-                                  user,
-                                ),
-                                icon: Icon(
-                                  Icons.edit,
-                                  color: Colors.white,
-                                  size: 24.sp,
-                                ),
-                              ),
-                            ),
-                            Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  CircleAvatar(
-                                    radius: 50.r,
-                                    backgroundColor: Colors.white,
-                                    child: Icon(
-                                      Icons.person,
-                                      size: 50.sp,
-                                      color: Theme.of(context).primaryColor,
-                                    ),
-                                  ),
-                                  SizedBox(height: 10.h),
-                                  Text(
-                                    user.name,
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 20.sp,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
-                      ),
+                        Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              CircleAvatar(
+                                radius: 50.r,
+                                backgroundColor: Colors.white,
+                                child: Icon(
+                                  Icons.person,
+                                  size: 50.sp,
+                                  color: Theme.of(context).primaryColor,
+                                ),
+                              ),
+                              SizedBox(height: 10.h),
+                              Text(
+                                cubit.user.name,
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 20.sp,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
 
-                      // User Information
-                      Padding(
-                        padding: EdgeInsets.all(20.w),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                  // User Information
+                  Padding(
+                    padding: EdgeInsets.all(20.w),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Personal Information",
+                          style: TextStyle(
+                            fontSize: 18.sp,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(height: 20.h),
+                        _buildInfoField(
+                          context,
+                          icon: Icons.person_outline,
+                          label: "Name",
+                          value: cubit.user.name,
+                        ),
+                        _buildInfoField(
+                          context,
+                          icon: Icons.phone_outlined,
+                          label: "Phone",
+                          value: cubit.user.phone,
+                        ),
+                        _buildInfoField(
+                          context,
+                          icon: Icons.email_outlined,
+                          label: "Email",
+                          value: cubit.user.email,
+                        ),
+                        SizedBox(height: 20.h),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              "Personal Information",
+                              "Saved Addresses",
                               style: TextStyle(
                                 fontSize: 18.sp,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            SizedBox(height: 20.h),
-                            _buildInfoField(
-                              icon: Icons.person_outline,
-                              label: "Name",
-                              value: user.name,
-                            ),
-                            _buildInfoField(
-                              icon: Icons.phone_outlined,
-                              label: "Phone",
-                              value: user.phone.toString(),
-                            ),
-                            _buildInfoField(
-                              icon: Icons.email_outlined,
-                              label: "Email",
-                              value: user.email,
-                            ),
-                            SizedBox(height: 20.h),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  "Saved Addresses",
-                                  style: TextStyle(
-                                    fontSize: 18.sp,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                            TextButton.icon(
+                              onPressed: () => _showAddressBottomSheet(context),
+                              icon: Icon(
+                                Icons.add,
+                                size: 20.sp,
+                                color: Theme.of(context).primaryColor,
+                              ),
+                              label: Text(
+                                "Add New",
+                                style: TextStyle(
+                                  color: Theme.of(context).primaryColor,
                                 ),
-                                TextButton.icon(
-                                  onPressed: () =>
-                                      _showAddressBottomSheet(context),
-                                  icon: Icon(
-                                    Icons.add,
-                                    size: 20.sp,
-                                    color: Theme.of(context).primaryColor,
-                                  ),
-                                  label: Text(
-                                    "Add New",
-                                    style: TextStyle(
-                                      color: Theme.of(context).primaryColor,
-                                    ),
-                                  ),
-                                ),
-                              ],
+                              ),
                             ),
-                            SizedBox(height: 10.h),
-                            ...user.address.asMap().entries.map((entry) {
-                              final index = entry.key;
-                              final address = entry.value;
-                              return _buildAddressCard(
-                                title: address["title"],
-                                address: address["address"],
-                                isDefault: address["isDefault"],
-                                onEdit: () => _showAddressBottomSheet(
-                                  context,
-                                  index: index,
-                                  title: address["title"],
-                                  address: address["address"],
-                                  isDefault: address["isDefault"],
-                                  latitude: address["latitude"],
-                                  longitude: address["longitude"],
-                                ),
-                                onDelete: () => cubit.deleteAddress(index),
-                                onSetDefault: () =>
-                                    cubit.setDefaultAddress(index),
-                              );
-                            }).toList(),
                           ],
                         ),
-                      ),
-                    ],
+                        SizedBox(height: 10.h),
+                        // ...cubit.user.address.asMap().entries.map((entry) {
+                        //   final index = entry.key;
+                        //   final address = entry.value;
+                        //   return _buildAddressCard(
+                        //     context,
+                        //     title: address["title"],
+                        //     address: address["address"],
+                        //     isDefault: address["isDefault"],
+                        //     onEdit: () => _showAddressBottomSheet(
+                        //       context,
+                        //       index: index,
+                        //       title: address["title"],
+                        //       address: address["address"],
+                        //       isDefault: address["isDefault"],
+                        //     ),
+                        //     // onDelete: () => _deleteAddress(index),
+                        //     // onSetDefault: () => _setDefaultAddress(index),
+                        //   );
+                        // }).toList(),
+                      ],
+                    ),
                   ),
-                ),
+                ],
               ),
-            );
-          }
-          return const SizedBox();
-        },
-      ),
+            ),
+          ),
+        );
+      },
     );
   }
 
-  void _showUpdateUserBottomSheet(BuildContext context, User user) {
-    final cubit = ProfileCubit.get(context);
-    final nameController = TextEditingController(text: user.name);
-    final emailController = TextEditingController(text: user.email);
-    final phoneController = TextEditingController(text: user.phone.toString());
+  // void _updateUserDetails(String name, String email, String phone) {
+  //   setState(() {
+  //     List<Map<String, dynamic>> oldAddresses = user.address;
+  //     user = User(
+  //       name: name,
+  //       email: email,
+  //       phone: phone,
+  //       uid: user.uid,
+  //     );
+  //     // Using reflection to maintain addresses
+  //     (user as dynamic).address = oldAddresses;
+  //   });
+  // }
+
+  // void _addAddress(String title, String address, bool isDefault) {
+  //   setState(() {
+  //     final updatedAddresses = List<Map<String, dynamic>>.from(user.address);
+  //     if (isDefault) {
+  //       for (var addr in updatedAddresses) {
+  //         addr["isDefault"] = false;
+  //       }
+  //     }
+  //     updatedAddresses.add({
+  //       "title": title,
+  //       "address": address,
+  //       "isDefault": isDefault,
+  //       "latitude": 30.0444,
+  //       "longitude": 31.2357,
+  //     });
+  //     // Using reflection to set updated addresses
+  //     (user as dynamic).address = updatedAddresses;
+  //   });
+  // }
+
+  // void _updateAddress(int index, String title, String address, bool isDefault) {
+  //   setState(() {
+  //     final updatedAddresses = List<Map<String, dynamic>>.from(user.address);
+  //     if (isDefault) {
+  //       for (var addr in updatedAddresses) {
+  //         addr["isDefault"] = false;
+  //       }
+  //     }
+  //     updatedAddresses[index] = {
+  //       "title": title,
+  //       "address": address,
+  //       "isDefault": isDefault,
+  //       "latitude": 30.0444,
+  //       "longitude": 31.2357,
+  //     };
+  //     // Using reflection to set updated addresses
+  //     (user as dynamic).address = updatedAddresses;
+  //   });
+  // }
+
+  // void _deleteAddress(int index) {
+  //   setState(() {
+  //     final updatedAddresses = List<Map<String, dynamic>>.from(user.address);
+  //     updatedAddresses.removeAt(index);
+  //     // Using reflection to set updated addresses
+  //     (user as dynamic).address = updatedAddresses;
+  //   });
+  // }
+
+  // void _setDefaultAddress(int index) {
+  //   setState(() {
+  //     final updatedAddresses = List<Map<String, dynamic>>.from(user.address);
+  //     for (var i = 0; i < updatedAddresses.length; i++) {
+  //       updatedAddresses[i]["isDefault"] = (i == index);
+  //     }
+  //     // Using reflection to set updated addresses
+  //     (user as dynamic).address = updatedAddresses;
+  //   });
+  // }
+
+  void _showUpdateUserBottomSheet(BuildContext context) {
+    var cubit = ProfileCubit.get(context);
+    final nameController = TextEditingController(text: cubit.user.name);
+    final emailController = TextEditingController(text: cubit.user.email);
+    final phoneController = TextEditingController(text: cubit.user.phone);
 
     showModalBottomSheet(
       context: context,
@@ -265,12 +370,12 @@ class _ProfilescreenState extends State<Profilescreen> {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  cubit.updateUserDetails(
-                    nameController.text,
-                    emailController.text,
-                    phoneController.text,
-                  );
-                  Navigator.pop(context);
+                  // _updateUserDetails(
+                  //   nameController.text,
+                  //   emailController.text,
+                  //   phoneController.text,
+                  // );
+                  // Navigator.pop(context);
                 },
                 child: Text("Update Profile"),
               ),
@@ -288,17 +393,10 @@ class _ProfilescreenState extends State<Profilescreen> {
     String? title,
     String? address,
     bool? isDefault,
-    double? latitude,
-    double? longitude,
   }) {
-    final cubit = ProfileCubit.get(context);
     final titleController = TextEditingController(text: title);
     final addressController = TextEditingController(text: address);
     bool isDefaultAddress = isDefault ?? false;
-    LatLng? selectedLocation =
-        (index != null && latitude != null && longitude != null)
-            ? LatLng(latitude, longitude)
-            : null;
 
     showModalBottomSheet(
       context: context,
@@ -346,86 +444,6 @@ class _ProfilescreenState extends State<Profilescreen> {
                 maxLines: 3,
               ),
               SizedBox(height: 10.h),
-              ElevatedButton.icon(
-                onPressed: () {
-                  setState(() {
-                    selectedLocation = null;
-                  });
-                },
-                icon: Icon(Icons.location_on),
-                label: Text(selectedLocation == null
-                    ? "Select Location"
-                    : "Location Selected"),
-              ),
-              SizedBox(height: 10.h),
-              Container(
-                height: 200.h,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10.r),
-                  border: Border.all(color: Colors.grey[300]!),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(10.r),
-                  child: Stack(
-                    children: [
-                      GoogleMap(
-                        initialCameraPosition: CameraPosition(
-                          target: LatLng(30.0444, 31.2357), // Default to Cairo
-                          zoom: 15,
-                        ),
-                        markers: selectedLocation != null
-                            ? {
-                                Marker(
-                                  markerId: const MarkerId('selected_location'),
-                                  position: selectedLocation!,
-                                ),
-                              }
-                            : {},
-                        myLocationEnabled: true,
-                        myLocationButtonEnabled: true,
-                        zoomControlsEnabled: true,
-                        mapToolbarEnabled: true,
-                        onTap: (LatLng position) async {
-                          setState(() {
-                            selectedLocation = position;
-                          });
-
-                          // Get address from coordinates
-                          try {
-                            final List<Placemark> placemarks =
-                                await placemarkFromCoordinates(
-                              position.latitude,
-                              position.longitude,
-                            );
-
-                            if (placemarks.isNotEmpty) {
-                              final Placemark place = placemarks[0];
-                              final String address =
-                                  '${place.street}, ${place.subLocality}, ${place.locality}, ${place.country}';
-                              addressController.text = address;
-                            }
-                          } catch (e) {
-                            print('Error getting address: $e');
-                          }
-                        },
-                      ),
-                      if (selectedLocation != null)
-                        Positioned(
-                          right: 10,
-                          bottom: 10,
-                          child: FloatingActionButton.small(
-                            onPressed: () {
-                              launchUrl(Uri.parse(
-                                'https://www.google.com/maps/search/?api=1&query=${selectedLocation!.latitude},${selectedLocation!.longitude}',
-                              ));
-                            },
-                            child: const Icon(Icons.open_in_new),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ),
               SizedBox(height: 10.h),
               Row(
                 children: [
@@ -445,27 +463,21 @@ class _ProfilescreenState extends State<Profilescreen> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    if (index == null) {
-                      cubit.addAddress(
-                        titleController.text,
-                        addressController.text,
-                        isDefaultAddress,
-                        latitude: selectedLocation?.latitude,
-                        longitude: selectedLocation?.longitude,
-                      );
-                    } else {
-                      cubit.updateAddress(
-                        index,
-                        titleController.text,
-                        addressController.text,
-                        isDefaultAddress,
-                        latitude: selectedLocation?.latitude,
-                        longitude: selectedLocation?.longitude,
-                      );
-                    }
-                    if (mounted) {
-                      Navigator.of(context).pop();
-                    }
+                    // if (index == null) {
+                    //   _addAddress(
+                    //     titleController.text,
+                    //     addressController.text,
+                    //     isDefaultAddress,
+                    //   );
+                    // } else {
+                    //   _updateAddress(
+                    //     index,
+                    //     titleController.text,
+                    //     addressController.text,
+                    //     isDefaultAddress,
+                    //   );
+                    // }
+                    Navigator.of(context).pop();
                   },
                   child: Text(
                     index == null ? "Add Address" : "Update Address",
@@ -480,7 +492,8 @@ class _ProfilescreenState extends State<Profilescreen> {
     );
   }
 
-  Widget _buildInfoField({
+  Widget _buildInfoField(
+    BuildContext context, {
     required IconData icon,
     required String label,
     required String value,
@@ -513,7 +526,8 @@ class _ProfilescreenState extends State<Profilescreen> {
     );
   }
 
-  Widget _buildAddressCard({
+  Widget _buildAddressCard(
+    BuildContext context, {
     required String title,
     required String address,
     required bool isDefault,

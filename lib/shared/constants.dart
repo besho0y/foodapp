@@ -20,9 +20,9 @@ Widget defaultTextFormField({
     decoration: InputDecoration(
       labelText: label,
 
-      labelStyle: TextStyle(color: AppColors.primaryLight),
+      labelStyle: const TextStyle(color: AppColors.primaryLight),
       prefixIcon: Icon(prefix, color: Colors.grey),
-      border: OutlineInputBorder(),
+      border: const OutlineInputBorder(),
       enabledBorder: OutlineInputBorder(
         borderSide: BorderSide(
           color: Colors.grey,
@@ -94,7 +94,7 @@ Widget mycheckbox({
 }
 
 Widget mydivider(BuildContext context) => Padding(
-  padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
   child: Container(
     height: 1,
     color:

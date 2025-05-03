@@ -93,7 +93,7 @@ class _ItemscreenState extends State<Itemscreen> {
                           SizedBox(
                             height: 300.h,
                             width: double.infinity,
-                            child: Image.asset(widget.img, fit: BoxFit.cover),
+                            child: Image.network(widget.img, fit: BoxFit.cover),
                           ),
                           Positioned(
                             top: 40.h,
@@ -140,10 +140,9 @@ class _ItemscreenState extends State<Itemscreen> {
                                     const Spacer(),
                                     Text(
                                       "${widget.price} EGP",
-                                      style:
-                                          Theme.of(
-                                            context,
-                                          ).textTheme.labelMedium,
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.labelMedium,
                                     ),
                                   ],
                                 ),
@@ -172,83 +171,77 @@ class _ItemscreenState extends State<Itemscreen> {
                                     child: Row(
                                       children:
                                           displayedItems.map<Widget>((item) {
-                                            return Container(
-                                              width: 120.w,
-                                              margin: EdgeInsets.only(
-                                                right: 10.w,
+                                        return Container(
+                                          width: 120.w,
+                                          margin: EdgeInsets.only(
+                                            right: 10.w,
+                                          ),
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              ClipRRect(
+                                                borderRadius:
+                                                    BorderRadius.circular(
+                                                  10.r,
+                                                ),
+                                                child: Image.network(
+                                                  item.img,
+                                                  height: 80.h,
+                                                  width: 120.w,
+                                                  fit: BoxFit.cover,
+                                                ),
                                               ),
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  ClipRRect(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          10.r,
-                                                        ),
-                                                    child: Image.asset(
-                                                      item.img,
-                                                      height: 80.h,
-                                                      width: 120.w,
-                                                      fit: BoxFit.cover,
-                                                    ),
-                                                  ),
-                                                  SizedBox(height: 5.h),
-                                                  Text(
-                                                    item.name,
-                                                    style:
-                                                        Theme.of(
-                                                          context,
-                                                        ).textTheme.bodySmall,
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
-                                                  ),
-                                                  Text(
-                                                    "${item.price} EGP",
-                                                    style:
-                                                        Theme.of(
-                                                          context,
-                                                        ).textTheme.labelSmall,
-                                                  ),
-                                                  Align(
-                                                    alignment:
-                                                        Alignment.centerRight,
-                                                    child: IconButton(
-                                                      onPressed: () {
-                                                        cubit.addToCart(
-                                                          name: item.name,
-                                                          price: item.price,
-                                                          quantity: 1,
-                                                          img: item.img,
-                                                        );
-                                                        Fluttertoast.showToast(
-                                                          msg:
-                                                              'Added ${item.name} to cart',
-                                                          toastLength:
-                                                              Toast
-                                                                  .LENGTH_SHORT,
-                                                          gravity:
-                                                              ToastGravity
-                                                                  .BOTTOM,
-                                                          timeInSecForIosWeb: 3,
-                                                          backgroundColor:
-                                                              Colors.green,
-                                                          textColor:
-                                                              Colors.white,
-                                                          fontSize: 14.0,
-                                                        );
-                                                      },
-                                                      icon: Icon(
-                                                        Icons.add_shopping_cart,
-                                                        size: 20.sp,
-                                                        color: Colors.green,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ],
+                                              SizedBox(height: 5.h),
+                                              Text(
+                                                item.name,
+                                                style: Theme.of(
+                                                  context,
+                                                ).textTheme.bodySmall,
+                                                overflow: TextOverflow.ellipsis,
                                               ),
-                                            );
-                                          }).toList(),
+                                              Text(
+                                                "${item.price} EGP",
+                                                style: Theme.of(
+                                                  context,
+                                                ).textTheme.labelSmall,
+                                              ),
+                                              Align(
+                                                alignment:
+                                                    Alignment.centerRight,
+                                                child: IconButton(
+                                                  onPressed: () {
+                                                    cubit.addToCart(
+                                                      name: item.name,
+                                                      price: item.price,
+                                                      quantity: 1,
+                                                      img: item.img,
+                                                    );
+                                                    Fluttertoast.showToast(
+                                                      msg:
+                                                          'Added ${item.name} to cart',
+                                                      toastLength:
+                                                          Toast.LENGTH_SHORT,
+                                                      gravity:
+                                                          ToastGravity.BOTTOM,
+                                                      timeInSecForIosWeb: 3,
+                                                      backgroundColor:
+                                                          Colors.green,
+                                                      textColor: Colors.white,
+                                                      fontSize: 14.0,
+                                                    );
+                                                  },
+                                                  icon: Icon(
+                                                    Icons.add_shopping_cart,
+                                                    size: 20.sp,
+                                                    color: Colors.green,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      }).toList(),
                                     ),
                                   ),
                                 ],

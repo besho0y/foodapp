@@ -5,7 +5,7 @@ import 'package:foodapp/screens/favourits/cubit.dart';
 import 'package:foodapp/screens/item%20des/itemScreen.dart';
 import 'package:foodapp/shared/constants.dart';
 
-Widget itemcard(context, bool fromFavourites, Item model,dynamic items) {
+Widget itemcard(context, bool fromFavourites, Item model, dynamic items) {
   var cubit = Favouritecubit.get(context);
   return Padding(
     padding: EdgeInsets.only(bottom: 5.h),
@@ -18,7 +18,7 @@ Widget itemcard(context, bool fromFavourites, Item model,dynamic items) {
             description: model.description,
             price: model.price,
             img: model.img,
-            items:items,
+            items: items,
           ),
         );
       },
@@ -103,7 +103,7 @@ Widget itemcard(context, bool fromFavourites, Item model,dynamic items) {
               decoration: BoxDecoration(
                 image: DecorationImage(
                   fit: BoxFit.cover,
-                  image: AssetImage(model.img),
+                  image: NetworkImage(model.img),
                 ),
               ),
             ),

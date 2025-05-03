@@ -27,15 +27,7 @@ class Layoutcubit extends Cubit<Layoutstates> {
   ];
 
   List<String> titles = ["Restaurants", "favourits", "Orders", "Settings"];
-  List<Cartitem> cartitems = [
-    Cartitem(
-      name: "burger",
-      price: 120,
-      id: "12",
-      img: "assets/images/items/burger.png",
-      quantity: 1,
-    ),
-  ];
+  List<Cartitem> cartitems = [];
 
   void addToCart({
     required String name,
@@ -86,13 +78,12 @@ class Layoutcubit extends Cubit<Layoutstates> {
     return total;
   }
 
-void toggletheme() {
-  if (isdark == lightTheme) {
-    isdark = darkTheme;
-  } else {
-    isdark = lightTheme;
+  void toggletheme() {
+    if (isdark == lightTheme) {
+      isdark = darkTheme;
+    } else {
+      isdark = lightTheme;
+    }
+    emit(LayoutChangeThemeState()); // ✅ emit a new theme state
   }
-  emit(LayoutChangeThemeState()); // ✅ emit a new theme state
-}
-
 }

@@ -12,8 +12,7 @@ class ProfileLoaded extends ProfileState {
 }
 
 class ProfileError extends ProfileState {
-  final String message;
-  ProfileError(this.message);
+
 }
 
 class AddressAdded extends ProfileState {}

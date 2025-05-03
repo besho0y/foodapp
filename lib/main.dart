@@ -1,8 +1,10 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:foodapp/firebase_options.dart';
 import 'package:foodapp/layout/cubit.dart';
 import 'package:foodapp/layout/layout.dart';
 import 'package:foodapp/layout/states.dart';
@@ -10,14 +12,18 @@ import 'package:foodapp/screens/favourits/cubit.dart';
 import 'package:foodapp/screens/login/cubit.dart';
 import 'package:foodapp/screens/login/loginScreen.dart';
 import 'package:foodapp/screens/oredrs/cubit.dart';
+import 'package:foodapp/screens/profile/cubit.dart';
+import 'package:foodapp/screens/profile/profileScreen.dart';
 import 'package:foodapp/screens/resturants/cubit.dart';
+import 'package:foodapp/screens/signup/cubit.dart';
 import 'package:foodapp/shared/blocObserver.dart';
 // Import the generated file
 
 void main() async {
   Bloc.observer = MyBlocObserver();
-  WidgetsFlutterBinding.ensureInitialized(); // <--- Important for locking orientation
-await Firebase.initializeApp();
+  WidgetsFlutterBinding
+      .ensureInitialized(); // <--- Important for locking orientation
+  await Firebase.initializeApp( options: DefaultFirebaseOptions.currentPlatform,);
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown, // Only portrait modes
@@ -37,11 +43,12 @@ class MyApp extends StatelessWidget {
         BlocProvider(
           create: (context) => (Restuarantscubit()..getRestuarants()),
         ),
-        BlocProvider(create: (context) => (Favouritecubit())),
+        BlocProvider(create: (context) => (Favouritecubit())..loadFavourites()),
         BlocProvider(create: (context) => (OrderCubit())),
         BlocProvider(create: (context) => (Logincubit())),
+        BlocProvider(create: (context) => (Signupcubit())),
+        BlocProvider(create: (context) => (ProfileCubit())),
       ],
-
       child: ScreenUtilInit(
         designSize: const Size(360, 690),
         minTextAdapt: true,
@@ -58,7 +65,7 @@ class MyApp extends StatelessWidget {
                 // You can use the library anywhere in the app even in theme
                 theme: cubit.isdark,
 
-                home: Loginscreen(),
+                home: Layout(),
               );
             },
           );

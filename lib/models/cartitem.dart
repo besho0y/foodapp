@@ -1,5 +1,3 @@
-
-
 class Cartitem {
   String id;
   String name;
