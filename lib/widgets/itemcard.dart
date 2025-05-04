@@ -103,7 +103,7 @@ Widget itemcard(context, bool fromFavourites, Item model, dynamic items) {
               decoration: BoxDecoration(
                 image: DecorationImage(
                   fit: BoxFit.cover,
-                  image: NetworkImage(model.img),
+                  image: _getImageProvider(model.img),
                 ),
               ),
             ),
@@ -112,4 +112,21 @@ Widget itemcard(context, bool fromFavourites, Item model, dynamic items) {
       ),
     ),
   );
+}
+
+// Helper function to get the correct image provider
+ImageProvider _getImageProvider(String imageUrl) {
+  try {
+    if (imageUrl.startsWith('http')) {
+      return NetworkImage(imageUrl);
+    } else if (imageUrl.startsWith('assets/')) {
+      return AssetImage(imageUrl);
+    } else {
+      // Default fallback image
+      return AssetImage('assets/images/items/default.jpg');
+    }
+  } catch (e) {
+    print("Error creating image provider: $e");
+    return AssetImage('assets/images/items/default.jpg');
+  }
 }

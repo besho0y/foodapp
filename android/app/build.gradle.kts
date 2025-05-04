@@ -14,9 +14,10 @@ android {
         targetCompatibility = JavaVersion.VERSION_11
     }
 
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_11.toString()
-    }
+  kotlinOptions {
+    jvmTarget = "11"
+}
+
 
     defaultConfig {
         applicationId = "com.example.foodapp"

@@ -11,12 +11,14 @@ class ProfileLoaded extends ProfileState {
   ProfileLoaded(this.user);
 }
 
-class ProfileError extends ProfileState {
-
-}
+class ProfileError extends ProfileState {}
 
 class AddressAdded extends ProfileState {}
 
 class AddressUpdated extends ProfileState {}
 
 class AddressDeleted extends ProfileState {}
+
+class ProfileLogoutSuccess extends ProfileState {}
+
+class ProfileAccountDeleted extends ProfileState {}

@@ -72,10 +72,36 @@ class Restuarantscubit extends Cubit<ResturantsStates> {
     {"name": "drinks", "img": "assets/images/categories/drinks.png"},
   ];
 
-  List<String> itemcategories = [];
+  List<String> itemcategories = ["All"]; // Default category
+
+  // Get menu categories for a specific restaurant
+  List<String> getRestaurantMenuCategories(String restaurantId) {
+    try {
+      // Find the restaurant
+      final restaurant = restaurants.firstWhere(
+        (r) => r.id == restaurantId,
+        orElse: () => throw Exception('Restaurant not found'),
+      );
+
+      // Get unique categories from restaurant's menu items
+      final uniqueCategories = <String>{};
+      for (var item in restaurant.menuItems) {
+        if (item.category.isNotEmpty && item.category != "Uncategorized") {
+          uniqueCategories.add(item.category);
+        }
+      }
+
+      // Return categories with "All" as the first option
+      return ["All", ...uniqueCategories.toList()];
+    } catch (e) {
+      print("Error getting menu categories for restaurant: $e");
+      return ["All"]; // Return default category
+    }
+  }
 
   void getRestuarants() async {
     allRestuarants.clear();
+    itemcategories = ["All"]; // Reset to default category only
     emit(RestuarantsLoadingState());
 
     final restaurantSnapshots =
@@ -108,18 +134,58 @@ class Restuarantscubit extends Cubit<ResturantsStates> {
       List<String> firestoreCategories =
           List<String>.from(data['categories'] ?? []);
 
+      // Read menu categories (for item filtering)
+      List<String> menuCategories =
+          List<String>.from(data['menuCategories'] ?? []);
+
+      // Get average rating from reviews
+      double averageRating = await getAverageRating(restaurantId);
+
       // Add the restaurant with its items and correct categories
       allRestuarants.add(Restuarants.fromJson({
         ...data,
         'items': items.map((item) => item.toJson()).toList(),
         'id': restaurantId,
         'categories': firestoreCategories,
+        'menuCategories': menuCategories,
+        'rating': averageRating, // Use the fetched average rating
       }));
-      itemcategories.addAll(firestoreCategories);
+
+      // No longer adding categories globally - we'll get them per restaurant
     }
 
     restaurants = List.from(allRestuarants);
     emit(RestuarantsGetDataSuccessState());
+  }
+
+  // Function to calculate average rating from reviews
+  Future<double> getAverageRating(String restaurantId) async {
+    try {
+      final reviewsSnapshot = await FirebaseFirestore.instance
+          .collection("restaurants")
+          .doc(restaurantId)
+          .collection("reviews")
+          .get();
+
+      if (reviewsSnapshot.docs.isEmpty) {
+        return 0.0; // Default rating if no reviews
+      }
+
+      double totalRating = 0.0;
+      for (var doc in reviewsSnapshot.docs) {
+        final data = doc.data();
+        if (data.containsKey('rating')) {
+          totalRating += double.parse(data['rating'].toString());
+        }
+      }
+
+      // Format to one decimal place for consistency
+      double average = totalRating / reviewsSnapshot.docs.length;
+      return double.parse(average.toStringAsFixed(1));
+    } catch (e) {
+      print("Error fetching average rating: $e");
+      return 0.0;
+    }
   }
 
   void filterRestaurants(String categoryName) {

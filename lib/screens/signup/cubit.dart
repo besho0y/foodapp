@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:foodapp/layout/layout.dart';
 import 'package:foodapp/models/user.dart' as AppUser;
+import 'package:foodapp/screens/profile/cubit.dart';
 import 'package:foodapp/screens/signup/states.dart';
 import 'package:foodapp/shared/constants.dart';
 
@@ -62,6 +63,7 @@ class Signupcubit extends Cubit<SignupStates> {
       phone: phone,
       email: email,
       uid: uid,
+      orderIds: [],
     );
 
     try {
@@ -71,6 +73,11 @@ class Signupcubit extends Cubit<SignupStates> {
           .set(userModel.tomap());
 
       emit(CreateUserSuccessState());
+
+      // Load user data after creating the user but before navigation
+      ProfileCubit profileCubit = ProfileCubit.get(context);
+      profileCubit.getuserdata();
+
       navigateAndFinish(context, Layout());
     } catch (e) {
       print("Firestore Error: $e");

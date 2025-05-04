@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:foodapp/models/user.dart';
 import 'package:foodapp/screens/profile/cubit.dart';
 import 'package:foodapp/screens/profile/states.dart';
 
@@ -46,7 +47,7 @@ class _ProfilescreenState extends State<Profilescreen> {
           return Scaffold(
             appBar: AppBar(
               leading: IconButton(
-                icon: Icon(Icons.arrow_back_ios_new),
+                icon: const Icon(Icons.arrow_back_ios_new),
                 onPressed: () => Navigator.pop(context),
               ),
               title: Text("Profile"),
@@ -55,11 +56,12 @@ class _ProfilescreenState extends State<Profilescreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text("Error loading profile data"),
-                  const SizedBox(height: 20),
+                  Icon(Icons.error_outline, size: 60, color: Colors.red),
+                  SizedBox(height: 16.h),
+                  Text("Error loading profile data"),
                   ElevatedButton(
                     onPressed: () => cubit.getuserdata(),
-                    child: const Text("Retry"),
+                    child: Text("Retry"),
                   ),
                 ],
               ),
@@ -172,7 +174,9 @@ class _ProfilescreenState extends State<Profilescreen> {
                           label: "Email",
                           value: cubit.user.email,
                         ),
-                        SizedBox(height: 20.h),
+
+                        // Addresses Section
+                        SizedBox(height: 30.h),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -183,42 +187,68 @@ class _ProfilescreenState extends State<Profilescreen> {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            TextButton.icon(
-                              onPressed: () => _showAddressBottomSheet(context),
-                              icon: Icon(
-                                Icons.add,
-                                size: 20.sp,
-                                color: Theme.of(context).primaryColor,
-                              ),
-                              label: Text(
-                                "Add New",
-                                style: TextStyle(
-                                  color: Theme.of(context).primaryColor,
-                                ),
-                              ),
+                            IconButton(
+                              icon: Icon(Icons.add_circle_outline),
+                              onPressed: () =>
+                                  _showAddAddressBottomSheet(context),
                             ),
                           ],
                         ),
                         SizedBox(height: 10.h),
-                        // ...cubit.user.address.asMap().entries.map((entry) {
-                        //   final index = entry.key;
-                        //   final address = entry.value;
-                        //   return _buildAddressCard(
-                        //     context,
-                        //     title: address["title"],
-                        //     address: address["address"],
-                        //     isDefault: address["isDefault"],
-                        //     onEdit: () => _showAddressBottomSheet(
-                        //       context,
-                        //       index: index,
-                        //       title: address["title"],
-                        //       address: address["address"],
-                        //       isDefault: address["isDefault"],
-                        //     ),
-                        //     // onDelete: () => _deleteAddress(index),
-                        //     // onSetDefault: () => _setDefaultAddress(index),
-                        //   );
-                        // }).toList(),
+
+                        // Address Cards
+                        cubit.user.addresses.isEmpty
+                            ? Center(
+                                child: Column(
+                                  children: [
+                                    Icon(Icons.location_off,
+                                        size: 40, color: Colors.grey),
+                                    SizedBox(height: 10.h),
+                                    Text("No addresses saved yet"),
+                                    SizedBox(height: 10.h),
+                                    ElevatedButton(
+                                      onPressed: () =>
+                                          _showAddAddressBottomSheet(context),
+                                      child: Text("Add Address"),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : ListView.builder(
+                                shrinkWrap: true,
+                                physics: NeverScrollableScrollPhysics(),
+                                itemCount: cubit.user.addresses.length,
+                                itemBuilder: (context, index) {
+                                  final address = cubit.user.addresses[index];
+                                  return _buildAddressCard(
+                                    context,
+                                    address: address,
+                                    isDefault: address.isDefault,
+                                    index: index,
+                                  );
+                                },
+                              ),
+
+                        // Account Actions (Delete Account and Logout)
+                        SizedBox(height: 30.h),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () =>
+                                _showDeleteAccountConfirmation(context),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red[700],
+                              padding: EdgeInsets.symmetric(vertical: 12.h),
+                            ),
+                            child: Text(
+                              "Delete Account",
+                              style: TextStyle(
+                                fontSize: 16.sp,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -231,79 +261,359 @@ class _ProfilescreenState extends State<Profilescreen> {
     );
   }
 
-  // void _updateUserDetails(String name, String email, String phone) {
-  //   setState(() {
-  //     List<Map<String, dynamic>> oldAddresses = user.address;
-  //     user = User(
-  //       name: name,
-  //       email: email,
-  //       phone: phone,
-  //       uid: user.uid,
-  //     );
-  //     // Using reflection to maintain addresses
-  //     (user as dynamic).address = oldAddresses;
-  //   });
-  // }
+  Widget _buildInfoField(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 8.h),
+      child: Row(
+        children: [
+          Icon(icon, size: 24.sp, color: Theme.of(context).primaryColor),
+          SizedBox(width: 10.w),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12.sp,
+                  color: Colors.grey,
+                ),
+              ),
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 
-  // void _addAddress(String title, String address, bool isDefault) {
-  //   setState(() {
-  //     final updatedAddresses = List<Map<String, dynamic>>.from(user.address);
-  //     if (isDefault) {
-  //       for (var addr in updatedAddresses) {
-  //         addr["isDefault"] = false;
-  //       }
-  //     }
-  //     updatedAddresses.add({
-  //       "title": title,
-  //       "address": address,
-  //       "isDefault": isDefault,
-  //       "latitude": 30.0444,
-  //       "longitude": 31.2357,
-  //     });
-  //     // Using reflection to set updated addresses
-  //     (user as dynamic).address = updatedAddresses;
-  //   });
-  // }
+  Widget _buildAddressCard(
+    BuildContext context, {
+    required Address address,
+    required bool isDefault,
+    required int index,
+  }) {
+    return Card(
+      margin: EdgeInsets.only(bottom: 12.h),
+      child: Padding(
+        padding: EdgeInsets.all(12.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.location_on, color: Theme.of(context).primaryColor),
+                SizedBox(width: 8.w),
+                Text(
+                  address.title,
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(width: 10.w),
+                if (isDefault)
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 8.w,
+                      vertical: 2.h,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.green,
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                    child: Text(
+                      "Default",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 10.sp,
+                      ),
+                    ),
+                  ),
+                Spacer(),
+                PopupMenuButton<String>(
+                  onSelected: (value) {
+                    if (value == 'edit') {
+                      _showEditAddressBottomSheet(context, index, address);
+                    } else if (value == 'delete') {
+                      _showDeleteAddressConfirmation(context, index);
+                    } else if (value == 'default') {
+                      ProfileCubit.get(context).setDefaultAddress(index);
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: 'edit',
+                      child: Row(
+                        children: [
+                          Icon(Icons.edit),
+                          SizedBox(width: 8.w),
+                          Text('Edit'),
+                        ],
+                      ),
+                    ),
+                    if (!isDefault)
+                      PopupMenuItem(
+                        value: 'default',
+                        child: Row(
+                          children: [
+                            Icon(Icons.check_circle),
+                            SizedBox(width: 8.w),
+                            Text('Set as Default'),
+                          ],
+                        ),
+                      ),
+                    PopupMenuItem(
+                      value: 'delete',
+                      child: Row(
+                        children: [
+                          Icon(Icons.delete, color: Colors.red),
+                          SizedBox(width: 8.w),
+                          Text('Delete', style: TextStyle(color: Colors.red)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            SizedBox(height: 8.h),
+            Padding(
+              padding: EdgeInsets.only(left: 32.w),
+              child: Text(
+                address.address,
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  color: Colors.grey[600],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-  // void _updateAddress(int index, String title, String address, bool isDefault) {
-  //   setState(() {
-  //     final updatedAddresses = List<Map<String, dynamic>>.from(user.address);
-  //     if (isDefault) {
-  //       for (var addr in updatedAddresses) {
-  //         addr["isDefault"] = false;
-  //       }
-  //     }
-  //     updatedAddresses[index] = {
-  //       "title": title,
-  //       "address": address,
-  //       "isDefault": isDefault,
-  //       "latitude": 30.0444,
-  //       "longitude": 31.2357,
-  //     };
-  //     // Using reflection to set updated addresses
-  //     (user as dynamic).address = updatedAddresses;
-  //   });
-  // }
+  void _showAddAddressBottomSheet(BuildContext context) {
+    final titleController = TextEditingController();
+    final addressController = TextEditingController();
+    bool isDefault = false;
 
-  // void _deleteAddress(int index) {
-  //   setState(() {
-  //     final updatedAddresses = List<Map<String, dynamic>>.from(user.address);
-  //     updatedAddresses.removeAt(index);
-  //     // Using reflection to set updated addresses
-  //     (user as dynamic).address = updatedAddresses;
-  //   });
-  // }
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+      ),
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+          left: 20.w,
+          right: 20.w,
+          top: 20.h,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Add New Address",
+              style: TextStyle(
+                fontSize: 18.sp,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: 20.h),
+            TextField(
+              controller: titleController,
+              decoration: InputDecoration(
+                labelText: "Address Title (e.g. Home, Work)",
+                border: OutlineInputBorder(),
+              ),
+            ),
+            SizedBox(height: 12.h),
+            TextField(
+              controller: addressController,
+              decoration: InputDecoration(
+                labelText: "Full Address",
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 3,
+            ),
+            SizedBox(height: 12.h),
+            StatefulBuilder(
+              builder: (context, setState) => CheckboxListTile(
+                title: Text("Set as default address"),
+                value: isDefault,
+                onChanged: (value) {
+                  setState(() {
+                    isDefault = value ?? false;
+                  });
+                },
+                contentPadding: EdgeInsets.zero,
+              ),
+            ),
+            SizedBox(height: 12.h),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  if (titleController.text.trim().isEmpty ||
+                      addressController.text.trim().isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("Please fill all fields")),
+                    );
+                    return;
+                  }
 
-  // void _setDefaultAddress(int index) {
-  //   setState(() {
-  //     final updatedAddresses = List<Map<String, dynamic>>.from(user.address);
-  //     for (var i = 0; i < updatedAddresses.length; i++) {
-  //       updatedAddresses[i]["isDefault"] = (i == index);
-  //     }
-  //     // Using reflection to set updated addresses
-  //     (user as dynamic).address = updatedAddresses;
-  //   });
-  // }
+                  final address = Address(
+                    title: titleController.text.trim(),
+                    address: addressController.text.trim(),
+                    isDefault: isDefault,
+                  );
+
+                  ProfileCubit.get(context).addAddress(address);
+                  Navigator.pop(context);
+                },
+                child: Text("Save Address"),
+              ),
+            ),
+            SizedBox(height: 20.h),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showEditAddressBottomSheet(
+    BuildContext context,
+    int index,
+    Address address,
+  ) {
+    final titleController = TextEditingController(text: address.title);
+    final addressController = TextEditingController(text: address.address);
+    bool isDefault = address.isDefault;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+      ),
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+          left: 20.w,
+          right: 20.w,
+          top: 20.h,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Edit Address",
+              style: TextStyle(
+                fontSize: 18.sp,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: 20.h),
+            TextField(
+              controller: titleController,
+              decoration: InputDecoration(
+                labelText: "Address Title (e.g. Home, Work)",
+                border: OutlineInputBorder(),
+              ),
+            ),
+            SizedBox(height: 12.h),
+            TextField(
+              controller: addressController,
+              decoration: InputDecoration(
+                labelText: "Full Address",
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 3,
+            ),
+            SizedBox(height: 12.h),
+            StatefulBuilder(
+              builder: (context, setState) => CheckboxListTile(
+                title: Text("Set as default address"),
+                value: isDefault,
+                onChanged: (value) {
+                  setState(() {
+                    isDefault = value ?? false;
+                  });
+                },
+                contentPadding: EdgeInsets.zero,
+              ),
+            ),
+            SizedBox(height: 12.h),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  if (titleController.text.trim().isEmpty ||
+                      addressController.text.trim().isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("Please fill all fields")),
+                    );
+                    return;
+                  }
+
+                  final updatedAddress = Address(
+                    title: titleController.text.trim(),
+                    address: addressController.text.trim(),
+                    isDefault: isDefault,
+                  );
+
+                  ProfileCubit.get(context)
+                      .updateAddress(index, updatedAddress);
+                  Navigator.pop(context);
+                },
+                child: Text("Update Address"),
+              ),
+            ),
+            SizedBox(height: 20.h),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showDeleteAddressConfirmation(BuildContext context, int index) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Delete Address"),
+        content: Text("Are you sure you want to delete this address?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              ProfileCubit.get(context).deleteAddress(index);
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: Text("Delete"),
+          ),
+        ],
+      ),
+    );
+  }
 
   void _showUpdateUserBottomSheet(BuildContext context) {
     var cubit = ProfileCubit.get(context);
@@ -326,11 +636,12 @@ class _ProfilescreenState extends State<Profilescreen> {
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               "Update Profile",
               style: TextStyle(
-                fontSize: 20.sp,
+                fontSize: 18.sp,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -339,29 +650,24 @@ class _ProfilescreenState extends State<Profilescreen> {
               controller: nameController,
               decoration: InputDecoration(
                 labelText: "Name",
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10.r),
-                ),
+                border: OutlineInputBorder(),
               ),
             ),
-            SizedBox(height: 10.h),
+            SizedBox(height: 12.h),
             TextField(
               controller: emailController,
               decoration: InputDecoration(
                 labelText: "Email",
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10.r),
-                ),
+                border: OutlineInputBorder(),
               ),
+              enabled: false, // Email cannot be changed
             ),
-            SizedBox(height: 10.h),
+            SizedBox(height: 12.h),
             TextField(
               controller: phoneController,
               decoration: InputDecoration(
                 labelText: "Phone",
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10.r),
-                ),
+                border: OutlineInputBorder(),
               ),
               keyboardType: TextInputType.phone,
             ),
@@ -370,12 +676,16 @@ class _ProfilescreenState extends State<Profilescreen> {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  // _updateUserDetails(
-                  //   nameController.text,
-                  //   emailController.text,
-                  //   phoneController.text,
-                  // );
-                  // Navigator.pop(context);
+                  if (nameController.text.trim().isEmpty ||
+                      phoneController.text.trim().isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("Please fill all fields")),
+                    );
+                    return;
+                  }
+
+                  // TODO: Implement update user profile in ProfileCubit
+                  Navigator.pop(context);
                 },
                 child: Text("Update Profile"),
               ),
@@ -387,217 +697,60 @@ class _ProfilescreenState extends State<Profilescreen> {
     );
   }
 
-  void _showAddressBottomSheet(
-    BuildContext context, {
-    int? index,
-    String? title,
-    String? address,
-    bool? isDefault,
-  }) {
-    final titleController = TextEditingController(text: title);
-    final addressController = TextEditingController(text: address);
-    bool isDefaultAddress = isDefault ?? false;
-
-    showModalBottomSheet(
+  void _showDeleteAccountConfirmation(BuildContext context) {
+    showDialog(
       context: context,
-      isScrollControlled: true,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
-      ),
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-            left: 20.w,
-            right: 20.w,
-            top: 20.h,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                index == null ? "Add New Address" : "Edit Address",
-                style: TextStyle(
-                  fontSize: 20.sp,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(height: 20.h),
-              TextField(
-                controller: titleController,
-                decoration: InputDecoration(
-                  labelText: "Title (e.g., Home, Work)",
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10.r),
-                  ),
-                ),
-              ),
-              SizedBox(height: 10.h),
-              TextField(
-                controller: addressController,
-                decoration: InputDecoration(
-                  labelText: "Address",
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10.r),
-                  ),
-                ),
-                maxLines: 3,
-              ),
-              SizedBox(height: 10.h),
-              SizedBox(height: 10.h),
-              Row(
-                children: [
-                  Checkbox(
-                    value: isDefaultAddress,
-                    onChanged: (value) {
-                      setState(() {
-                        isDefaultAddress = value ?? false;
-                      });
-                    },
-                  ),
-                  Text("Set as default address"),
-                ],
-              ),
-              SizedBox(height: 20.h),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    // if (index == null) {
-                    //   _addAddress(
-                    //     titleController.text,
-                    //     addressController.text,
-                    //     isDefaultAddress,
-                    //   );
-                    // } else {
-                    //   _updateAddress(
-                    //     index,
-                    //     titleController.text,
-                    //     addressController.text,
-                    //     isDefaultAddress,
-                    //   );
-                    // }
-                    Navigator.of(context).pop();
-                  },
-                  child: Text(
-                    index == null ? "Add Address" : "Update Address",
-                  ),
-                ),
-              ),
-              SizedBox(height: 20.h),
-            ],
-          ),
+      builder: (context) => AlertDialog(
+        title: Text("Delete Account"),
+        content: Text(
+          "Are you sure you want to delete your account? This action cannot be undone and all your data will be permanently deleted.",
+          style: TextStyle(fontSize: 14.sp),
         ),
-      ),
-    );
-  }
-
-  Widget _buildInfoField(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    required String value,
-  }) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: 15.h),
-      child: Row(
-        children: [
-          Icon(icon, size: 24.sp, color: Theme.of(context).primaryColor),
-          SizedBox(width: 15.w),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: TextStyle(fontSize: 14.sp, color: Colors.grey),
-              ),
-              SizedBox(height: 5.h),
-              Text(
-                value,
-                style: TextStyle(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.black),
-              ),
-            ],
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              // Show an additional confirmation with password for security
+              _showFinalDeleteConfirmation(context);
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: Text("Delete"),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildAddressCard(
-    BuildContext context, {
-    required String title,
-    required String address,
-    required bool isDefault,
-    required VoidCallback onEdit,
-    required VoidCallback onDelete,
-    required VoidCallback onSetDefault,
-  }) {
-    return Card(
-      margin: EdgeInsets.only(bottom: 10.h),
-      child: Padding(
-        padding: EdgeInsets.all(15.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                if (isDefault)
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 10.w,
-                      vertical: 5.h,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.green.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(15.r),
-                    ),
-                    child: Text(
-                      "Default",
-                      style: TextStyle(color: Colors.green, fontSize: 12.sp),
-                    ),
-                  ),
-              ],
-            ),
-            SizedBox(height: 5.h),
-            Text(
-              address,
-              style: TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
-            ),
-            SizedBox(height: 10.h),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                if (!isDefault)
-                  TextButton(
-                    onPressed: onSetDefault,
-                    child: Text(
-                      "Set as Default",
-                      style: TextStyle(color: Colors.green, fontSize: 12.sp),
-                    ),
-                  ),
-                IconButton(
-                  onPressed: onEdit,
-                  icon: Icon(Icons.edit, size: 20.sp),
-                ),
-                IconButton(
-                  onPressed: onDelete,
-                  icon: Icon(Icons.delete, size: 20.sp),
-                ),
-              ],
-            ),
-          ],
+  void _showFinalDeleteConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Final Confirmation"),
+        content: Text(
+          "This will permanently delete your account, including order history, saved addresses, and personal information. Are you absolutely sure?",
+          style: TextStyle(fontSize: 14.sp),
         ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              ProfileCubit.get(context).deleteAccount(context);
+            },
+            style: TextButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: Text("Yes, Delete My Account"),
+          ),
+        ],
       ),
     );
   }

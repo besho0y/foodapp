@@ -1,9 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+import 'package:flutter_styled_toast/flutter_styled_toast.dart';
 import 'package:foodapp/layout/layout.dart';
 import 'package:foodapp/screens/login/states.dart';
+import 'package:foodapp/screens/profile/cubit.dart';
 import 'package:foodapp/shared/constants.dart';
 
 class Logincubit extends Cubit<LoginStates> {
@@ -19,6 +20,11 @@ class Logincubit extends Cubit<LoginStates> {
         .signInWithEmailAndPassword(email: email, password: password)
         .then((value) {
       emit(LoginSuccessState());
+
+      // Load user data before navigation
+      ProfileCubit profileCubit = ProfileCubit.get(context);
+      profileCubit.getuserdata();
+
       navigateAndFinish(context, Layout());
     }).catchError((error) {
       emit(LoginErrorlState());
@@ -43,14 +49,14 @@ class Logincubit extends Cubit<LoginStates> {
         }
       }
 
-      Fluttertoast.showToast(
-          msg: errorMessage,
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.BOTTOM,
-          timeInSecForIosWeb: 1,
-          backgroundColor: Colors.red,
-          textColor: Colors.white,
-          fontSize: 16.0);
+      showToast(
+        errorMessage,
+        context: context,
+        duration: const Duration(seconds: 1),
+        backgroundColor: Colors.red,
+        textStyle: const TextStyle(color: Colors.white, fontSize: 16.0),
+        position: StyledToastPosition.bottom,
+      );
     });
   }
 }

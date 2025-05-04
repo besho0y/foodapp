@@ -11,6 +11,9 @@ Widget resturantbox(context, model) => GestureDetector(
               items: model.menuItems,
               name: model.name,
               img: model.img,
+              deliveryprice: model.deliveryFee,
+              deliverytime: model.deliveryTime,
+              restaurantId: model.id,
             ));
       },
       child: Container(
@@ -28,12 +31,7 @@ Widget resturantbox(context, model) => GestureDetector(
           children: [
             ClipRRect(
               borderRadius: BorderRadius.vertical(top: Radius.circular(13)),
-              child: Image.network(
-                "${model.img}",
-                fit: BoxFit.cover,
-                height: 85.h,
-                width: double.infinity,
-              ),
+              child: _buildRestaurantImage(model.img),
             ),
             SizedBox(height: 5.h),
             Padding(
@@ -45,7 +43,7 @@ Widget resturantbox(context, model) => GestureDetector(
                     children: [
                       Icon(Icons.delivery_dining_outlined),
                       SizedBox(width: 5.w),
-                      Text("1 day",
+                      Text(model.deliveryTime,
                           style: Theme.of(context).textTheme.bodySmall),
                     ],
                   ),
@@ -58,7 +56,7 @@ Widget resturantbox(context, model) => GestureDetector(
                       Icon(Icons.star_rate_rounded, color: Colors.amber),
                       SizedBox(width: 5.w),
                       Text(
-                        "${model.rating}",
+                        "${model.rating > 0 ? model.rating.toStringAsFixed(1) : 'No ratings'}",
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ],
@@ -70,3 +68,63 @@ Widget resturantbox(context, model) => GestureDetector(
         ),
       ),
     );
+
+// Helper widget to build restaurant image with error handling
+Widget _buildRestaurantImage(String imageUrl) {
+  try {
+    if (imageUrl.startsWith('http')) {
+      // Network image
+      return Image.network(
+        imageUrl,
+        fit: BoxFit.cover,
+        height: 85.h,
+        width: double.infinity,
+        // Handle errors with network images
+        errorBuilder: (context, error, stackTrace) {
+          print("Error loading network image: $error");
+          return Image.asset(
+            'assets/images/restuarants/store.jpg',
+            fit: BoxFit.cover,
+            height: 85.h,
+            width: double.infinity,
+          );
+        },
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Center(
+            child: CircularProgressIndicator(
+              value: loadingProgress.expectedTotalBytes != null
+                  ? loadingProgress.cumulativeBytesLoaded /
+                      loadingProgress.expectedTotalBytes!
+                  : null,
+            ),
+          );
+        },
+      );
+    } else if (imageUrl.startsWith('assets/')) {
+      // Asset image
+      return Image.asset(
+        imageUrl,
+        fit: BoxFit.cover,
+        height: 85.h,
+        width: double.infinity,
+      );
+    } else {
+      // Default image
+      return Image.asset(
+        'assets/images/restuarants/store.jpg',
+        fit: BoxFit.cover,
+        height: 85.h,
+        width: double.infinity,
+      );
+    }
+  } catch (e) {
+    print("Error handling image: $e");
+    return Image.asset(
+      'assets/images/restuarants/store.jpg',
+      fit: BoxFit.cover,
+      height: 85.h,
+      width: double.infinity,
+    );
+  }
+}
