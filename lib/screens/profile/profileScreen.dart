@@ -408,6 +408,7 @@ class _ProfilescreenState extends State<Profilescreen> {
     final titleController = TextEditingController();
     final addressController = TextEditingController();
     bool isDefault = false;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     showModalBottomSheet(
       context: context,
@@ -436,17 +437,55 @@ class _ProfilescreenState extends State<Profilescreen> {
             SizedBox(height: 20.h),
             TextField(
               controller: titleController,
+              style: TextStyle(
+                color: isDarkMode ? Colors.white : Colors.black,
+              ),
               decoration: InputDecoration(
                 labelText: "Address Title (e.g. Home, Work)",
-                border: OutlineInputBorder(),
+                labelStyle: TextStyle(color: Theme.of(context).primaryColor),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: BorderSide(color: Colors.grey),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: BorderSide(
+                      color: Theme.of(context).primaryColor, width: 2.0),
+                ),
+                filled: true,
+                fillColor: isDarkMode ? Colors.black : Colors.grey.shade50,
+                prefixIcon:
+                    Icon(Icons.home, color: Theme.of(context).primaryColor),
               ),
             ),
             SizedBox(height: 12.h),
             TextField(
               controller: addressController,
+              style: TextStyle(
+                color: isDarkMode ? Colors.white : Colors.black,
+              ),
               decoration: InputDecoration(
                 labelText: "Full Address",
-                border: OutlineInputBorder(),
+                labelStyle: TextStyle(color: Theme.of(context).primaryColor),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: BorderSide(color: Colors.grey),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: BorderSide(
+                      color: Theme.of(context).primaryColor, width: 2.0),
+                ),
+                filled: true,
+                fillColor: isDarkMode ? Colors.black : Colors.grey.shade50,
+                prefixIcon: Icon(Icons.location_on,
+                    color: Theme.of(context).primaryColor),
               ),
               maxLines: 3,
             ),
@@ -503,6 +542,7 @@ class _ProfilescreenState extends State<Profilescreen> {
     final titleController = TextEditingController(text: address.title);
     final addressController = TextEditingController(text: address.address);
     bool isDefault = address.isDefault;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     showModalBottomSheet(
       context: context,
@@ -531,17 +571,55 @@ class _ProfilescreenState extends State<Profilescreen> {
             SizedBox(height: 20.h),
             TextField(
               controller: titleController,
+              style: TextStyle(
+                color: isDarkMode ? Colors.white : Colors.black,
+              ),
               decoration: InputDecoration(
                 labelText: "Address Title (e.g. Home, Work)",
-                border: OutlineInputBorder(),
+                labelStyle: TextStyle(color: Theme.of(context).primaryColor),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: BorderSide(color: Colors.grey),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: BorderSide(
+                      color: Theme.of(context).primaryColor, width: 2.0),
+                ),
+                filled: true,
+                fillColor: isDarkMode ? Colors.black : Colors.grey.shade50,
+                prefixIcon:
+                    Icon(Icons.home, color: Theme.of(context).primaryColor),
               ),
             ),
             SizedBox(height: 12.h),
             TextField(
               controller: addressController,
+              style: TextStyle(
+                color: isDarkMode ? Colors.white : Colors.black,
+              ),
               decoration: InputDecoration(
                 labelText: "Full Address",
-                border: OutlineInputBorder(),
+                labelStyle: TextStyle(color: Theme.of(context).primaryColor),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: BorderSide(color: Colors.grey),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: BorderSide(
+                      color: Theme.of(context).primaryColor, width: 2.0),
+                ),
+                filled: true,
+                fillColor: isDarkMode ? Colors.black : Colors.grey.shade50,
+                prefixIcon: Icon(Icons.location_on,
+                    color: Theme.of(context).primaryColor),
               ),
               maxLines: 3,
             ),
@@ -620,6 +698,7 @@ class _ProfilescreenState extends State<Profilescreen> {
     final nameController = TextEditingController(text: cubit.user.name);
     final emailController = TextEditingController(text: cubit.user.email);
     final phoneController = TextEditingController(text: cubit.user.phone);
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     showModalBottomSheet(
       context: context,
@@ -648,26 +727,83 @@ class _ProfilescreenState extends State<Profilescreen> {
             SizedBox(height: 20.h),
             TextField(
               controller: nameController,
+              style: TextStyle(
+                color: isDarkMode ? Colors.white : Colors.black,
+              ),
               decoration: InputDecoration(
                 labelText: "Name",
-                border: OutlineInputBorder(),
+                labelStyle: TextStyle(color: Theme.of(context).primaryColor),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: BorderSide(color: Colors.grey),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: BorderSide(
+                      color: Theme.of(context).primaryColor, width: 2.0),
+                ),
+                filled: true,
+                fillColor: isDarkMode ? Colors.black : Colors.grey.shade50,
+                prefixIcon:
+                    Icon(Icons.person, color: Theme.of(context).primaryColor),
               ),
             ),
             SizedBox(height: 12.h),
             TextField(
               controller: emailController,
+              style: TextStyle(
+                color: isDarkMode ? Colors.white : Colors.black,
+              ),
               decoration: InputDecoration(
                 labelText: "Email",
-                border: OutlineInputBorder(),
+                labelStyle: TextStyle(color: Theme.of(context).primaryColor),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: BorderSide(color: Colors.grey),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: BorderSide(
+                      color: Theme.of(context).primaryColor, width: 2.0),
+                ),
+                filled: true,
+                fillColor: isDarkMode ? Colors.black : Colors.grey.shade50,
+                prefixIcon:
+                    Icon(Icons.email, color: Theme.of(context).primaryColor),
               ),
               enabled: false, // Email cannot be changed
             ),
             SizedBox(height: 12.h),
             TextField(
               controller: phoneController,
+              style: TextStyle(
+                color: isDarkMode ? Colors.white : Colors.black,
+              ),
               decoration: InputDecoration(
                 labelText: "Phone",
-                border: OutlineInputBorder(),
+                labelStyle: TextStyle(color: Theme.of(context).primaryColor),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: BorderSide(color: Colors.grey),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: BorderSide(
+                      color: Theme.of(context).primaryColor, width: 2.0),
+                ),
+                filled: true,
+                fillColor: isDarkMode ? Colors.black : Colors.grey.shade50,
+                prefixIcon:
+                    Icon(Icons.phone, color: Theme.of(context).primaryColor),
               ),
               keyboardType: TextInputType.phone,
             ),
@@ -675,7 +811,7 @@ class _ProfilescreenState extends State<Profilescreen> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
                   if (nameController.text.trim().isEmpty ||
                       phoneController.text.trim().isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -684,8 +820,42 @@ class _ProfilescreenState extends State<Profilescreen> {
                     return;
                   }
 
-                  // TODO: Implement update user profile in ProfileCubit
+                  // Validate phone number
+                  if (phoneController.text.trim().length != 11) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("Phone number must be 11 digits")),
+                    );
+                    return;
+                  }
+
+                  // Show loading indicator
+                  showDialog(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (context) => Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                  );
+
+                  // Update profile
+                  await ProfileCubit.get(context).updateUserProfile(
+                    name: nameController.text.trim(),
+                    phone: phoneController.text.trim(),
+                  );
+
+                  // Close loading indicator
+                  Navigator.of(context).pop();
+
+                  // Close bottom sheet
                   Navigator.pop(context);
+
+                  // Show success message
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text("Profile updated successfully"),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
                 },
                 child: Text("Update Profile"),
               ),

@@ -40,11 +40,55 @@ class ProfileCubit extends Cubit<ProfileState> {
           // Load saved addresses from SharedPreferences
           List<Address> localAddresses =
               await LocalStorageService.getAddresses();
+
           if (localAddresses.isNotEmpty) {
-            // If we have local addresses, merge them with any addresses from Firestore
-            user.addresses = [...user.addresses, ...localAddresses]
-                .toSet()
-                .toList(); // Remove duplicates
+            // Create a map using a custom key to ensure uniqueness
+            final Map<String, Address> uniqueAddresses = {};
+
+            // Add Firestore addresses
+            for (var addr in user.addresses) {
+              String key = "${addr.title}_${addr.address}";
+              uniqueAddresses[key] = addr;
+            }
+
+            // Add local addresses (will override Firestore addresses with same key)
+            for (var addr in localAddresses) {
+              String key = "${addr.title}_${addr.address}";
+              uniqueAddresses[key] = addr;
+            }
+
+            // Convert back to list
+            user.addresses = uniqueAddresses.values.toList();
+
+            print("Loaded ${user.addresses.length} unique addresses");
+
+            // Make sure there's only one default address
+            bool hasDefault = false;
+            for (int i = 0; i < user.addresses.length; i++) {
+              if (user.addresses[i].isDefault) {
+                if (hasDefault) {
+                  user.addresses[i].isDefault = false;
+                } else {
+                  hasDefault = true;
+                }
+              }
+            }
+
+            // If no default address, set the first one as default
+            if (!hasDefault && user.addresses.isNotEmpty) {
+              user.addresses[0].isDefault = true;
+            }
+
+            // Update addresses in Firestore to ensure consistency
+            await FirebaseFirestore.instance
+                .collection("users")
+                .doc(currentUser.uid)
+                .update({
+              'addresses': user.addresses.map((addr) => addr.toJson()).toList(),
+            });
+
+            // Save the merged addresses back to local storage
+            await LocalStorageService.saveAddresses(user.addresses);
           }
 
           // Load cart items from local storage
@@ -307,6 +351,69 @@ class ProfileCubit extends Cubit<ProfileState> {
       emit(ProfileLoaded(user));
     } catch (error) {
       print("Error setting default address: $error");
+      emit(ProfileError());
+    }
+  }
+
+  // Update user's phone number
+  Future<void> updateUserPhone(String phoneNumber) async {
+    try {
+      emit(ProfileLoading());
+
+      final currentUser = auth.FirebaseAuth.instance.currentUser;
+      if (currentUser == null) {
+        emit(ProfileError());
+        return;
+      }
+
+      // Update the phone number in the user model
+      user.phone = phoneNumber;
+
+      // Update in Firestore
+      await FirebaseFirestore.instance
+          .collection("users")
+          .doc(currentUser.uid)
+          .update({
+        'phone': phoneNumber,
+      });
+
+      emit(ProfileLoaded(user));
+    } catch (error) {
+      print("Error updating phone number: $error");
+      emit(ProfileError());
+    }
+  }
+
+  // Update user's profile information
+  Future<void> updateUserProfile({
+    required String name,
+    required String phone,
+  }) async {
+    try {
+      emit(ProfileLoading());
+
+      final currentUser = auth.FirebaseAuth.instance.currentUser;
+      if (currentUser == null) {
+        emit(ProfileError());
+        return;
+      }
+
+      // Update the user model
+      user.name = name;
+      user.phone = phone;
+
+      // Update in Firestore
+      await FirebaseFirestore.instance
+          .collection("users")
+          .doc(currentUser.uid)
+          .update({
+        'name': name,
+        'phone': phone,
+      });
+
+      emit(ProfileLoaded(user));
+    } catch (error) {
+      print("Error updating profile: $error");
       emit(ProfileError());
     }
   }

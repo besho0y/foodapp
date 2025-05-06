@@ -100,62 +100,68 @@ class Restuarantscubit extends Cubit<ResturantsStates> {
   }
 
   void getRestuarants() async {
+    // Clear all data before loading
     allRestuarants.clear();
+    restaurants.clear();
     itemcategories = ["All"]; // Reset to default category only
     emit(RestuarantsLoadingState());
 
-    final restaurantSnapshots =
-        await FirebaseFirestore.instance.collection("restaurants").get();
+    try {
+      final restaurantSnapshots =
+          await FirebaseFirestore.instance.collection("restaurants").get();
 
-    for (var doc in restaurantSnapshots.docs) {
-      String restaurantId = doc.id;
-      final data = doc.data();
+      for (var doc in restaurantSnapshots.docs) {
+        String restaurantId = doc.id;
+        final data = doc.data();
 
-      // Get items subcollection
-      final itemsSnapshot = await FirebaseFirestore.instance
-          .collection("restaurants")
-          .doc(restaurantId)
-          .collection("items")
-          .get();
+        // Get items subcollection
+        final itemsSnapshot = await FirebaseFirestore.instance
+            .collection("restaurants")
+            .doc(restaurantId)
+            .collection("items")
+            .get();
 
-      List<Item> items = itemsSnapshot.docs.map((itemDoc) {
-        final itemData = itemDoc.data();
-        return Item(
-          id: itemDoc.id,
-          name: itemData['name'] ?? '',
-          description: itemData['description'] ?? '',
-          price: (itemData['price'] as num?)?.toDouble() ?? 0.0,
-          img: itemData['img'] ?? '',
-          category: itemData['category'] ?? '',
-        );
-      }).toList();
+        List<Item> items = itemsSnapshot.docs.map((itemDoc) {
+          final itemData = itemDoc.data();
+          return Item(
+            id: itemDoc.id,
+            name: itemData['name'] ?? '',
+            description: itemData['description'] ?? '',
+            price: (itemData['price'] as num?)?.toDouble() ?? 0.0,
+            img: itemData['img'] ?? '',
+            category: itemData['category'] ?? '',
+          );
+        }).toList();
 
-      // ✅ Read categories from the document data
-      List<String> firestoreCategories =
-          List<String>.from(data['categories'] ?? []);
+        // ✅ Read categories from the document data
+        List<String> firestoreCategories =
+            List<String>.from(data['categories'] ?? []);
 
-      // Read menu categories (for item filtering)
-      List<String> menuCategories =
-          List<String>.from(data['menuCategories'] ?? []);
+        // Read menu categories (for item filtering)
+        List<String> menuCategories =
+            List<String>.from(data['menuCategories'] ?? []);
 
-      // Get average rating from reviews
-      double averageRating = await getAverageRating(restaurantId);
+        // Get average rating from reviews
+        double averageRating = await getAverageRating(restaurantId);
 
-      // Add the restaurant with its items and correct categories
-      allRestuarants.add(Restuarants.fromJson({
-        ...data,
-        'items': items.map((item) => item.toJson()).toList(),
-        'id': restaurantId,
-        'categories': firestoreCategories,
-        'menuCategories': menuCategories,
-        'rating': averageRating, // Use the fetched average rating
-      }));
+        // Add the restaurant with its items and correct categories
+        allRestuarants.add(Restuarants.fromJson({
+          ...data,
+          'items': items.map((item) => item.toJson()).toList(),
+          'id': restaurantId,
+          'categories': firestoreCategories,
+          'menuCategories': menuCategories,
+          'rating': averageRating, // Use the fetched average rating
+        }));
+      }
 
-      // No longer adding categories globally - we'll get them per restaurant
+      // Copy to restaurants list for display
+      restaurants = List.from(allRestuarants);
+      emit(RestuarantsGetDataSuccessState());
+    } catch (e) {
+      print("Error loading restaurants: $e");
+      emit(RestuarantsErrorState(e.toString()));
     }
-
-    restaurants = List.from(allRestuarants);
-    emit(RestuarantsGetDataSuccessState());
   }
 
   // Function to calculate average rating from reviews

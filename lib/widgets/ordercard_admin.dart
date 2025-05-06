@@ -581,6 +581,7 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
                                       String itemName = "";
                                       double itemPrice = 0.0;
                                       int quantity = 1;
+                                      String? comment;
 
                                       if (item is Map) {
                                         itemName =
@@ -592,55 +593,83 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
                                           itemPrice = price;
                                         }
                                         quantity = item['quantity'] ?? 1;
+                                        comment = item['comment'];
                                       } else if (item.name != null) {
                                         itemName = item.name;
                                         itemPrice = item.price;
                                         quantity = item.quantity ?? 1;
+                                        comment = item.comment;
                                       }
 
-                                      return Container(
-                                        padding:
-                                            EdgeInsets.symmetric(vertical: 4.h),
-                                        decoration: BoxDecoration(
-                                          border: index < model.items.length - 1
-                                              ? Border(
-                                                  bottom: BorderSide(
-                                                    color: Colors.grey[300]!,
-                                                    width: 0.5,
-                                                  ),
-                                                )
-                                              : null,
-                                        ),
-                                        child: Row(
-                                          children: [
-                                            Expanded(
-                                              flex: 4,
-                                              child: Text(
-                                                itemName,
-                                                style: TextStyle(
-                                                  fontSize: smallScreen
-                                                      ? 11.sp
-                                                      : 12.sp,
-                                                  fontWeight: FontWeight.w500,
-                                                ),
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
+                                      return Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Container(
+                                            padding: EdgeInsets.symmetric(
+                                                vertical: 4.h),
+                                            decoration: BoxDecoration(
+                                              border: index <
+                                                      model.items.length - 1
+                                                  ? Border(
+                                                      bottom: BorderSide(
+                                                        color:
+                                                            Colors.grey[300]!,
+                                                        width: 0.5,
+                                                      ),
+                                                    )
+                                                  : null,
                                             ),
-                                            Expanded(
-                                              flex: 1,
-                                              child: Center(
-                                                child: Container(
-                                                  padding: EdgeInsets.symmetric(
-                                                      horizontal: 4.w,
-                                                      vertical: 1.h),
-                                                  decoration: BoxDecoration(
-                                                    color: Colors.grey[200],
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            3.r),
-                                                  ),
+                                            child: Row(
+                                              children: [
+                                                Expanded(
+                                                  flex: 4,
                                                   child: Text(
-                                                    "x$quantity",
+                                                    itemName,
+                                                    style: TextStyle(
+                                                      fontSize: smallScreen
+                                                          ? 11.sp
+                                                          : 12.sp,
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                    ),
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                  ),
+                                                ),
+                                                Expanded(
+                                                  flex: 1,
+                                                  child: Center(
+                                                    child: Container(
+                                                      padding:
+                                                          EdgeInsets.symmetric(
+                                                              horizontal: 4.w,
+                                                              vertical: 1.h),
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.grey[200],
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(3.r),
+                                                      ),
+                                                      child: Text(
+                                                        "x$quantity",
+                                                        style: TextStyle(
+                                                          fontSize: smallScreen
+                                                              ? 10.sp
+                                                              : 11.sp,
+                                                          fontWeight:
+                                                              FontWeight.w500,
+                                                        ),
+                                                        textAlign:
+                                                            TextAlign.center,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                                Expanded(
+                                                  flex: 2,
+                                                  child: Text(
+                                                    "${itemPrice.toStringAsFixed(2)} EGP",
                                                     style: TextStyle(
                                                       fontSize: smallScreen
                                                           ? 10.sp
@@ -648,26 +677,46 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
                                                       fontWeight:
                                                           FontWeight.w500,
                                                     ),
-                                                    textAlign: TextAlign.center,
+                                                    textAlign: TextAlign.end,
                                                   ),
                                                 ),
+                                              ],
+                                            ),
+                                          ),
+                                          // Display comment if available
+                                          if (comment != null &&
+                                              comment.isNotEmpty)
+                                            Padding(
+                                              padding: EdgeInsets.only(
+                                                  left: 8.w,
+                                                  right: 8.w,
+                                                  bottom: 6.h),
+                                              child: Row(
+                                                children: [
+                                                  Icon(Icons.comment,
+                                                      size: 12.sp,
+                                                      color: Colors.blue[700]),
+                                                  SizedBox(width: 4.w),
+                                                  Expanded(
+                                                    child: Text(
+                                                      comment,
+                                                      style: TextStyle(
+                                                        fontSize: smallScreen
+                                                            ? 9.sp
+                                                            : 10.sp,
+                                                        fontStyle:
+                                                            FontStyle.italic,
+                                                        color: Colors.grey[800],
+                                                      ),
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                      maxLines: 2,
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
                                             ),
-                                            Expanded(
-                                              flex: 2,
-                                              child: Text(
-                                                "${itemPrice.toStringAsFixed(2)} EGP",
-                                                style: TextStyle(
-                                                  fontSize: smallScreen
-                                                      ? 10.sp
-                                                      : 11.sp,
-                                                  fontWeight: FontWeight.w500,
-                                                ),
-                                                textAlign: TextAlign.end,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
+                                        ],
                                       );
                                     },
                                   ),
@@ -852,6 +901,8 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
   }
 
   Color _getStatusColor(String status) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     switch (status.toLowerCase()) {
       case 'delivered':
         return Colors.green;
@@ -862,7 +913,8 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
       case 'cancelled':
         return Colors.red;
       default:
-        return Colors.black;
+        // Use white for dark mode and black for light mode for other statuses
+        return isDarkMode ? Colors.white : Colors.black;
     }
   }
 

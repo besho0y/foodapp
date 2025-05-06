@@ -8,6 +8,9 @@ class LocalStorageService {
   static const String THEME_MODE_KEY = 'theme_mode';
   static const String SAVED_ADDRESSES_KEY = 'saved_addresses';
   static const String SAVED_PAYMENT_METHODS_KEY = 'saved_payment_methods';
+  static const String USER_LOGGED_IN_KEY = 'user_logged_in';
+  static const String USER_ID_KEY = 'user_id';
+  static const String USER_EMAIL_KEY = 'user_email';
 
   // Save cart items to local storage
   static Future<void> saveCartItems(List<CartItem> cartItems) async {
@@ -120,6 +123,51 @@ class LocalStorageService {
       print("Error getting payment methods: $e");
       // Return empty list on error
       return [];
+    }
+  }
+
+  // Save user login state
+  static Future<void> saveUserLogin(String userId, String email) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(USER_LOGGED_IN_KEY, true);
+      await prefs.setString(USER_ID_KEY, userId);
+      await prefs.setString(USER_EMAIL_KEY, email);
+    } catch (e) {
+      print("Error saving user login state: $e");
+    }
+  }
+
+  // Check if user is logged in
+  static Future<bool> isUserLoggedIn() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getBool(USER_LOGGED_IN_KEY) ?? false;
+    } catch (e) {
+      print("Error checking user login state: $e");
+      return false;
+    }
+  }
+
+  // Get user ID
+  static Future<String?> getUserId() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getString(USER_ID_KEY);
+    } catch (e) {
+      print("Error getting user ID: $e");
+      return null;
+    }
+  }
+
+  // Get user email
+  static Future<String?> getUserEmail() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getString(USER_EMAIL_KEY);
+    } catch (e) {
+      print("Error getting user email: $e");
+      return null;
     }
   }
 

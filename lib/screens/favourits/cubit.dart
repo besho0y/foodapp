@@ -153,29 +153,27 @@ class Favouritecubit extends Cubit<FavouriteState> {
 
       print("Total items loaded: ${allItems.length}");
 
-      // Now filter for favorites only
-      Set<String> addedNames = {};
+      // Use a Map to store favorites to prevent duplicates by ID
+      final Map<String, Item> favoriteItemsMap = {};
 
+      // Now filter for favorites only
       for (String id in favIds) {
         final item = allItems[id];
         if (item != null) {
-          // Check if an item with the same name is already in favorites
-          if (addedNames.contains(item.name.toLowerCase())) {
-            print("Skipping duplicate item: ${item.name} (ID: $id)");
-            continue;
-          }
-
-          // Mark as favorite and add to list
+          // Mark as favorite
           item.isfavourite = true;
-          favourites.add(item);
-          addedNames.add(item.name.toLowerCase());
+          // Use the ID as key in the map to ensure uniqueness
+          favoriteItemsMap[id] = item;
           print("Added to favorites: ${item.name} (ID: $id)");
         } else {
           print("Could not find item with ID: $id in any collection");
         }
       }
 
-      print("Successfully loaded ${favourites.length} unique favourite items");
+      // Convert map values to list
+      favourites = favoriteItemsMap.values.toList();
+
+      print("Successfully loaded ${favourites.length} favourite items");
       emit(FavouriteLoadedState());
     } catch (e) {
       print("Error loading favourites: $e");

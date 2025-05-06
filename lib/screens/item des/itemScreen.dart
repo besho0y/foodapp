@@ -12,6 +12,7 @@ class Itemscreen extends StatefulWidget {
     required this.price,
     required this.img,
     this.items = const [],
+    this.category = '',
   });
 
   final String name;
@@ -19,6 +20,7 @@ class Itemscreen extends StatefulWidget {
   final double price;
   final String img;
   final dynamic items;
+  final String category;
 
   @override
   State<Itemscreen> createState() => _ItemscreenState();
@@ -27,16 +29,63 @@ class Itemscreen extends StatefulWidget {
 class _ItemscreenState extends State<Itemscreen> {
   int quantity = 1;
   late dynamic displayedItems;
+  final TextEditingController _commentController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
+    _loadRelatedItems();
+  }
 
-    if (widget.items.length <= 3) {
-      displayedItems = widget.items;
+  @override
+  void dispose() {
+    _commentController.dispose();
+    super.dispose();
+  }
+
+  void _loadRelatedItems() {
+    // Get items of the same category if possible
+    if (widget.items.isNotEmpty && widget.category.isNotEmpty) {
+      final sameCategory = widget.items.where((item) {
+        // Skip the current item
+        if (item.name == widget.name) return false;
+
+        // Match by category
+        return item.category.toLowerCase() == widget.category.toLowerCase();
+      }).toList();
+
+      if (sameCategory.length >= 3) {
+        // If we have enough items in the same category
+        displayedItems = sameCategory.take(3).toList();
+      } else {
+        // If not enough in the same category, add other items to reach 3
+        var otherItems = widget.items
+            .where((item) =>
+                item.name != widget.name &&
+                item.category.toLowerCase() != widget.category.toLowerCase())
+            .toList();
+
+        // Combine same category with others
+        displayedItems = [...sameCategory];
+
+        // Add other items until we have 3 or run out of items
+        if (otherItems.isNotEmpty) {
+          otherItems.shuffle();
+          int itemsNeeded = (3 - displayedItems.length).toInt();
+          displayedItems.addAll(otherItems.take(itemsNeeded));
+        }
+      }
     } else {
-      widget.items.shuffle();
-      displayedItems = widget.items.take(3).toList();
+      // Fallback to random selection if no category matching is possible
+      var availableItems =
+          widget.items.where((item) => item.name != widget.name).toList();
+
+      if (availableItems.isNotEmpty) {
+        availableItems.shuffle();
+        displayedItems = availableItems.take(3).toList();
+      } else {
+        displayedItems = [];
+      }
     }
   }
 
@@ -55,13 +104,17 @@ class _ItemscreenState extends State<Itemscreen> {
   }
 
   void addToCart(Layoutcubit cubit) {
+    // Add item to cart with comment
     cubit.addToCart(
       name: widget.name,
       price: widget.price,
       quantity: quantity,
       img: widget.img,
+      comment: _commentController.text.trim(),
     );
+
     Navigator.pop(context);
+
     showToast(
       'Added ${quantity}x ${widget.name} to cart',
       context: context,
@@ -351,17 +404,21 @@ class _ItemscreenState extends State<Itemscreen> {
                                   ],
                                 ),
                                 SizedBox(height: 20.h),
-                                TextButton(
-                                  onPressed: () {},
-                                  child: Text(
-                                    "Special Request!",
-                                    style: TextStyle(
-                                      fontSize: 14.sp,
-                                      color: Colors.blueGrey,
-                                      decoration: TextDecoration.underline,
+
+                                // Comment TextField (replaces Special Request button)
+                                TextField(
+                                  controller: _commentController,
+                                  decoration: InputDecoration(
+                                    hintText: "Add special request or comment",
+                                    labelText: "Special Request",
+                                    prefixIcon: Icon(Icons.comment),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8.r),
                                     ),
                                   ),
+                                  maxLines: 2,
                                 ),
+
                                 if (displayedItems.isNotEmpty) ...[
                                   SizedBox(height: 20.h),
                                   Text(
@@ -466,6 +523,7 @@ class _ItemscreenState extends State<Itemscreen> {
             child: Container(
               padding: EdgeInsets.symmetric(horizontal: 15.w, vertical: 10.h),
               decoration: BoxDecoration(
+                color: Theme.of(context).cardColor,
                 boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10.r)],
               ),
               child: Row(

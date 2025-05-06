@@ -7,15 +7,17 @@ import 'package:foodapp/firebase_options.dart';
 import 'package:foodapp/layout/cubit.dart';
 import 'package:foodapp/layout/layout.dart';
 import 'package:foodapp/layout/states.dart';
-import 'package:foodapp/screens/admin%20panel/adminpanelscreen.dart';
 import 'package:foodapp/screens/admin%20panel/cubit.dart';
 import 'package:foodapp/screens/favourits/cubit.dart';
 import 'package:foodapp/screens/login/cubit.dart';
+import 'package:foodapp/screens/login/loginScreen.dart';
 import 'package:foodapp/screens/oredrs/cubit.dart';
 import 'package:foodapp/screens/profile/cubit.dart';
 import 'package:foodapp/screens/resturants/cubit.dart';
 import 'package:foodapp/screens/signup/cubit.dart';
+import 'package:foodapp/screens/signup/signupScreen.dart';
 import 'package:foodapp/shared/blocObserver.dart';
+import 'package:foodapp/shared/local_storage.dart';
 // Import the generated file
 
 void main() async {
@@ -68,7 +70,29 @@ class MyApp extends StatelessWidget {
                 theme: cubit.isdark,
                 navigatorKey:
                     navigatorKey, // Add navigator key for global access
-                home: Layout(),
+                home:
+                FutureBuilder<bool>(
+                  future: LocalStorageService.isUserLoggedIn(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Scaffold(
+                        body: Center(
+                          child: CircularProgressIndicator(),
+                        ),
+                      );
+                    }
+
+                    final isLoggedIn = snapshot.data ?? false;
+
+                    if (isLoggedIn) {
+                      // Load user data
+                      ProfileCubit.get(context).getuserdata();
+                      return Layout();
+                    } else {
+                      return Loginscreen();
+                    }
+                  },
+                ),
               );
             },
           );

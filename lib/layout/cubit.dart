@@ -81,6 +81,7 @@ class Layoutcubit extends Cubit<Layoutstates> {
     required double price,
     required int quantity,
     required String img,
+    String? comment,
   }) {
     // Validate and sanitize image URL to prevent invalid URIs
     String sanitizedImg = img;
@@ -97,6 +98,7 @@ class Layoutcubit extends Cubit<Layoutstates> {
       price: price,
       quantity: quantity,
       img: sanitizedImg,
+      comment: comment,
     );
 
     cartitems.add(newItem);

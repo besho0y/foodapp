@@ -110,18 +110,7 @@ class Settingsscreen extends StatelessWidget {
               ),
             ),
           ),
-          Card(
-            child: Padding(
-              padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 5.w),
-              child: Row(
-                children: [
-                  Icon(Icons.shopping_cart_outlined),
-                  SizedBox(width: 5.w),
-                  Text("Cart", style: Theme.of(context).textTheme.labelLarge),
-                ],
-              ),
-            ),
-          ),
+         
           GestureDetector(
             onTap: () => _openWhatsAppWithContext(context),
             child: Card(

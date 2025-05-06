@@ -188,6 +188,7 @@ class _OrderCardState extends State<OrderCard> {
                           String itemName = "";
                           double itemPrice = 0.0;
                           int quantity = 1;
+                          String? comment;
 
                           // If item is a Map (new format)
                           if (item is Map) {
@@ -202,56 +203,96 @@ class _OrderCardState extends State<OrderCard> {
                               itemPrice = 0.0;
                             }
                             quantity = item['quantity'] ?? 1;
+                            comment = item['comment'];
                           }
                           // If item is an older model object
                           else if (item.name != null) {
                             itemName = item.name;
                             itemPrice = item.price;
                             quantity = item.quantity ?? 1;
+                            comment = item.comment;
                           }
 
-                          return Padding(
-                            padding: EdgeInsets.symmetric(vertical: 4.h),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
-                                  flex: 2,
-                                  child: Text(
-                                    itemName,
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.bodyLarge!.copyWith(
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 16.sp,
-                                        ),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                Expanded(
-                                  flex: 1,
-                                  child: Text(
-                                    "x$quantity",
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.bodySmall!.copyWith(
-                                          color: Colors.grey[600],
-                                          fontSize: 14.sp,
-                                        ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
-                                Text(
-                                  "${itemPrice.toStringAsFixed(2)} EGP",
-                                  style: Theme.of(
-                                    context,
-                                  ).textTheme.bodySmall!.copyWith(
-                                        color: Colors.grey[600],
-                                        fontSize: 14.sp,
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Padding(
+                                padding: EdgeInsets.symmetric(vertical: 4.h),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Expanded(
+                                      flex: 2,
+                                      child: Text(
+                                        itemName,
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.bodyLarge!.copyWith(
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 16.sp,
+                                            ),
+                                        overflow: TextOverflow.ellipsis,
                                       ),
+                                    ),
+                                    Expanded(
+                                      flex: 1,
+                                      child: Text(
+                                        "x$quantity",
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.bodySmall!.copyWith(
+                                              color: Colors.grey[600],
+                                              fontSize: 14.sp,
+                                            ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ),
+                                    Text(
+                                      "${itemPrice.toStringAsFixed(2)} EGP",
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.bodySmall!.copyWith(
+                                            color: Colors.grey[600],
+                                            fontSize: 14.sp,
+                                          ),
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
+                              ),
+                              // Display comment if available
+                              if (comment != null && comment.isNotEmpty)
+                                Padding(
+                                  padding: EdgeInsets.only(
+                                      left: 8.w, right: 8.w, bottom: 8.h),
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.comment,
+                                          size: 14.sp,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .secondary),
+                                      SizedBox(width: 4.w),
+                                      Expanded(
+                                        child: Text(
+                                          "Note: $comment",
+                                          style: TextStyle(
+                                            fontSize: 12.sp,
+                                            fontStyle: FontStyle.italic,
+                                            color:
+                                                Theme.of(context).brightness ==
+                                                        Brightness.dark
+                                                    ? Colors.grey[300]
+                                                    : Colors.grey[700],
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                          maxLines: 2,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                            ],
                           );
                         },
                       ),
@@ -302,6 +343,8 @@ class _OrderCardState extends State<OrderCard> {
   }
 
   Color _getStatusColor(String status) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     switch (status.toLowerCase()) {
       case 'delivered':
         return Colors.green;
@@ -310,7 +353,8 @@ class _OrderCardState extends State<OrderCard> {
       case 'cancelled':
         return Colors.red;
       default:
-        return Colors.black;
+        // Use white for dark mode and black for light mode for other statuses
+        return isDarkMode ? Colors.white : Colors.black;
     }
   }
 

@@ -13,34 +13,44 @@ Widget defaultTextFormField({
   VoidCallback? suffixPressed,
   bool isPassword = false,
   bool readOnly = false,
+  String? hintText,
 }) {
+  final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
   return TextFormField(
-    style: const TextStyle(color: Colors.black),
+    style: TextStyle(
+      color: isDarkMode ? Colors.white : Colors.black,
+    ),
     cursorColor: AppColors.primaryLight,
     decoration: InputDecoration(
       labelText: label,
-
-      labelStyle: const TextStyle(color: AppColors.primaryLight),
-      prefixIcon: Icon(prefix, color: Colors.grey),
-      border: const OutlineInputBorder(),
+      hintText: hintText,
+      labelStyle: TextStyle(color: AppColors.primaryLight),
+      prefixIcon: Icon(prefix, color: AppColors.primaryLight),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.grey, width: 1.0),
+      ),
       enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(
           color: Colors.grey,
-          width: 1.0.w,
-        ), // Optional: default border
+          width: 1.0,
+        ),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
-        borderSide: BorderSide(color: AppColors.primaryLight, width: 1.0.w),
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: AppColors.primaryLight, width: 2.0),
       ),
-
-      suffixIcon:
-          suffix != null
-              ? IconButton(
-                onPressed: suffixPressed,
-                icon: Icon(suffix, color: Colors.grey),
-              )
-              : null,
+      filled: true,
+      fillColor: isDarkMode ? Colors.black : Colors.grey.shade50,
+      contentPadding: EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+      suffixIcon: suffix != null
+          ? IconButton(
+              onPressed: suffixPressed,
+              icon: Icon(suffix, color: AppColors.primaryLight),
+            )
+          : null,
     ),
     controller: controller,
     keyboardType: inputType,
@@ -52,7 +62,6 @@ Widget defaultTextFormField({
 
 Widget defaultbutton({
   double width = double.infinity,
-
   required String text,
   required VoidCallback function,
   required context,
@@ -94,12 +103,11 @@ Widget mycheckbox({
 }
 
 Widget mydivider(BuildContext context) => Padding(
-  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-  child: Container(
-    height: 1,
-    color:
-        Theme.of(context).brightness == Brightness.dark
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      child: Container(
+        height: 1,
+        color: Theme.of(context).brightness == Brightness.dark
             ? Colors.white
             : Colors.black,
-  ),
-);
+      ),
+    );

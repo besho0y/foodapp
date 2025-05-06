@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:foodapp/layout/cubit.dart';
@@ -6,7 +7,6 @@ import 'package:foodapp/models/user.dart';
 import 'package:foodapp/screens/oredrs/cubit.dart';
 import 'package:foodapp/screens/profile/cubit.dart';
 import 'package:foodapp/screens/profile/states.dart';
-import 'package:foodapp/shared/local_storage.dart';
 import 'package:uuid/uuid.dart';
 
 class CheckoutScreen extends StatefulWidget {
@@ -20,11 +20,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   int _currentStep = 0;
   Address? selectedAddress;
   String paymentMethod = 'cash'; // Default payment method
-  final cardNumberController = TextEditingController();
-  final cardHolderController = TextEditingController();
-  final expiryDateController = TextEditingController();
-  final cvvController = TextEditingController();
-  bool saveCardDetails = false;
+  final transferReferenceController = TextEditingController();
+  final instapayPhoneNumber = "01226680469"; // Store phone number for Instapay
+  bool paymentVerified = false;
 
   @override
   void initState() {
@@ -105,21 +103,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         _currentStep = 1;
                       });
                     } else if (_currentStep == 1) {
-                      if (paymentMethod == 'visa') {
-                        if (cardNumberController.text.isEmpty ||
-                            cardHolderController.text.isEmpty ||
-                            expiryDateController.text.isEmpty ||
-                            cvvController.text.isEmpty) {
+                      if (paymentMethod == 'instapay') {
+                        if (transferReferenceController.text.isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                                content: Text('Please fill all card details')),
+                                content: Text(
+                                    'Please enter the transfer reference number')),
                           );
                           return;
-                        }
-
-                        // Save card details if requested
-                        if (saveCardDetails) {
-                          _saveCardDetails();
                         }
                       }
 
@@ -362,80 +353,149 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         ),
         SizedBox(height: 10.h),
         _buildPaymentMethodTile(
-          title: 'Credit/Debit Card',
-          subtitle: 'Pay now with your card',
-          icon: Icons.credit_card,
-          value: 'visa',
+          title: 'Instapay',
+          subtitle: 'Pay instantly via Instapay',
+          icon: Icons.payment,
+          value: 'instapay',
         ),
         SizedBox(height: 16.h),
 
-        // Show card details form if card is selected
-        if (paymentMethod == 'visa') ...[
+        // Show Instapay payment UI if instapay is selected
+        if (paymentMethod == 'instapay') ...[
           Text(
-            'Card Details',
+            'Instapay Details',
             style: TextStyle(
               fontSize: 16.sp,
               fontWeight: FontWeight.bold,
             ),
           ),
           SizedBox(height: 12.h),
-          TextField(
-            controller: cardNumberController,
-            decoration: InputDecoration(
-              labelText: 'Card Number',
-              border: OutlineInputBorder(),
-              prefixIcon: Icon(Icons.credit_card),
+
+          // Instructions for payment
+          Container(
+            padding: EdgeInsets.all(12.w),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(8.r),
+              border: Border.all(color: Colors.grey.shade300),
             ),
-            keyboardType: TextInputType.number,
-          ),
-          SizedBox(height: 12.h),
-          TextField(
-            controller: cardHolderController,
-            decoration: InputDecoration(
-              labelText: 'Card Holder Name',
-              border: OutlineInputBorder(),
-              prefixIcon: Icon(Icons.person),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Payment Instructions:",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14.sp,
+                  ),
+                ),
+                SizedBox(height: 8.h),
+                RichText(
+                  text: TextSpan(
+                    style: TextStyle(
+                      color: Colors.black87,
+                      fontSize: 14.sp,
+                    ),
+                    children: [
+                      TextSpan(text: "1. Open your Instapay app\n"),
+                      TextSpan(text: "2. Send payment to: "),
+                      TextSpan(
+                        text: instapayPhoneNumber,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).primaryColor,
+                        ),
+                      ),
+                      TextSpan(text: "\n3. Enter the amount: EGP "),
+                      TextSpan(
+                        text:
+                            "${(Layoutcubit.get(context).calculateTotalPrice() + 30).toStringAsFixed(2)}",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).primaryColor,
+                        ),
+                      ),
+                      TextSpan(
+                          text:
+                              "\n4. Complete the transfer and enter the reference number below"),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
           SizedBox(height: 12.h),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: expiryDateController,
-                  decoration: InputDecoration(
-                    labelText: 'Expiry Date (MM/YY)',
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.datetime,
-                ),
-              ),
-              SizedBox(width: 12.w),
-              Expanded(
-                child: TextField(
-                  controller: cvvController,
-                  decoration: InputDecoration(
-                    labelText: 'CVV',
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.number,
-                  obscureText: true,
-                  maxLength: 3,
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 12.h),
-          CheckboxListTile(
-            title: Text('Save card for future payments'),
-            value: saveCardDetails,
-            onChanged: (value) {
-              setState(() {
-                saveCardDetails = value ?? false;
-              });
+
+          // Copy phone number button
+          OutlinedButton.icon(
+            onPressed: () {
+              // Copy the phone number to clipboard
+              Clipboard.setData(ClipboardData(text: instapayPhoneNumber));
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Phone number copied to clipboard')),
+              );
             },
-            contentPadding: EdgeInsets.zero,
+            icon: Icon(Icons.copy),
+            label: Text("Copy Phone Number"),
+            style: OutlinedButton.styleFrom(
+              side: BorderSide(color: Theme.of(context).primaryColor),
+            ),
           ),
+          SizedBox(height: 16.h),
+
+          // Reference number field
+          TextField(
+            controller: transferReferenceController,
+            decoration: InputDecoration(
+              labelText: 'Transfer Reference Number',
+              hintText:
+                  'Enter the reference number from your Instapay transfer',
+              border: OutlineInputBorder(),
+              prefixIcon: Icon(Icons.numbers),
+            ),
+            keyboardType: TextInputType.text,
+          ),
+          SizedBox(height: 16.h),
+
+          // Verify payment button
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                _verifyPayment(context);
+              },
+              icon: Icon(Icons.check_circle),
+              label: Text("Verify Payment"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).primaryColor,
+              ),
+            ),
+          ),
+
+          // Payment status indicator
+          if (paymentVerified) ...[
+            SizedBox(height: 16.h),
+            Container(
+              padding: EdgeInsets.all(12.w),
+              decoration: BoxDecoration(
+                color: Colors.green.shade100,
+                borderRadius: BorderRadius.circular(8.r),
+                border: Border.all(color: Colors.green),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.check_circle, color: Colors.green),
+                  SizedBox(width: 8.w),
+                  Expanded(
+                    child: Text(
+                      "Payment verified successfully! You can now place your order.",
+                      style: TextStyle(color: Colors.green.shade800),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
 
         SizedBox(height: 16.h),
@@ -604,16 +664,49 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-  void _saveCardDetails() {
-    // Save card details to local storage
-    final cardDetails = {
-      'cardNumber': cardNumberController.text,
-      'cardHolder': cardHolderController.text,
-      'expiryDate': expiryDateController.text,
-      // Don't save CVV for security reasons
-    };
+  // Method to verify payment (simulate verification for now)
+  void _verifyPayment(BuildContext context) {
+    if (transferReferenceController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please enter the transfer reference number')),
+      );
+      return;
+    }
 
-    LocalStorageService.savePaymentMethod(cardDetails);
+    // Show loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16.h),
+              Text("Verifying payment..."),
+            ],
+          ),
+        );
+      },
+    );
+
+    // Simulate payment verification with a delay
+    Future.delayed(Duration(seconds: 2), () {
+      Navigator.pop(context); // Close the loading dialog
+
+      // For demo purposes, consider all payments valid if reference number is provided
+      setState(() {
+        paymentVerified = true;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Payment verified successfully!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    });
   }
 
   void _processOrder(BuildContext context) async {
@@ -626,6 +719,28 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Your cart is empty!'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Check if the user's phone number is missing (Google sign-in users might not have it)
+    if (profileCubit.user.phone.isEmpty ||
+        profileCubit.user.phone == "0000000000") {
+      // Show dialog to collect phone number
+      final result = await _showAddPhoneNumberDialog(context);
+      if (!result) {
+        // User canceled, don't proceed with checkout
+        return;
+      }
+    }
+
+    // Verify Instapay payment if selected
+    if (paymentMethod == 'instapay' && !paymentVerified) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Please verify your Instapay payment first'),
           backgroundColor: Colors.red,
         ),
       );
@@ -648,6 +763,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       'total': totalPrice,
       'address': selectedAddress!.toJson(),
       'paymentMethod': paymentMethod,
+      'paymentReference':
+          paymentMethod == 'instapay' ? transferReferenceController.text : null,
       'status': 'Pending', // Ensure status is set to Pending
       'date': DateTime.now().toString(),
     };
@@ -675,6 +792,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       // Clear the cart
       layoutCubit.clearCart();
 
+      // Reset payment verification status
+      setState(() {
+        paymentVerified = false;
+        transferReferenceController.clear();
+      });
+
       // Close loading dialog
       Navigator.of(context).pop();
 
@@ -701,5 +824,110 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         ),
       );
     }
+  }
+
+  // Dialog to collect phone number from users who don't have one (typically Google sign-in users)
+  Future<bool> _showAddPhoneNumberDialog(BuildContext context) async {
+    final phoneController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
+    // Primary color for styling (matching login/signup screens)
+    const primaryColor = Color(0xFFFF5722);
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    return await showDialog<bool>(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            title: Text(
+              "Phone Number Required",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: primaryColor,
+              ),
+            ),
+            content: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    "Please add your phone number to continue with checkout.",
+                    style: TextStyle(fontSize: 14.sp),
+                  ),
+                  SizedBox(height: 16.h),
+                  TextFormField(
+                    controller: phoneController,
+                    style: TextStyle(
+                      color: isDarkMode ? Colors.white : Colors.black,
+                    ),
+                    decoration: InputDecoration(
+                      labelText: "Phone Number",
+                      hintText: "Enter your 11-digit phone number",
+                      labelStyle: TextStyle(color: primaryColor),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.r),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.r),
+                        borderSide: BorderSide(color: Colors.grey),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.r),
+                        borderSide: BorderSide(color: primaryColor, width: 2.0),
+                      ),
+                      filled: true,
+                      fillColor:
+                          isDarkMode ? Colors.black : Colors.grey.shade50,
+                      prefixIcon: Icon(Icons.phone, color: primaryColor),
+                    ),
+                    keyboardType: TextInputType.phone,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return "Phone number is required";
+                      }
+                      if (value.length != 11) {
+                        return "Please enter a valid 11-digit phone number";
+                      }
+                      return null;
+                    },
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: Text(
+                  "Cancel",
+                  style: TextStyle(color: Colors.grey),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  if (formKey.currentState!.validate()) {
+                    final profileCubit = ProfileCubit.get(context);
+
+                    // Update the phone number in the user model and Firestore
+                    await profileCubit.updateUserPhone(phoneController.text);
+
+                    Navigator.pop(context, true);
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primaryColor,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8.r),
+                  ),
+                ),
+                child: Text(
+                  "Save",
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+        ) ??
+        false;
   }
 }

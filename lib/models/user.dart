@@ -69,6 +69,16 @@ class Address {
         address: json['address'],
         isDefault: json['isDefault'],
       );
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is Address && other.title == title && other.address == address;
+  }
+
+  @override
+  int get hashCode => title.hashCode ^ address.hashCode;
 }
 
 class CartItem {
@@ -77,6 +87,7 @@ class CartItem {
   double price;
   int quantity;
   String img;
+  String? comment;
 
   CartItem({
     required this.id,
@@ -84,6 +95,7 @@ class CartItem {
     required this.price,
     required this.quantity,
     required this.img,
+    this.comment,
   });
 
   Map<String, dynamic> toJson() => {
@@ -92,6 +104,7 @@ class CartItem {
         'price': price,
         'quantity': quantity,
         'img': img,
+        'comment': comment,
       };
 
   factory CartItem.fromJson(Map<String, dynamic> json) => CartItem(
@@ -100,5 +113,6 @@ class CartItem {
         price: json['price'].toDouble(),
         quantity: json['quantity'],
         img: json['img'],
+        comment: json['comment'],
       );
 }
