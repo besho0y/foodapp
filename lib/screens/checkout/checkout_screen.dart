@@ -7,6 +7,7 @@ import 'package:foodapp/models/user.dart';
 import 'package:foodapp/screens/oredrs/cubit.dart';
 import 'package:foodapp/screens/profile/cubit.dart';
 import 'package:foodapp/screens/profile/states.dart';
+import 'package:foodapp/shared/paytabs_service.dart';
 import 'package:uuid/uuid.dart';
 
 class CheckoutScreen extends StatefulWidget {
@@ -357,6 +358,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           subtitle: 'Pay instantly via Instapay',
           icon: Icons.payment,
           value: 'instapay',
+        ),
+        SizedBox(height: 10.h),
+        _buildPaymentMethodTile(
+          title: 'Credit Card',
+          subtitle: 'Pay securely with your credit or debit card',
+          icon: Icons.credit_card,
+          value: 'card',
         ),
         SizedBox(height: 16.h),
 
@@ -745,6 +753,68 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         ),
       );
       return;
+    }
+
+    // If credit card payment is selected, process with PayTabs
+    if (paymentMethod == 'card') {
+      final totalPrice =
+          layoutCubit.calculateTotalPrice() + 30; // Including delivery fee
+
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return Center(
+            child: CircularProgressIndicator(),
+          );
+        },
+      );
+
+      try {
+        // Process payment with PayTabs
+        final paymentResult = await PayTabsService.processPayment(
+          context: context,
+          amount: totalPrice,
+          customerEmail: profileCubit.user.email,
+          customerName: profileCubit.user.name,
+          customerPhone: profileCubit.user.phone,
+          address: selectedAddress!.address,
+          city: selectedAddress!.address
+              .split(',')
+              .last
+              .trim(), // Extracting city from address
+          countryCode: "EG", // Default to Egypt, adjust as needed
+        );
+
+        // Close loading indicator
+        Navigator.of(context).pop();
+
+        if (!paymentResult) {
+          // Payment failed
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                  'Payment failed. Please try again or choose another payment method.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+          return;
+        }
+
+        // If we get here, payment was successful - continue with order processing
+      } catch (e) {
+        // Close loading indicator
+        Navigator.of(context).pop();
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Payment error: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
     }
 
     // Generate a unique order ID

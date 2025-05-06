@@ -55,6 +55,7 @@ dependencies:
   uuid: ^4.5.1
   shared_preferences: ^2.5.3
   google_sign_in: ^6.3.0
+  flutter_paytabs_bridge: ^2.7.0
 
 dev_dependencies:
   flutter_test:
