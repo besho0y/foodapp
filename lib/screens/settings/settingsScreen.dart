@@ -2,6 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_styled_toast/flutter_styled_toast.dart';
+import 'package:foodapp/layout/cubit.dart';
+import 'package:foodapp/layout/layout.dart';
 import 'package:foodapp/screens/admin%20panel/adminpanelscreen.dart';
 import 'package:foodapp/screens/login/loginScreen.dart';
 import 'package:foodapp/screens/profile/profileScreen.dart';
@@ -11,31 +13,72 @@ import 'package:url_launcher/url_launcher.dart';
 class Settingsscreen extends StatelessWidget {
   const Settingsscreen({super.key});
 
-  Future<void> _signOut(BuildContext context) async {
-    try {
-      final currentUser = FirebaseAuth.instance.currentUser;
-      print('Current user before sign out: ${currentUser?.email}');
-
-      await FirebaseAuth.instance.signOut();
-
-      final userAfterSignOut = FirebaseAuth.instance.currentUser;
-      print('User after sign out: $userAfterSignOut');
-
-      if (context.mounted) {
-        print('Navigating to login screen...');
-        navigateAndFinish(context, Loginscreen());
-      }
-    } catch (error) {
-      print('Sign out error: $error');
-      if (context.mounted) {
-        showToast(
-          "Failed to sign out: ${error.toString()}",
+  Future<void> _showLogoutConfirmation(BuildContext context) async {
+    // Show confirmation dialog
+    bool confirm = await showDialog(
           context: context,
-          duration: const Duration(seconds: 1),
-          backgroundColor: Colors.red,
-          textStyle: const TextStyle(color: Colors.white, fontSize: 16.0),
-          position: StyledToastPosition.bottom,
-        );
+          builder: (context) => AlertDialog(
+            title: Text('Logout'),
+            content: Text('Are you sure you want to logout?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: Text('Logout'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                ),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+
+    if (confirm && context.mounted) {
+      try {
+        final currentUser = FirebaseAuth.instance.currentUser;
+        print('Current user before sign out: ${currentUser?.email}');
+
+        await FirebaseAuth.instance.signOut();
+
+        final userAfterSignOut = FirebaseAuth.instance.currentUser;
+        print('User after sign out: $userAfterSignOut');
+
+        if (context.mounted) {
+          print('Navigating to home screen after logout');
+
+          // Get the Layout from the widget tree
+          final layoutWidget = Layout();
+
+          // Navigate to Layout with reset navigation
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => layoutWidget),
+            (route) => false,
+          );
+
+          // Access the Layoutcubit to ensure we're on the first tab (index 0)
+          if (context.mounted) {
+            Future.delayed(Duration(milliseconds: 100), () {
+              final layoutCubit = Layoutcubit.get(context);
+              layoutCubit.changenavbar(0); // Change to the first tab
+            });
+          }
+        }
+      } catch (error) {
+        print('Sign out error: $error');
+        if (context.mounted) {
+          showToast(
+            "Failed to sign out: ${error.toString()}",
+            context: context,
+            duration: const Duration(seconds: 1),
+            backgroundColor: Colors.red,
+            textStyle: const TextStyle(color: Colors.white, fontSize: 16.0),
+            position: StyledToastPosition.bottom,
+          );
+        }
       }
     }
   }
@@ -86,31 +129,39 @@ class Settingsscreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Check if user is logged in
+    final isLoggedIn = FirebaseAuth.instance.currentUser != null;
+
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 10.w),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(height: 10.h),
-          GestureDetector(
-            onTap: () => navigateTo(context, Profilescreen()),
-            child: Card(
-              child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 5.w),
-                child: Row(
-                  children: [
-                    Icon(Icons.person),
-                    SizedBox(width: 5.w),
-                    Text(
-                      "Profile",
-                      style: Theme.of(context).textTheme.labelLarge,
-                    ),
-                  ],
+
+          // Show Profile option only if logged in
+          if (isLoggedIn)
+            GestureDetector(
+              onTap: () => navigateTo(context, Profilescreen()),
+              child: Card(
+                child: Padding(
+                  padding:
+                      EdgeInsets.symmetric(vertical: 10.h, horizontal: 5.w),
+                  child: Row(
+                    children: [
+                      Icon(Icons.person),
+                      SizedBox(width: 5.w),
+                      Text(
+                        "Profile",
+                        style: Theme.of(context).textTheme.labelLarge,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-         
+
+          // Contact us is always shown
           GestureDetector(
             onTap: () => _openWhatsAppWithContext(context),
             child: Card(
@@ -129,44 +180,53 @@ class Settingsscreen extends StatelessWidget {
               ),
             ),
           ),
-          FutureBuilder<bool>(
-            future: _isUserAdmin(),
-            builder: (context, snapshot) {
-              if (snapshot.hasData && snapshot.data == true) {
-                return GestureDetector(
-                  onTap: () => navigateTo(context, AdminPanelScreen()),
-                  child: Card(
-                    child: Padding(
-                      padding:
-                          EdgeInsets.symmetric(vertical: 10.h, horizontal: 5.w),
-                      child: Row(
-                        children: [
-                          Icon(Icons.admin_panel_settings),
-                          SizedBox(width: 5.w),
-                          Text(
-                            "Admin Panel",
-                            style: Theme.of(context).textTheme.labelLarge,
-                          ),
-                        ],
+
+          // Admin panel option
+          if (isLoggedIn)
+            FutureBuilder<bool>(
+              future: _isUserAdmin(),
+              builder: (context, snapshot) {
+                if (snapshot.hasData && snapshot.data == true) {
+                  return GestureDetector(
+                    onTap: () => navigateTo(context, AdminPanelScreen()),
+                    child: Card(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                            vertical: 10.h, horizontal: 5.w),
+                        child: Row(
+                          children: [
+                            Icon(Icons.admin_panel_settings),
+                            SizedBox(width: 5.w),
+                            Text(
+                              "Admin Panel",
+                              style: Theme.of(context).textTheme.labelLarge,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                );
-              }
-              return SizedBox.shrink();
-            },
-          ),
+                  );
+                }
+                return SizedBox.shrink();
+              },
+            ),
+
+          // Show Login or Logout based on authentication state
           GestureDetector(
-            onTap: () => _signOut(context),
+            onTap: isLoggedIn
+                ? () => _showLogoutConfirmation(context)
+                : () => navigateTo(context, Loginscreen()),
             child: Card(
               child: Padding(
                 padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 5.w),
                 child: Row(
                   children: [
-                    Icon(Icons.logout),
+                    Icon(isLoggedIn ? Icons.logout : Icons.login),
                     SizedBox(width: 5.w),
-                    Text("Logout",
-                        style: Theme.of(context).textTheme.labelLarge),
+                    Text(
+                      isLoggedIn ? "Logout" : "Login",
+                      style: Theme.of(context).textTheme.labelLarge,
+                    ),
                   ],
                 ),
               ),

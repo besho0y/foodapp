@@ -15,18 +15,26 @@ import 'package:foodapp/screens/oredrs/cubit.dart';
 import 'package:foodapp/screens/profile/cubit.dart';
 import 'package:foodapp/screens/resturants/cubit.dart';
 import 'package:foodapp/screens/signup/cubit.dart';
-import 'package:foodapp/screens/signup/signupScreen.dart';
 import 'package:foodapp/shared/blocObserver.dart';
-import 'package:foodapp/shared/local_storage.dart';
+import 'package:foodapp/shared/paymob_service.dart';
 // Import the generated file
+
+// Global navigator key for access across the app
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   Bloc.observer = MyBlocObserver();
   WidgetsFlutterBinding
       .ensureInitialized(); // <--- Important for locking orientation
+
+  // Firebase initialization
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  // Initialize PayMob payment gateway with correct credentials
+  PayMobService.initialize();
+
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown, // Only portrait modes
@@ -44,7 +52,13 @@ class MyApp extends StatelessWidget {
       providers: [
         BlocProvider(create: (context) => Layoutcubit()),
         BlocProvider(
-          create: (context) => (Restuarantscubit()..getRestuarants()),
+          create: (context) {
+            final cubit = Restuarantscubit();
+            // Ensure restaurants exist and are loaded when the app starts
+            print("Initializing restaurant cubit and checking data...");
+            cubit.ensureRestaurantsExist();
+            return cubit;
+          },
         ),
         BlocProvider(create: (context) => (Favouritecubit())..loadFavourites()),
         BlocProvider(create: (context) => (OrderCubit())),
@@ -70,29 +84,10 @@ class MyApp extends StatelessWidget {
                 theme: cubit.isdark,
                 navigatorKey:
                     navigatorKey, // Add navigator key for global access
-                home:
-                FutureBuilder<bool>(
-                  future: LocalStorageService.isUserLoggedIn(),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Scaffold(
-                        body: Center(
-                          child: CircularProgressIndicator(),
-                        ),
-                      );
-                    }
-
-                    final isLoggedIn = snapshot.data ?? false;
-
-                    if (isLoggedIn) {
-                      // Load user data
-                      ProfileCubit.get(context).getuserdata();
-                      return Layout();
-                    } else {
-                      return Loginscreen();
-                    }
-                  },
-                ),
+                home: Layout(),
+                routes: {
+                  '/login': (context) => Loginscreen(),
+                },
               );
             },
           );

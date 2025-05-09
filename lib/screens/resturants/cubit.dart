@@ -100,6 +100,7 @@ class Restuarantscubit extends Cubit<ResturantsStates> {
   }
 
   void getRestuarants() async {
+    print("Starting to fetch restaurants...");
     // Clear all data before loading
     allRestuarants.clear();
     restaurants.clear();
@@ -107,57 +108,86 @@ class Restuarantscubit extends Cubit<ResturantsStates> {
     emit(RestuarantsLoadingState());
 
     try {
+      print("Fetching restaurants from Firestore...");
       final restaurantSnapshots =
           await FirebaseFirestore.instance.collection("restaurants").get();
+      print("Found ${restaurantSnapshots.docs.length} restaurants");
 
-      for (var doc in restaurantSnapshots.docs) {
-        String restaurantId = doc.id;
-        final data = doc.data();
-
-        // Get items subcollection
-        final itemsSnapshot = await FirebaseFirestore.instance
-            .collection("restaurants")
-            .doc(restaurantId)
-            .collection("items")
-            .get();
-
-        List<Item> items = itemsSnapshot.docs.map((itemDoc) {
-          final itemData = itemDoc.data();
-          return Item(
-            id: itemDoc.id,
-            name: itemData['name'] ?? '',
-            description: itemData['description'] ?? '',
-            price: (itemData['price'] as num?)?.toDouble() ?? 0.0,
-            img: itemData['img'] ?? '',
-            category: itemData['category'] ?? '',
-          );
-        }).toList();
-
-        // ✅ Read categories from the document data
-        List<String> firestoreCategories =
-            List<String>.from(data['categories'] ?? []);
-
-        // Read menu categories (for item filtering)
-        List<String> menuCategories =
-            List<String>.from(data['menuCategories'] ?? []);
-
-        // Get average rating from reviews
-        double averageRating = await getAverageRating(restaurantId);
-
-        // Add the restaurant with its items and correct categories
-        allRestuarants.add(Restuarants.fromJson({
-          ...data,
-          'items': items.map((item) => item.toJson()).toList(),
-          'id': restaurantId,
-          'categories': firestoreCategories,
-          'menuCategories': menuCategories,
-          'rating': averageRating, // Use the fetched average rating
-        }));
+      if (restaurantSnapshots.docs.isEmpty) {
+        print("No restaurants found in Firestore");
+        // Keep in loading state if no restaurants found
+        // This will show the loading indicator instead of "No restaurants found"
+        return;
       }
 
-      // Copy to restaurants list for display
-      restaurants = List.from(allRestuarants);
-      emit(RestuarantsGetDataSuccessState());
+      for (var doc in restaurantSnapshots.docs) {
+        try {
+          String restaurantId = doc.id;
+          final data = doc.data();
+          print(
+              "Processing restaurant: ${data['resname'] ?? 'Unnamed'} (ID: $restaurantId)");
+
+          // Get items subcollection
+          final itemsSnapshot = await FirebaseFirestore.instance
+              .collection("restaurants")
+              .doc(restaurantId)
+              .collection("items")
+              .get();
+
+          print(
+              "Found ${itemsSnapshot.docs.length} items for restaurant $restaurantId");
+
+          List<Item> items = itemsSnapshot.docs.map((itemDoc) {
+            final itemData = itemDoc.data();
+            return Item(
+              id: itemDoc.id,
+              name: itemData['name'] ?? '',
+              description: itemData['description'] ?? '',
+              price: (itemData['price'] as num?)?.toDouble() ?? 0.0,
+              img: itemData['img'] ?? '',
+              category: itemData['category'] ?? '',
+            );
+          }).toList();
+
+          // Create restaurant with complete data
+          Restuarants restaurant = Restuarants(
+            id: restaurantId,
+            name: data['resname'] ?? '',
+            menuItems: items,
+            img: data['img'] ?? 'assets/images/restuarants/store.jpg',
+            rating: (data['rating'] as num?)?.toDouble() ?? 0.0,
+            category: data['category']?.toString() ?? 'fast food',
+            deliveryFee: data['delivery fee']?.toString() ?? '50',
+            deliveryTime: data['delivery time']?.toString() ?? '30-45 min',
+            ordersnum: data['ordersnumber'] is num
+                ? (data['ordersnumber'] as num).toInt()
+                : 0,
+            categories: data['categories'] is List
+                ? List<String>.from(data['categories'])
+                : ['fast food'],
+            menuCategories: data['menuCategories'] is List
+                ? List<String>.from(data['menuCategories'])
+                : null,
+          );
+
+          print("Successfully created restaurant: ${restaurant.name}");
+          allRestuarants.add(restaurant);
+        } catch (e) {
+          print("Error processing restaurant ${doc.id}: $e");
+          // Continue with next restaurant
+        }
+      }
+
+      // Only emit success if we actually found restaurants
+      if (allRestuarants.isNotEmpty) {
+        // Copy to restaurants list for display
+        restaurants = List.from(allRestuarants);
+        print("Successfully loaded ${restaurants.length} restaurants");
+        emit(RestuarantsGetDataSuccessState());
+      } else {
+        // Keep in loading state if no valid restaurants were processed
+        print("No valid restaurants were processed");
+      }
     } catch (e) {
       print("Error loading restaurants: $e");
       emit(RestuarantsErrorState(e.toString()));
@@ -217,5 +247,90 @@ class Restuarantscubit extends Cubit<ResturantsStates> {
           .toList();
     }
     emit(RestuarantsGetDataSuccessState());
+  }
+
+  // Add a test restaurant to Firestore for testing
+  Future<void> addTestRestaurant() async {
+    print("Adding test restaurant to Firestore...");
+    emit(RestuarantsLoadingState());
+
+    try {
+      // Create restaurant document data
+      final restaurantData = {
+        'resname': 'Test Restaurant',
+        'category': 'fast food',
+        'delivery fee': '50',
+        'delivery time': '30-45 min',
+        'img': 'assets/images/restuarants/store.jpg',
+        'rating': 4.5,
+        'ordersnumber': 0,
+        'categories': ['fast food', 'burgers'],
+      };
+
+      // Add restaurant document to Firestore
+      DocumentReference restaurantRef = await FirebaseFirestore.instance
+          .collection('restaurants')
+          .add(restaurantData);
+
+      print("Created test restaurant with ID: ${restaurantRef.id}");
+
+      // Add menu items to the restaurant
+      await restaurantRef.collection('items').add({
+        'name': 'Burger',
+        'description': 'Delicious burger with cheese',
+        'price': 9.99,
+        'img': 'assets/images/items/burger.png',
+        'category': 'Burger',
+      });
+
+      await restaurantRef.collection('items').add({
+        'name': 'Pizza',
+        'description': 'Classic pepperoni pizza',
+        'price': 12.99,
+        'img': 'assets/images/items/pizza.png',
+        'category': 'Pizza',
+      });
+
+      print("Added menu items to test restaurant");
+
+      // Reload restaurants to include the new one
+      getRestuarants();
+    } catch (e) {
+      print("Error adding test restaurant: $e");
+      emit(RestuarantsErrorState(e.toString()));
+    }
+  }
+
+  // Check if any restaurants exist in Firestore, create a sample if none
+  Future<void> ensureRestaurantsExist() async {
+    print("Checking if any restaurants exist in Firestore...");
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('restaurants')
+          .limit(1)
+          .get();
+
+      if (snapshot.docs.isEmpty) {
+        print("No restaurants found in Firestore, creating a sample one...");
+        await addTestRestaurant();
+      } else {
+        print("Found existing restaurants in Firestore");
+        getRestuarants();
+      }
+    } catch (e) {
+      print("Error checking for restaurants: $e");
+      emit(RestuarantsErrorState(e.toString()));
+    }
+  }
+
+  // Reset restaurant data and state
+  void resetRestaurants() {
+    print("Resetting restaurant data and state...");
+    allRestuarants.clear();
+    restaurants.clear();
+    emit(ResturantsInitialState());
+
+    // Reload restaurants
+    getRestuarants();
   }
 }

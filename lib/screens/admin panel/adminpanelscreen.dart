@@ -1,9 +1,11 @@
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:foodapp/layout/cubit.dart';
 import 'package:foodapp/models/item.dart';
 import 'package:foodapp/models/order.dart' as app_models;
 import 'package:foodapp/models/resturant.dart';
@@ -83,6 +85,8 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
   }
 
   Future<void> _fetchAllOrders() async {
+    if (!mounted) return;
+
     setState(() {
       isLoadingOrders = true;
     });
@@ -93,6 +97,8 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
           .orderBy('date', descending: true)
           .get();
 
+      if (!mounted) return;
+
       setState(() {
         allOrders = snapshot.docs
             .map((doc) => app_models.Order.fromJson(doc.data()))
@@ -101,6 +107,8 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
       });
     } catch (e) {
       print('Error fetching all orders: $e');
+      if (!mounted) return;
+
       setState(() {
         isLoadingOrders = false;
       });
@@ -149,9 +157,71 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
 
         return Scaffold(
           appBar: AppBar(
-            title: const Text('Admin Panel'),
+            actions: [
+              IconButton(
+                onPressed: () async {
+                  // Show confirmation dialog
+                  bool confirm = await showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: Text('Logout'),
+                          content: Text('Are you sure you want to logout?'),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, false),
+                              child: Text('Cancel'),
+                            ),
+                            ElevatedButton(
+                              onPressed: () => Navigator.pop(context, true),
+                              child: Text('Logout'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.red,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ) ??
+                      false;
+
+                  if (confirm && mounted) {
+                    try {
+                      // First perform logout
+                      await FirebaseAuth.instance.signOut();
+
+                      // Then navigate only if still mounted
+                      if (mounted) {
+                        Navigator.of(context).pushNamedAndRemoveUntil(
+                            '/login', (route) => false);
+                      }
+                    } catch (e) {
+                      print("Error during logout: $e");
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Error during logout: $e')),
+                        );
+                      }
+                    }
+                  }
+                },
+                icon: Icon(Icons.logout),
+                tooltip: 'Logout',
+              ),
+              IconButton(
+                onPressed: () {
+                  Layoutcubit.get(context).toggletheme();
+                },
+                icon: Icon(
+                  Icons.brightness_6_outlined,
+                  size: 25.sp,
+                ),
+                tooltip: 'Toggle Theme',
+              ),
+            ],
             bottom: TabBar(
               controller: _tabController,
+              labelColor: Theme.of(context).primaryColor,
+              unselectedLabelColor: Colors.grey,
+              indicatorColor: Theme.of(context).primaryColor,
               tabs: const [
                 Tab(text: 'Restaurants'),
                 Tab(text: 'Items'),
@@ -325,11 +395,6 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
                       onPressed: () => _addTestRestaurant(cubit),
                       tooltip: 'Add test restaurant (Debug)',
                     ),
-                    IconButton(
-                      icon: Icon(Icons.bug_report, color: Colors.blue),
-                      onPressed: () => _debugRestaurants(cubit),
-                      tooltip: 'Debug restaurants',
-                    ),
                   ],
                 ),
               ],
@@ -423,19 +488,34 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
             ),
             SizedBox(height: 16.h),
             DropdownButtonFormField<String>(
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Select Restaurant',
                 border: OutlineInputBorder(),
+                labelStyle: TextStyle(color: Theme.of(context).primaryColor),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(
+                      color: Theme.of(context).primaryColor, width: 2),
+                ),
               ),
               value: selectedRestaurantId,
-              dropdownColor: Colors.white,
-              style: TextStyle(color: Colors.black, fontSize: 16.sp),
+              dropdownColor: Theme.of(context).cardColor,
+              style: TextStyle(
+                  color: Theme.of(context).textTheme.bodyLarge?.color ??
+                      Colors.white,
+                  fontSize: 16.sp),
+              icon: Icon(Icons.arrow_drop_down,
+                  color: Theme.of(context).primaryColor),
               items: cubit.restaurants.map((restaurant) {
                 return DropdownMenuItem<String>(
                   value: restaurant.id,
                   child: Text(
                     restaurant.name,
-                    style: TextStyle(color: Colors.black),
+                    style: TextStyle(
+                      // Use the appropriate text color based on theme
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white
+                          : Colors.black,
+                    ),
                   ),
                 );
               }).toList(),
@@ -643,19 +723,34 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
             ),
             SizedBox(height: 16.h),
             DropdownButtonFormField<String>(
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Select Restaurant',
                 border: OutlineInputBorder(),
+                labelStyle: TextStyle(color: Theme.of(context).primaryColor),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(
+                      color: Theme.of(context).primaryColor, width: 2),
+                ),
               ),
               value: selectedRestaurantId,
-              dropdownColor: Colors.white,
-              style: TextStyle(color: Colors.black, fontSize: 16.sp),
+              dropdownColor: Theme.of(context).cardColor,
+              style: TextStyle(
+                  color: Theme.of(context).textTheme.bodyLarge?.color ??
+                      Colors.white,
+                  fontSize: 16.sp),
+              icon: Icon(Icons.arrow_drop_down,
+                  color: Theme.of(context).primaryColor),
               items: cubit.restaurants.map((restaurant) {
                 return DropdownMenuItem<String>(
                   value: restaurant.id,
                   child: Text(
                     restaurant.name,
-                    style: TextStyle(color: Colors.black),
+                    style: TextStyle(
+                      // Use the appropriate text color based on theme
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white
+                          : Colors.black,
+                    ),
                   ),
                 );
               }).toList(),
@@ -1036,7 +1131,12 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
                     .map((category) {
                   final isSelected = selectedCategories.contains(category);
                   return FilterChip(
-                    label: Text(category),
+                    label: Text(
+                      category,
+                      style: TextStyle(
+                        color: Colors.black,
+                      ),
+                    ),
                     selected: isSelected,
                     onSelected: (selected) {
                       setState(() {
@@ -1138,34 +1238,45 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
                             await orderCubit.updateOrderStatus(
                                 orderId, newStatus);
 
+                            // Check if widget is still mounted before updating state
+                            if (!mounted) return;
+
                             // Update the order in the allOrders list
                             setState(() {
                               allOrders[index].status = newStatus;
                             });
 
-                            // Close loading dialog
-                            Navigator.of(context).pop();
+                            // Close loading dialog if context is still valid
+                            if (Navigator.of(context).canPop()) {
+                              Navigator.of(context).pop();
+                            }
 
-                            // Show success message
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content:
-                                    Text('Order status updated to: $newStatus'),
-                                backgroundColor: Colors.green,
-                              ),
-                            );
+                            // Show success message if context is still valid
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                      'Order status updated to: $newStatus'),
+                                  backgroundColor: Colors.green,
+                                ),
+                              );
+                            }
                           } catch (error) {
-                            // Close loading dialog
-                            Navigator.of(context).pop();
+                            // Close loading dialog if context is still valid
+                            if (Navigator.of(context).canPop()) {
+                              Navigator.of(context).pop();
+                            }
 
-                            // Show error message
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content:
-                                    Text('Error updating order status: $error'),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
+                            // Show error message if context is still valid
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                      'Error updating order status: $error'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
                           }
                         },
                       );

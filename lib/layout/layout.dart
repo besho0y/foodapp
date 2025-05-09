@@ -1,10 +1,12 @@
 import 'package:animated_bottom_navigation_bar/animated_bottom_navigation_bar.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:foodapp/layout/cubit.dart';
 import 'package:foodapp/layout/states.dart';
 import 'package:foodapp/screens/checkout/checkout_screen.dart';
+import 'package:foodapp/screens/login/loginScreen.dart';
 import 'package:foodapp/screens/profile/cubit.dart';
 import 'package:foodapp/screens/profile/states.dart';
 import 'package:foodapp/screens/resturants/cubit.dart';
@@ -19,12 +21,20 @@ class Layout extends StatefulWidget {
 
 class _LayoutState extends State<Layout> {
   var scaffoldKey = GlobalKey<ScaffoldState>();
+  bool _hasInitialized = false;
 
   @override
   void initState() {
     super.initState();
-    // Load user data when layout is initialized
-    ProfileCubit.get(context).getuserdata();
+    // Try to load user data if available, but don't require it
+    _initializeUserData();
+  }
+
+  // Separate method to initialize user data only once
+  void _initializeUserData() {
+    if (FirebaseAuth.instance.currentUser != null) {
+      ProfileCubit.get(context).getuserdata();
+    }
   }
 
   @override
@@ -35,9 +45,17 @@ class _LayoutState extends State<Layout> {
       listener: (context, state) {},
       builder: (context, state) {
         return BlocConsumer<ProfileCubit, ProfileState>(
-          listener: (context, profileState) {},
+          listener: (context, profileState) {
+            // Check if user data loaded successfully
+            if (profileState is ProfileLoaded && !_hasInitialized) {
+              // Only set admin status once to prevent refresh loop
+              cubit.checkAndSetAdminStatus(profileState.user.uid);
+              _hasInitialized = true;
+            }
+          },
           builder: (context, profileState) {
             var profileCubit = ProfileCubit.get(context);
+            bool isLoggedIn = FirebaseAuth.instance.currentUser != null;
 
             return GestureDetector(
               onTap: () {
@@ -63,7 +81,10 @@ class _LayoutState extends State<Layout> {
                                     children: [
                                       SizedBox(height: 10.h),
                                       Text(
-                                        "Hello, ${profileCubit.user.name}",
+                                        isLoggedIn &&
+                                                profileState is ProfileLoaded
+                                            ? "Hello, ${profileCubit.user.name}"
+                                            : "Hello, User",
                                         style: TextStyle(fontSize: 22.sp),
                                       ),
                                       Text(
@@ -129,303 +150,346 @@ class _LayoutState extends State<Layout> {
                               ]
                             : [],
                       ),
-                floatingActionButton: MediaQuery.of(context)
-                            .viewInsets
-                            .bottom ==
-                        0
-                    ? FloatingActionButton(
-                        heroTag:
-                            "cart_button_${DateTime.now().millisecondsSinceEpoch}",
-                        onPressed: () async {
-                          FocusScope.of(context).unfocus();
-                          await showModalBottomSheet(
-                            context: context,
-                            isScrollControlled: true,
-                            backgroundColor: Theme.of(context).cardColor,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.vertical(
-                                top: Radius.circular(25.r),
-                              ),
-                            ),
-                            builder: (context) =>
-                                BlocBuilder<Layoutcubit, Layoutstates>(
-                              builder: (context, state) {
-                                var cubit = Layoutcubit.get(context);
-                                return Container(
-                                  padding: EdgeInsets.all(20.w),
-                                  height: 600.h,
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Text(
-                                            "Your Cart",
-                                            style: TextStyle(
-                                              fontSize: 20.sp,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                          IconButton(
-                                            onPressed: () =>
-                                                Navigator.of(context).pop(),
-                                            icon: Icon(Icons.close),
-                                          ),
-                                        ],
+                floatingActionButton:
+                    // Hide the cart button for admin user
+                    cubit.isAdminUser
+                        ? null
+                        : (MediaQuery.of(context).viewInsets.bottom == 0
+                            ? FloatingActionButton(
+                                heroTag:
+                                    "cart_button_${DateTime.now().millisecondsSinceEpoch}",
+                                onPressed: () async {
+                                  // Check if user is logged in before showing cart
+                                  if (!isLoggedIn) {
+                                    _showLoginRequiredDialog(
+                                        context, "access your cart");
+                                    return;
+                                  }
+
+                                  FocusScope.of(context).unfocus();
+                                  await showModalBottomSheet(
+                                    context: context,
+                                    isScrollControlled: true,
+                                    backgroundColor:
+                                        Theme.of(context).cardColor,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.vertical(
+                                        top: Radius.circular(25.r),
                                       ),
-                                      SizedBox(height: 20.h),
-                                      Expanded(
-                                        child: cubit.cartitems.isEmpty
-                                            ? Center(
-                                                child: Column(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment.center,
-                                                  children: [
-                                                    Icon(
-                                                      Icons
-                                                          .shopping_cart_outlined,
-                                                      size: 80.sp,
-                                                      color: Colors.grey,
-                                                    ),
-                                                    SizedBox(height: 16.h),
-                                                    Text(
-                                                      "Your cart is empty",
-                                                      style: TextStyle(
-                                                        fontSize: 18.sp,
-                                                        color: Colors.grey[600],
-                                                      ),
-                                                    ),
-                                                    SizedBox(height: 8.h),
-                                                    Text(
-                                                      "Add items to your cart to get started",
-                                                      style: TextStyle(
-                                                        fontSize: 14.sp,
-                                                        color: Colors.grey,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              )
-                                            : ListView.builder(
-                                                itemCount:
-                                                    cubit.cartitems.length,
-                                                itemBuilder: (context, index) {
-                                                  return Container(
-                                                    margin: EdgeInsets.only(
-                                                        bottom: 15.h),
-                                                    padding:
-                                                        EdgeInsets.all(10.w),
-                                                    decoration: BoxDecoration(
-                                                      color: Theme.of(context)
-                                                          .cardColor,
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              15.r),
-                                                      boxShadow: [
-                                                        BoxShadow(
-                                                          color: Colors.black
-                                                              .withOpacity(
-                                                                  0.05),
-                                                          spreadRadius: 1,
-                                                          blurRadius: 5,
-                                                          offset: const Offset(
-                                                              0, 3),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                    child: Row(
-                                                      children: [
-                                                        ClipRRect(
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(
-                                                                      10.r),
-                                                          child:
-                                                              _buildCartItemImage(
-                                                            cubit
-                                                                .cartitems[
-                                                                    index]
-                                                                .img,
-                                                          ),
-                                                        ),
-                                                        SizedBox(width: 10.w),
-                                                        Expanded(
-                                                          child: Column(
-                                                            crossAxisAlignment:
-                                                                CrossAxisAlignment
-                                                                    .start,
-                                                            children: [
-                                                              Text(
-                                                                cubit
-                                                                    .cartitems[
-                                                                        index]
-                                                                    .name,
-                                                                style:
-                                                                    TextStyle(
-                                                                  fontSize:
-                                                                      16.sp,
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .bold,
-                                                                ),
-                                                              ),
-                                                              SizedBox(
-                                                                  height: 5.h),
-                                                              Text(
-                                                                "${cubit.cartitems[index].price} EGP",
-                                                                style:
-                                                                    TextStyle(
-                                                                  fontSize:
-                                                                      14.sp,
-                                                                  color: Theme.of(
-                                                                          context)
-                                                                      .primaryColor,
-                                                                ),
-                                                              ),
-                                                            ],
-                                                          ),
-                                                        ),
-                                                        Row(
-                                                          children: [
-                                                            IconButton(
-                                                              onPressed: () {
-                                                                cubit
-                                                                    .decreaseQuantity(
-                                                                        index);
-                                                              },
-                                                              icon: Icon(
-                                                                Icons.remove,
-                                                                size: 24.sp,
-                                                              ),
-                                                            ),
-                                                            Text(
-                                                              "${cubit.cartitems[index].quantity}",
-                                                              style: TextStyle(
-                                                                fontSize: 16.sp,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold,
-                                                              ),
-                                                            ),
-                                                            IconButton(
-                                                              onPressed: () {
-                                                                cubit
-                                                                    .increaseQuantity(
-                                                                        index);
-                                                              },
-                                                              icon: Icon(
-                                                                Icons.add,
-                                                                size: 24.sp,
-                                                              ),
-                                                            ),
-                                                          ],
-                                                        ),
-                                                        IconButton(
-                                                          onPressed: () {
-                                                            cubit
-                                                                .removeItemFromCart(
-                                                                    index);
-                                                          },
-                                                          icon: Icon(
-                                                            Icons
-                                                                .delete_outline,
-                                                            color: Colors.red,
-                                                            size: 24.sp,
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  );
-                                                }),
-                                      ),
-                                      // Order summary with checkout button
-                                      if (cubit.cartitems.isNotEmpty)
-                                        Column(
-                                          children: [
-                                            Divider(),
-                                            Padding(
-                                              padding: EdgeInsets.symmetric(
-                                                  horizontal: 16.w,
-                                                  vertical: 10.h),
-                                              child: Row(
+                                    ),
+                                    builder: (context) =>
+                                        BlocBuilder<Layoutcubit, Layoutstates>(
+                                      builder: (context, state) {
+                                        var cubit = Layoutcubit.get(context);
+                                        return Container(
+                                          padding: EdgeInsets.all(20.w),
+                                          height: 600.h,
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Row(
                                                 mainAxisAlignment:
                                                     MainAxisAlignment
                                                         .spaceBetween,
                                                 children: [
                                                   Text(
-                                                    'Total:',
+                                                    "Your Cart",
                                                     style: TextStyle(
-                                                      fontSize: 18.sp,
+                                                      fontSize: 20.sp,
                                                       fontWeight:
                                                           FontWeight.bold,
                                                     ),
                                                   ),
-                                                  Text(
-                                                    '${cubit.calculateTotalPrice().toStringAsFixed(2)} EGP',
-                                                    style: TextStyle(
-                                                      fontSize: 18.sp,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      color: Theme.of(context)
-                                                          .primaryColor,
-                                                    ),
+                                                  IconButton(
+                                                    onPressed: () =>
+                                                        Navigator.of(context)
+                                                            .pop(),
+                                                    icon: Icon(Icons.close),
                                                   ),
                                                 ],
                                               ),
-                                            ),
-                                            SizedBox(height: 10.h),
-                                            Padding(
-                                              padding: EdgeInsets.symmetric(
-                                                  horizontal: 16.w),
-                                              child: SizedBox(
-                                                width: double.infinity,
-                                                child: ElevatedButton(
-                                                  onPressed: () {
-                                                    Navigator.pop(
-                                                        context); // Close the cart sheet
-                                                    Navigator.push(
-                                                      context,
-                                                      MaterialPageRoute(
-                                                        builder: (_) =>
-                                                            const CheckoutScreen(),
-                                                      ),
-                                                    );
-                                                  },
-                                                  style:
-                                                      ElevatedButton.styleFrom(
-                                                    padding:
-                                                        EdgeInsets.symmetric(
-                                                            vertical: 12.h),
-                                                  ),
-                                                  child: Text(
-                                                    'Proceed to Checkout',
-                                                    style: TextStyle(
-                                                      fontSize: 16.sp,
-                                                    ),
-                                                  ),
-                                                ),
+                                              SizedBox(height: 20.h),
+                                              Expanded(
+                                                child: cubit.cartitems.isEmpty
+                                                    ? Center(
+                                                        child: Column(
+                                                          mainAxisAlignment:
+                                                              MainAxisAlignment
+                                                                  .center,
+                                                          children: [
+                                                            Icon(
+                                                              Icons
+                                                                  .shopping_cart_outlined,
+                                                              size: 80.sp,
+                                                              color:
+                                                                  Colors.grey,
+                                                            ),
+                                                            SizedBox(
+                                                                height: 16.h),
+                                                            Text(
+                                                              "Your cart is empty",
+                                                              style: TextStyle(
+                                                                fontSize: 18.sp,
+                                                                color: Colors
+                                                                    .grey[600],
+                                                              ),
+                                                            ),
+                                                            SizedBox(
+                                                                height: 8.h),
+                                                            Text(
+                                                              "Add items to your cart to get started",
+                                                              style: TextStyle(
+                                                                fontSize: 14.sp,
+                                                                color:
+                                                                    Colors.grey,
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      )
+                                                    : ListView.builder(
+                                                        itemCount: cubit
+                                                            .cartitems.length,
+                                                        itemBuilder:
+                                                            (context, index) {
+                                                          return Container(
+                                                            margin:
+                                                                EdgeInsets.only(
+                                                                    bottom:
+                                                                        15.h),
+                                                            padding:
+                                                                EdgeInsets.all(
+                                                                    10.w),
+                                                            decoration:
+                                                                BoxDecoration(
+                                                              color: Theme.of(
+                                                                      context)
+                                                                  .cardColor,
+                                                              borderRadius:
+                                                                  BorderRadius
+                                                                      .circular(
+                                                                          15.r),
+                                                              boxShadow: [
+                                                                BoxShadow(
+                                                                  color: Colors
+                                                                      .black
+                                                                      .withOpacity(
+                                                                          0.05),
+                                                                  spreadRadius:
+                                                                      1,
+                                                                  blurRadius: 5,
+                                                                  offset:
+                                                                      const Offset(
+                                                                          0, 3),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                            child: Row(
+                                                              children: [
+                                                                ClipRRect(
+                                                                  borderRadius:
+                                                                      BorderRadius
+                                                                          .circular(
+                                                                              10.r),
+                                                                  child:
+                                                                      _buildCartItemImage(
+                                                                    cubit
+                                                                        .cartitems[
+                                                                            index]
+                                                                        .img,
+                                                                  ),
+                                                                ),
+                                                                SizedBox(
+                                                                    width:
+                                                                        10.w),
+                                                                Expanded(
+                                                                  child: Column(
+                                                                    crossAxisAlignment:
+                                                                        CrossAxisAlignment
+                                                                            .start,
+                                                                    children: [
+                                                                      Text(
+                                                                        cubit
+                                                                            .cartitems[index]
+                                                                            .name,
+                                                                        style:
+                                                                            TextStyle(
+                                                                          fontSize:
+                                                                              16.sp,
+                                                                          fontWeight:
+                                                                              FontWeight.bold,
+                                                                        ),
+                                                                      ),
+                                                                      SizedBox(
+                                                                          height:
+                                                                              5.h),
+                                                                      Text(
+                                                                        "${cubit.cartitems[index].price} EGP",
+                                                                        style:
+                                                                            TextStyle(
+                                                                          fontSize:
+                                                                              14.sp,
+                                                                          color:
+                                                                              Theme.of(context).primaryColor,
+                                                                        ),
+                                                                      ),
+                                                                    ],
+                                                                  ),
+                                                                ),
+                                                                Row(
+                                                                  children: [
+                                                                    IconButton(
+                                                                      onPressed:
+                                                                          () {
+                                                                        cubit.decreaseQuantity(
+                                                                            index);
+                                                                      },
+                                                                      icon:
+                                                                          Icon(
+                                                                        Icons
+                                                                            .remove,
+                                                                        size: 24
+                                                                            .sp,
+                                                                      ),
+                                                                    ),
+                                                                    Text(
+                                                                      "${cubit.cartitems[index].quantity}",
+                                                                      style:
+                                                                          TextStyle(
+                                                                        fontSize:
+                                                                            16.sp,
+                                                                        fontWeight:
+                                                                            FontWeight.bold,
+                                                                      ),
+                                                                    ),
+                                                                    IconButton(
+                                                                      onPressed:
+                                                                          () {
+                                                                        cubit.increaseQuantity(
+                                                                            index);
+                                                                      },
+                                                                      icon:
+                                                                          Icon(
+                                                                        Icons
+                                                                            .add,
+                                                                        size: 24
+                                                                            .sp,
+                                                                      ),
+                                                                    ),
+                                                                  ],
+                                                                ),
+                                                                IconButton(
+                                                                  onPressed:
+                                                                      () {
+                                                                    cubit.removeItemFromCart(
+                                                                        index);
+                                                                  },
+                                                                  icon: Icon(
+                                                                    Icons
+                                                                        .delete_outline,
+                                                                    color: Colors
+                                                                        .red,
+                                                                    size: 24.sp,
+                                                                  ),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                          );
+                                                        }),
                                               ),
-                                            ),
-                                            SizedBox(height: 20.h),
-                                          ],
-                                        ),
-                                    ],
-                                  ),
-                                );
-                              },
-                            ),
-                          );
-                        },
-                        child: Badge(
-                          label: Text('${cubit.cartitems.length}'),
-                          isLabelVisible: cubit.cartitems.isNotEmpty,
-                          child: const Icon(Icons.shopping_cart_outlined),
-                        ),
-                      )
-                    : null,
+                                              // Order summary with checkout button
+                                              if (cubit.cartitems.isNotEmpty)
+                                                Column(
+                                                  children: [
+                                                    Divider(),
+                                                    Padding(
+                                                      padding:
+                                                          EdgeInsets.symmetric(
+                                                              horizontal: 16.w,
+                                                              vertical: 10.h),
+                                                      child: Row(
+                                                        mainAxisAlignment:
+                                                            MainAxisAlignment
+                                                                .spaceBetween,
+                                                        children: [
+                                                          Text(
+                                                            'Total:',
+                                                            style: TextStyle(
+                                                              fontSize: 18.sp,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold,
+                                                            ),
+                                                          ),
+                                                          Text(
+                                                            '${cubit.calculateTotalPrice().toStringAsFixed(2)} EGP',
+                                                            style: TextStyle(
+                                                              fontSize: 18.sp,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold,
+                                                              color: Theme.of(
+                                                                      context)
+                                                                  .primaryColor,
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                    SizedBox(height: 10.h),
+                                                    Padding(
+                                                      padding:
+                                                          EdgeInsets.symmetric(
+                                                              horizontal: 16.w),
+                                                      child: SizedBox(
+                                                        width: double.infinity,
+                                                        child: ElevatedButton(
+                                                          onPressed: () {
+                                                            Navigator.pop(
+                                                                context); // Close the cart sheet
+                                                            Navigator.push(
+                                                              context,
+                                                              MaterialPageRoute(
+                                                                builder: (_) =>
+                                                                    const CheckoutScreen(),
+                                                              ),
+                                                            );
+                                                          },
+                                                          style: ElevatedButton
+                                                              .styleFrom(
+                                                            padding: EdgeInsets
+                                                                .symmetric(
+                                                                    vertical:
+                                                                        12.h),
+                                                          ),
+                                                          child: Text(
+                                                            'Proceed to Checkout',
+                                                            style: TextStyle(
+                                                              fontSize: 16.sp,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    SizedBox(height: 20.h),
+                                                  ],
+                                                ),
+                                            ],
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  );
+                                },
+                                child: Badge(
+                                  label: Text('${cubit.cartitems.length}'),
+                                  isLabelVisible: cubit.cartitems.isNotEmpty,
+                                  child:
+                                      const Icon(Icons.shopping_cart_outlined),
+                                ),
+                              )
+                            : null),
                 floatingActionButtonLocation:
                     FloatingActionButtonLocation.centerDocked,
                 body: cubit.screens[cubit.currentindex],
@@ -453,6 +517,33 @@ class _LayoutState extends State<Layout> {
           },
         );
       },
+    );
+  }
+
+  // Dialog to prompt login
+  void _showLoginRequiredDialog(BuildContext context, String feature) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Login Required"),
+        content: Text("You need to log in to $feature."),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("Cancel"),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => Loginscreen()),
+              );
+            },
+            child: Text("Login"),
+          ),
+        ],
+      ),
     );
   }
 

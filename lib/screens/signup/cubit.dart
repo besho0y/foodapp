@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_styled_toast/flutter_styled_toast.dart';
+import 'package:foodapp/layout/cubit.dart';
 import 'package:foodapp/layout/layout.dart';
 import 'package:foodapp/models/user.dart' as AppUser;
 import 'package:foodapp/screens/profile/cubit.dart';
@@ -85,6 +86,16 @@ class Signupcubit extends Cubit<SignupStates> {
       profileCubit.getuserdata();
 
       navigateAndFinish(context, Layout());
+
+      // After navigation, ensure we're on the first tab
+      Future.delayed(Duration(milliseconds: 100), () {
+        try {
+          final layoutCubit = Layoutcubit.get(context);
+          layoutCubit.changenavbar(0); // Change to the first tab
+        } catch (e) {
+          print("Error setting initial tab: $e");
+        }
+      });
     } catch (e) {
       print("Firestore Error: $e");
       emit(CreateUserErrorState());

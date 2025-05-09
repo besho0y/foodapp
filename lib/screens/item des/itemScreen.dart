@@ -106,6 +106,7 @@ class _ItemscreenState extends State<Itemscreen> {
   void addToCart(Layoutcubit cubit) {
     // Add item to cart with comment
     cubit.addToCart(
+      context: context,
       name: widget.name,
       price: widget.price,
       quantity: quantity,
@@ -469,6 +470,7 @@ class _ItemscreenState extends State<Itemscreen> {
                                                 child: IconButton(
                                                   onPressed: () {
                                                     cubit.addToCart(
+                                                      context: context,
                                                       name: item.name,
                                                       price: item.price,
                                                       quantity: 1,

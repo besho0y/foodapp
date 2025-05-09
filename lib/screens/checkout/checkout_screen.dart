@@ -7,7 +7,7 @@ import 'package:foodapp/models/user.dart';
 import 'package:foodapp/screens/oredrs/cubit.dart';
 import 'package:foodapp/screens/profile/cubit.dart';
 import 'package:foodapp/screens/profile/states.dart';
-import 'package:foodapp/shared/paytabs_service.dart';
+import 'package:foodapp/shared/paymob_service.dart';
 import 'package:uuid/uuid.dart';
 
 class CheckoutScreen extends StatefulWidget {
@@ -339,179 +339,45 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Payment Method',
+          'Select Payment Method',
           style: TextStyle(
             fontSize: 16.sp,
             fontWeight: FontWeight.bold,
           ),
         ),
         SizedBox(height: 16.h),
-        _buildPaymentMethodTile(
+
+        // Cash on delivery payment method
+        _buildPaymentMethodCard(
           title: 'Cash on Delivery',
-          subtitle: 'Pay when you receive your order',
-          icon: Icons.money,
+          subtitle: 'Pay when your order is delivered',
+          icon: Icons.payments_outlined,
           value: 'cash',
         ),
-        SizedBox(height: 10.h),
-        _buildPaymentMethodTile(
-          title: 'Instapay',
-          subtitle: 'Pay instantly via Instapay',
-          icon: Icons.payment,
-          value: 'instapay',
-        ),
-        SizedBox(height: 10.h),
-        _buildPaymentMethodTile(
-          title: 'Credit Card',
-          subtitle: 'Pay securely with your credit or debit card',
+
+        // Credit card payment method
+        _buildPaymentMethodCard(
+          title: 'Credit / Debit Card',
+          subtitle: 'Pay now with your card',
           icon: Icons.credit_card,
           value: 'card',
         ),
-        SizedBox(height: 16.h),
 
-        // Show Instapay payment UI if instapay is selected
-        if (paymentMethod == 'instapay') ...[
-          Text(
-            'Instapay Details',
-            style: TextStyle(
-              fontSize: 16.sp,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          SizedBox(height: 12.h),
+        // InstaPay payment method
+        _buildPaymentMethodCard(
+          title: 'InstaPay',
+          subtitle: 'Transfer to our InstaPay account',
+          icon: Icons.mobile_friendly,
+          value: 'instapay',
+        ),
 
-          // Instructions for payment
-          Container(
-            padding: EdgeInsets.all(12.w),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(8.r),
-              border: Border.all(color: Colors.grey.shade300),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Payment Instructions:",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14.sp,
-                  ),
-                ),
-                SizedBox(height: 8.h),
-                RichText(
-                  text: TextSpan(
-                    style: TextStyle(
-                      color: Colors.black87,
-                      fontSize: 14.sp,
-                    ),
-                    children: [
-                      TextSpan(text: "1. Open your Instapay app\n"),
-                      TextSpan(text: "2. Send payment to: "),
-                      TextSpan(
-                        text: instapayPhoneNumber,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).primaryColor,
-                        ),
-                      ),
-                      TextSpan(text: "\n3. Enter the amount: EGP "),
-                      TextSpan(
-                        text:
-                            "${(Layoutcubit.get(context).calculateTotalPrice() + 30).toStringAsFixed(2)}",
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).primaryColor,
-                        ),
-                      ),
-                      TextSpan(
-                          text:
-                              "\n4. Complete the transfer and enter the reference number below"),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(height: 12.h),
-
-          // Copy phone number button
-          OutlinedButton.icon(
-            onPressed: () {
-              // Copy the phone number to clipboard
-              Clipboard.setData(ClipboardData(text: instapayPhoneNumber));
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Phone number copied to clipboard')),
-              );
-            },
-            icon: Icon(Icons.copy),
-            label: Text("Copy Phone Number"),
-            style: OutlinedButton.styleFrom(
-              side: BorderSide(color: Theme.of(context).primaryColor),
-            ),
-          ),
-          SizedBox(height: 16.h),
-
-          // Reference number field
-          TextField(
-            controller: transferReferenceController,
-            decoration: InputDecoration(
-              labelText: 'Transfer Reference Number',
-              hintText:
-                  'Enter the reference number from your Instapay transfer',
-              border: OutlineInputBorder(),
-              prefixIcon: Icon(Icons.numbers),
-            ),
-            keyboardType: TextInputType.text,
-          ),
-          SizedBox(height: 16.h),
-
-          // Verify payment button
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: () {
-                _verifyPayment(context);
-              },
-              icon: Icon(Icons.check_circle),
-              label: Text("Verify Payment"),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).primaryColor,
-              ),
-            ),
-          ),
-
-          // Payment status indicator
-          if (paymentVerified) ...[
-            SizedBox(height: 16.h),
-            Container(
-              padding: EdgeInsets.all(12.w),
-              decoration: BoxDecoration(
-                color: Colors.green.shade100,
-                borderRadius: BorderRadius.circular(8.r),
-                border: Border.all(color: Colors.green),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.check_circle, color: Colors.green),
-                  SizedBox(width: 8.w),
-                  Expanded(
-                    child: Text(
-                      "Payment verified successfully! You can now place your order.",
-                      style: TextStyle(color: Colors.green.shade800),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ],
-
-        SizedBox(height: 16.h),
+        // Display transfer information if InstaPay is selected
+        if (paymentMethod == 'instapay') _buildInstapayInfo(),
       ],
     );
   }
 
-  Widget _buildPaymentMethodTile({
+  Widget _buildPaymentMethodCard({
     required String title,
     required String subtitle,
     required IconData icon,
@@ -571,6 +437,124 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildInstapayInfo() {
+    return Container(
+      margin: EdgeInsets.only(top: 16.h),
+      padding: EdgeInsets.all(16.w),
+      decoration: BoxDecoration(
+        color: Colors.grey.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8.r),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'InstaPay Details',
+            style: TextStyle(
+              fontSize: 16.sp,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          SizedBox(height: 16.h),
+          RichText(
+            text: TextSpan(
+              style: TextStyle(
+                color: Colors.black87,
+                fontSize: 14.sp,
+              ),
+              children: [
+                TextSpan(text: "1. Open your Instapay app\n"),
+                TextSpan(text: "2. Send payment to: "),
+                TextSpan(
+                  text: instapayPhoneNumber,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).primaryColor,
+                  ),
+                ),
+                TextSpan(text: "\n3. Enter the amount: EGP "),
+                TextSpan(
+                  text:
+                      "${(Layoutcubit.get(context).calculateTotalPrice() + 30).toStringAsFixed(2)}",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).primaryColor,
+                  ),
+                ),
+                TextSpan(
+                    text:
+                        "\n4. Complete the transfer and enter the reference number below"),
+              ],
+            ),
+          ),
+          SizedBox(height: 12.h),
+          OutlinedButton.icon(
+            onPressed: () {
+              Clipboard.setData(ClipboardData(text: instapayPhoneNumber));
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Phone number copied to clipboard')),
+              );
+            },
+            icon: Icon(Icons.copy),
+            label: Text("Copy Phone Number"),
+            style: OutlinedButton.styleFrom(
+              side: BorderSide(color: Theme.of(context).primaryColor),
+            ),
+          ),
+          SizedBox(height: 16.h),
+          TextField(
+            controller: transferReferenceController,
+            decoration: InputDecoration(
+              labelText: 'Transfer Reference Number',
+              hintText:
+                  'Enter the reference number from your Instapay transfer',
+              border: OutlineInputBorder(),
+              prefixIcon: Icon(Icons.numbers),
+            ),
+            keyboardType: TextInputType.text,
+          ),
+          SizedBox(height: 16.h),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                _verifyPayment(context);
+              },
+              icon: Icon(Icons.check_circle),
+              label: Text("Verify Payment"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).primaryColor,
+              ),
+            ),
+          ),
+          if (paymentVerified) ...[
+            SizedBox(height: 16.h),
+            Container(
+              padding: EdgeInsets.all(12.w),
+              decoration: BoxDecoration(
+                color: Colors.green.shade100,
+                borderRadius: BorderRadius.circular(8.r),
+                border: Border.all(color: Colors.green),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.check_circle, color: Colors.green),
+                  SizedBox(width: 8.w),
+                  Expanded(
+                    child: Text(
+                      "Payment verified successfully! You can now place your order.",
+                      style: TextStyle(color: Colors.green.shade800),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }
@@ -672,7 +656,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-  // Method to verify payment (simulate verification for now)
   void _verifyPayment(BuildContext context) {
     if (transferReferenceController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -722,40 +705,38 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     final orderCubit = OrderCubit.get(context);
     final profileCubit = ProfileCubit.get(context);
 
-    // First check if we have items in the cart
-    if (layoutCubit.cartitems.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Your cart is empty!'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    // Check if the user's phone number is missing (Google sign-in users might not have it)
-    if (profileCubit.user.phone.isEmpty ||
-        profileCubit.user.phone == "0000000000") {
-      // Show dialog to collect phone number
-      final result = await _showAddPhoneNumberDialog(context);
-      if (!result) {
-        // User canceled, don't proceed with checkout
-        return;
+    // Check if user has a phone number
+    if (profileCubit.user.phone.isEmpty) {
+      // Show phone number collection dialog
+      final phoneAdded = await _showAddPhoneNumberDialog(context);
+      if (!phoneAdded) {
+        return; // User cancelled adding phone number
       }
     }
 
-    // Verify Instapay payment if selected
-    if (paymentMethod == 'instapay' && !paymentVerified) {
+    // Verify that an address is selected
+    if (selectedAddress == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Please verify your Instapay payment first'),
+          content: Text('Please select a delivery address'),
           backgroundColor: Colors.red,
         ),
       );
       return;
     }
 
-    // If credit card payment is selected, process with PayTabs
+    // For InstaPay payment, verify that reference has been entered and verified
+    if (paymentMethod == 'instapay' && !paymentVerified) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Please verify your InstaPay payment first'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // If credit card payment is selected, process with PayMob
     if (paymentMethod == 'card') {
       final totalPrice =
           layoutCubit.calculateTotalPrice() + 30; // Including delivery fee
@@ -772,40 +753,38 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       );
 
       try {
-        // Process payment with PayTabs
-        final paymentResult = await PayTabsService.processPayment(
+        // Process payment with PayMob
+        final paymentResult = await PayMobService.processCardPayment(
           context: context,
           amount: totalPrice,
-          customerEmail: profileCubit.user.email,
-          customerName: profileCubit.user.name,
-          customerPhone: profileCubit.user.phone,
-          address: selectedAddress!.address,
-          city: selectedAddress!.address
-              .split(',')
-              .last
-              .trim(), // Extracting city from address
-          countryCode: "EG", // Default to Egypt, adjust as needed
+          currency: "EGP", // Default to Egyptian Pound
         );
 
         // Close loading indicator
-        Navigator.of(context).pop();
+        Navigator.of(context, rootNavigator: true).pop();
 
-        if (!paymentResult) {
+        if (paymentResult['success'] == true) {
+          // Payment succeeded
+          setState(() {
+            paymentVerified = true;
+          });
+
+          // Complete the order placement
+          await _completeOrderPlacement(context);
+        } else {
           // Payment failed
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(
-                  'Payment failed. Please try again or choose another payment method.'),
+              content: Text(paymentResult['message'] ??
+                  'Payment failed. Please try again.'),
               backgroundColor: Colors.red,
             ),
           );
           return;
         }
-
-        // If we get here, payment was successful - continue with order processing
       } catch (e) {
         // Close loading indicator
-        Navigator.of(context).pop();
+        Navigator.of(context, rootNavigator: true).pop();
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -815,85 +794,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         );
         return;
       }
+      return; // Return after handling card payment
     }
 
-    // Generate a unique order ID
-    final orderId = Uuid().v4();
-
-    // Calculate the total price (items + delivery fee)
-    final totalPrice =
-        layoutCubit.calculateTotalPrice() + 30; // Including delivery fee
-
-    // Create order data
-    final orderData = {
-      'id': orderId,
-      'userId': profileCubit.user.uid,
-      'userName': profileCubit.user.name, // Add the user's name
-      'items': layoutCubit.cartitems.map((item) => item.toJson()).toList(),
-      'total': totalPrice,
-      'address': selectedAddress!.toJson(),
-      'paymentMethod': paymentMethod,
-      'paymentReference':
-          paymentMethod == 'instapay' ? transferReferenceController.text : null,
-      'status': 'Pending', // Ensure status is set to Pending
-      'date': DateTime.now().toString(),
-    };
-
-    try {
-      // Show loading indicator
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (BuildContext context) {
-          return Center(
-            child: CircularProgressIndicator(),
-          );
-        },
-      );
-
-      // Add the order through the order cubit (which will handle adding to global orders collection)
-      await orderCubit.addOrder(orderData);
-
-      // Also update the user's orderIds list in memory
-      if (!profileCubit.user.orderIds.contains(orderId)) {
-        profileCubit.user.orderIds.add(orderId);
-      }
-
-      // Clear the cart
-      layoutCubit.clearCart();
-
-      // Reset payment verification status
-      setState(() {
-        paymentVerified = false;
-        transferReferenceController.clear();
-      });
-
-      // Close loading dialog
-      Navigator.of(context).pop();
-
-      // Show success message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Order placed successfully!'),
-          backgroundColor: Colors.green,
-        ),
-      );
-
-      // Navigate to the orders tab of the bottom navbar
-      layoutCubit.changenavbar(2); // Index 2 is the Orders tab
-      Navigator.pop(context);
-    } catch (error) {
-      // Close loading dialog
-      Navigator.of(context).pop();
-
-      // Show error message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error placing order: $error'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
+    // Only proceed with order placement for non-card payments
+    await _completeOrderPlacement(context);
   }
 
   // Dialog to collect phone number from users who don't have one (typically Google sign-in users)
@@ -999,5 +904,100 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           ),
         ) ??
         false;
+  }
+
+  Future<void> _completeOrderPlacement(BuildContext context) async {
+    final layoutCubit = Layoutcubit.get(context);
+    final orderCubit = OrderCubit.get(context);
+    final profileCubit = ProfileCubit.get(context);
+
+    // Verify that an address is selected
+    if (selectedAddress == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Please select a delivery address'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Generate a unique order ID
+    final orderId = Uuid().v4();
+
+    // Calculate the total price (items + delivery fee)
+    final totalPrice =
+        layoutCubit.calculateTotalPrice() + 30; // Including delivery fee
+
+    // Create order data
+    final orderData = {
+      'id': orderId,
+      'userId': profileCubit.user.uid,
+      'userName': profileCubit.user.name, // Add the user's name
+      'items': layoutCubit.cartitems.map((item) => item.toJson()).toList(),
+      'total': totalPrice,
+      'address': selectedAddress!.toJson(),
+      'paymentMethod': paymentMethod,
+      'paymentReference':
+          paymentMethod == 'instapay' ? transferReferenceController.text : null,
+      'status': 'Pending', // Ensure status is set to Pending
+      'date': DateTime.now().toString(),
+    };
+
+    try {
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return Center(
+            child: CircularProgressIndicator(),
+          );
+        },
+      );
+
+      // Add the order through the order cubit (which will handle adding to global orders collection)
+      await orderCubit.addOrder(orderData);
+
+      // Also update the user's orderIds list in memory
+      if (!profileCubit.user.orderIds.contains(orderId)) {
+        profileCubit.user.orderIds.add(orderId);
+      }
+
+      // Clear the cart
+      layoutCubit.clearCart();
+
+      // Reset payment verification status
+      setState(() {
+        paymentVerified = false;
+        transferReferenceController.clear();
+      });
+
+      // Close loading dialog
+      Navigator.of(context).pop();
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Order placed successfully!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      // Navigate to the orders tab of the bottom navbar
+      layoutCubit.changenavbar(2); // Index 2 is the Orders tab
+      Navigator.pop(context);
+    } catch (error) {
+      // Close loading dialog
+      Navigator.of(context).pop();
+
+      // Show error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error placing order: $error'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 }

@@ -5,7 +5,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_styled_toast/flutter_styled_toast.dart';
+import 'package:foodapp/layout/cubit.dart' hide navigatorKey;
 import 'package:foodapp/layout/layout.dart';
+import 'package:foodapp/main.dart';
 import 'package:foodapp/screens/login/states.dart';
 import 'package:foodapp/screens/profile/cubit.dart';
 import 'package:foodapp/shared/constants.dart';
@@ -33,7 +35,16 @@ class Logincubit extends Cubit<LoginStates> {
       ProfileCubit profileCubit = ProfileCubit.get(context);
       profileCubit.getuserdata();
 
+      // Navigate to the Layout
       navigateAndFinish(context, Layout());
+
+      // After navigation, ensure we're on the first tab
+      Future.delayed(Duration(milliseconds: 100), () {
+        if (navigatorKey.currentContext != null) {
+          final layoutCubit = Layoutcubit.get(navigatorKey.currentContext!);
+          layoutCubit.changenavbar(0); // Change to the first tab
+        }
+      });
     }).catchError((error) {
       emit(LoginErrorlState());
       String errorMessage = "An error occurred";
@@ -184,7 +195,17 @@ class Logincubit extends Cubit<LoginStates> {
             ProfileCubit profileCubit = ProfileCubit.get(context);
             profileCubit.getuserdata();
 
+            // Navigate to the Layout
             navigateAndFinish(context, Layout());
+
+            // After navigation, ensure we're on the first tab
+            Future.delayed(Duration(milliseconds: 100), () {
+              if (navigatorKey.currentContext != null) {
+                final layoutCubit =
+                    Layoutcubit.get(navigatorKey.currentContext!);
+                layoutCubit.changenavbar(0); // Change to the first tab
+              }
+            });
           }
         } else {
           throw Exception("Firebase user is null after sign-in");
