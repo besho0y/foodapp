@@ -181,4 +181,9 @@ class LocalStorageService {
       // Silent fail - just log error
     }
   }
+
+  static Future<void> clearCartItems() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('cart_items');
+  }
 }

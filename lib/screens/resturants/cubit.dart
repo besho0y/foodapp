@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:foodapp/generated/l10n.dart';
 import 'package:foodapp/models/item.dart';
 import 'package:foodapp/models/resturant.dart';
 import 'package:foodapp/screens/resturants/states.dart';
@@ -14,63 +16,27 @@ class Restuarantscubit extends Cubit<ResturantsStates> {
     "assets/images/banners/banner2.png",
     "assets/images/banners/banner3.png",
   ];
-  List<Restuarants> allRestuarants = [
-    // Restuarants(
-    //   name: "mcdonald's",
-    //   img: "assets/images/restuarants/fastfood.jpg",
-    //   rating: 3.5,
-    //   category: "fast food",
-    //   menuItems: [
-    //     Item(
-    //       id: "1",
-    //       name: "burger",
-    //       description: "best burger",
-    //       price: 210,
-    //       img: "assets/images/items/burger.png",
-    //       category: "Burger"
-    //     ),
-    //     Item(
-    //       id: "2",
-    //       name: "pizza",
-    //       description: "best pizza",
-    //       price: 210,
-    //       img: "assets/images/items/pizza.png",
-    //       category: "Pizza"
-    //     ),
-    //     Item(
-    //       id: "3",
-    //       name: "sushi",
-    //       description: "best sushi",
-    //       price: 210,
-    //       img: "assets/images/items/sushi.png",
-    //       category: "Sushi"
-    //     ),
-    //     Item(
-    //       id: "4",
-    //       name: "pasta",
-    //       description: "best pasta",
-    //       price: 210,
-    //       img: "assets/images/items/pasta.png",
-    //       category: "Pizaa"
-    //     ),
-    //     Item(
-    //       id: "5",
-    //       name: "rice",
-    //       description: "best rice",
-    //       price: 210,
-    //       img: "assets/images/items/rice.png",
-    //       category: "For you"
-    //     ),
-    //   ],
-    // ),
-  ];
-  List<Map<String, dynamic>> categories = [
-    {"name": "All", "img": "assets/images/categories/all.png"},
-    {"name": "fast food", "img": "assets/images/categories/fastfood.png"},
-    {"name": "sea food", "img": "assets/images/categories/seafood.PNG"},
-    {"name": "sweets", "img": "assets/images/categories/sweets.png"},
-    {"name": "drinks", "img": "assets/images/categories/drinks.png"},
-  ];
+  List<Restuarants> allRestuarants = [];
+
+  List<Map<String, dynamic>> categories(BuildContext context) => [
+        {"name": S.of(context).all, "img": "assets/images/categories/all.png"},
+        {
+          "name": S.of(context).fastfood,
+          "img": "assets/images/categories/fastfood.png"
+        },
+        {
+          "name": S.of(context).seafood,
+          "img": "assets/images/categories/seafood.PNG"
+        },
+        {
+          "name": S.of(context).sweets,
+          "img": "assets/images/categories/sweets.png"
+        },
+        {
+          "name": S.of(context).drinks,
+          "img": "assets/images/categories/drinks.png"
+        },
+      ];
 
   List<String> itemcategories = ["All"]; // Default category
 
@@ -115,8 +81,7 @@ class Restuarantscubit extends Cubit<ResturantsStates> {
 
       if (restaurantSnapshots.docs.isEmpty) {
         print("No restaurants found in Firestore");
-        // Keep in loading state if no restaurants found
-        // This will show the loading indicator instead of "No restaurants found"
+        emit(RestuarantsGetDataSuccessState()); // Emit success even when empty
         return;
       }
 
@@ -170,7 +135,6 @@ class Restuarantscubit extends Cubit<ResturantsStates> {
                 : null,
           );
 
-          print("Successfully created restaurant: ${restaurant.name}");
           allRestuarants.add(restaurant);
         } catch (e) {
           print("Error processing restaurant ${doc.id}: $e");
@@ -178,16 +142,10 @@ class Restuarantscubit extends Cubit<ResturantsStates> {
         }
       }
 
-      // Only emit success if we actually found restaurants
-      if (allRestuarants.isNotEmpty) {
-        // Copy to restaurants list for display
-        restaurants = List.from(allRestuarants);
-        print("Successfully loaded ${restaurants.length} restaurants");
-        emit(RestuarantsGetDataSuccessState());
-      } else {
-        // Keep in loading state if no valid restaurants were processed
-        print("No valid restaurants were processed");
-      }
+      // Copy to restaurants list for display
+      restaurants = List.from(allRestuarants);
+      print("Successfully loaded ${restaurants.length} restaurants");
+      emit(RestuarantsGetDataSuccessState());
     } catch (e) {
       print("Error loading restaurants: $e");
       emit(RestuarantsErrorState(e.toString()));

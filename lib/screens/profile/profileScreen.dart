@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:foodapp/generated/l10n.dart';
 import 'package:foodapp/models/user.dart';
 import 'package:foodapp/screens/profile/cubit.dart';
 import 'package:foodapp/screens/profile/states.dart';
@@ -37,7 +38,7 @@ class _ProfilescreenState extends State<Profilescreen> {
                 icon: const Icon(Icons.arrow_back_ios_new),
                 onPressed: () => Navigator.pop(context),
               ),
-              title: Text("Profile"),
+              title: Text(S.of(context).profile),
             ),
             body: const Center(child: CircularProgressIndicator()),
           );
@@ -50,7 +51,7 @@ class _ProfilescreenState extends State<Profilescreen> {
                 icon: const Icon(Icons.arrow_back_ios_new),
                 onPressed: () => Navigator.pop(context),
               ),
-              title: Text("Profile"),
+              title: Text(S.of(context).profile),
             ),
             body: Center(
               child: Column(
@@ -149,7 +150,7 @@ class _ProfilescreenState extends State<Profilescreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "Personal Information",
+                          S.of(context).PersonalInformation,
                           style: TextStyle(
                             fontSize: 18.sp,
                             fontWeight: FontWeight.bold,
@@ -159,19 +160,19 @@ class _ProfilescreenState extends State<Profilescreen> {
                         _buildInfoField(
                           context,
                           icon: Icons.person_outline,
-                          label: "Name",
+                          label: S.of(context).Name,
                           value: cubit.user.name,
                         ),
                         _buildInfoField(
                           context,
                           icon: Icons.phone_outlined,
-                          label: "Phone",
+                          label: S.of(context).Phone,
                           value: cubit.user.phone,
                         ),
                         _buildInfoField(
                           context,
                           icon: Icons.email_outlined,
-                          label: "Email",
+                          label: S.of(context).Email,
                           value: cubit.user.email,
                         ),
 
@@ -181,7 +182,7 @@ class _ProfilescreenState extends State<Profilescreen> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              "Saved Addresses",
+                              S.of(context).Address,
                               style: TextStyle(
                                 fontSize: 18.sp,
                                 fontWeight: FontWeight.bold,
@@ -204,12 +205,12 @@ class _ProfilescreenState extends State<Profilescreen> {
                                     Icon(Icons.location_off,
                                         size: 40, color: Colors.grey),
                                     SizedBox(height: 10.h),
-                                    Text("No addresses saved yet"),
+                                    Text(S.of(context).Naddresses),
                                     SizedBox(height: 10.h),
                                     ElevatedButton(
                                       onPressed: () =>
                                           _showAddAddressBottomSheet(context),
-                                      child: Text("Add Address"),
+                                      child: Text(S.of(context).AddAddress),
                                     ),
                                   ],
                                 ),
@@ -241,7 +242,7 @@ class _ProfilescreenState extends State<Profilescreen> {
                               padding: EdgeInsets.symmetric(vertical: 12.h),
                             ),
                             child: Text(
-                              "Delete Account",
+                              S.of(context).delete_account,
                               style: TextStyle(
                                 fontSize: 16.sp,
                                 color: Colors.white,
@@ -333,7 +334,7 @@ class _ProfilescreenState extends State<Profilescreen> {
                       borderRadius: BorderRadius.circular(12.r),
                     ),
                     child: Text(
-                      "Default",
+                      S.of(context).default1,
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 10.sp,
@@ -345,9 +346,9 @@ class _ProfilescreenState extends State<Profilescreen> {
                   onSelected: (value) {
                     if (value == 'edit') {
                       _showEditAddressBottomSheet(context, index, address);
-                    } else if (value == 'delete') {
+                    } else if (value == S.of(context).delete) {
                       _showDeleteAddressConfirmation(context, index);
-                    } else if (value == 'default') {
+                    } else if (value == S.of(context).default1) {
                       ProfileCubit.get(context).setDefaultAddress(index);
                     }
                   },
@@ -358,28 +359,29 @@ class _ProfilescreenState extends State<Profilescreen> {
                         children: [
                           Icon(Icons.edit),
                           SizedBox(width: 8.w),
-                          Text('Edit'),
+                          Text(S.of(context).Edit),
                         ],
                       ),
                     ),
                     if (!isDefault)
                       PopupMenuItem(
-                        value: 'default',
+                        value: S.of(context).default1,
                         child: Row(
                           children: [
                             Icon(Icons.check_circle),
                             SizedBox(width: 8.w),
-                            Text('Set as Default'),
+                            Text(S.of(context).Setdefaultaddress),
                           ],
                         ),
                       ),
                     PopupMenuItem(
-                      value: 'delete',
+                      value: S.of(context).delete,
                       child: Row(
                         children: [
                           Icon(Icons.delete, color: Colors.red),
                           SizedBox(width: 8.w),
-                          Text('Delete', style: TextStyle(color: Colors.red)),
+                          Text(S.of(context).delete,
+                              style: TextStyle(color: Colors.red)),
                         ],
                       ),
                     ),
@@ -428,7 +430,7 @@ class _ProfilescreenState extends State<Profilescreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "Add New Address",
+              S.of(context).add_address,
               style: TextStyle(
                 fontSize: 18.sp,
                 fontWeight: FontWeight.bold,
@@ -441,7 +443,7 @@ class _ProfilescreenState extends State<Profilescreen> {
                 color: isDarkMode ? Colors.white : Colors.black,
               ),
               decoration: InputDecoration(
-                labelText: "Address Title (e.g. Home, Work)",
+                labelText: S.of(context).AddressTitle,
                 labelStyle: TextStyle(color: Theme.of(context).primaryColor),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.r),
@@ -468,7 +470,7 @@ class _ProfilescreenState extends State<Profilescreen> {
                 color: isDarkMode ? Colors.white : Colors.black,
               ),
               decoration: InputDecoration(
-                labelText: "Full Address",
+                labelText: S.of(context).FullAddress,
                 labelStyle: TextStyle(color: Theme.of(context).primaryColor),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.r),
@@ -492,7 +494,7 @@ class _ProfilescreenState extends State<Profilescreen> {
             SizedBox(height: 12.h),
             StatefulBuilder(
               builder: (context, setState) => CheckboxListTile(
-                title: Text("Set as default address"),
+                title: Text(S.of(context).Setdefaultaddress),
                 value: isDefault,
                 onChanged: (value) {
                   setState(() {
@@ -510,7 +512,7 @@ class _ProfilescreenState extends State<Profilescreen> {
                   if (titleController.text.trim().isEmpty ||
                       addressController.text.trim().isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text("Please fill all fields")),
+                      SnackBar(content: Text(S.of(context).Pleasefill)),
                     );
                     return;
                   }
@@ -524,7 +526,7 @@ class _ProfilescreenState extends State<Profilescreen> {
                   ProfileCubit.get(context).addAddress(address);
                   Navigator.pop(context);
                 },
-                child: Text("Save Address"),
+                child: Text(S.of(context).SaveAddress),
               ),
             ),
             SizedBox(height: 20.h),
@@ -562,7 +564,7 @@ class _ProfilescreenState extends State<Profilescreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "Edit Address",
+              S.of(context).EditAddress,
               style: TextStyle(
                 fontSize: 18.sp,
                 fontWeight: FontWeight.bold,
@@ -575,7 +577,7 @@ class _ProfilescreenState extends State<Profilescreen> {
                 color: isDarkMode ? Colors.white : Colors.black,
               ),
               decoration: InputDecoration(
-                labelText: "Address Title (e.g. Home, Work)",
+                labelText: S.of(context).AddressTitle,
                 labelStyle: TextStyle(color: Theme.of(context).primaryColor),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.r),
@@ -602,7 +604,7 @@ class _ProfilescreenState extends State<Profilescreen> {
                 color: isDarkMode ? Colors.white : Colors.black,
               ),
               decoration: InputDecoration(
-                labelText: "Full Address",
+                labelText: S.of(context).FullAddress,
                 labelStyle: TextStyle(color: Theme.of(context).primaryColor),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.r),
@@ -626,7 +628,7 @@ class _ProfilescreenState extends State<Profilescreen> {
             SizedBox(height: 12.h),
             StatefulBuilder(
               builder: (context, setState) => CheckboxListTile(
-                title: Text("Set as default address"),
+                title: Text(S.of(context).Setdefaultaddress),
                 value: isDefault,
                 onChanged: (value) {
                   setState(() {
@@ -644,7 +646,7 @@ class _ProfilescreenState extends State<Profilescreen> {
                   if (titleController.text.trim().isEmpty ||
                       addressController.text.trim().isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text("Please fill all fields")),
+                      SnackBar(content: Text(S.of(context).Pleasefill)),
                     );
                     return;
                   }
@@ -659,7 +661,7 @@ class _ProfilescreenState extends State<Profilescreen> {
                       .updateAddress(index, updatedAddress);
                   Navigator.pop(context);
                 },
-                child: Text("Update Address"),
+                child: Text(S.of(context).UpdateAddress),
               ),
             ),
             SizedBox(height: 20.h),
@@ -673,12 +675,12 @@ class _ProfilescreenState extends State<Profilescreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text("Delete Address"),
-        content: Text("Are you sure you want to delete this address?"),
+        title: Text(S.of(context).DeleteAddress),
+        content: Text(S.of(context).suredeleteaddress),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text("Cancel"),
+            child: Text(S.of(context).Cancel),
           ),
           TextButton(
             onPressed: () {
@@ -686,7 +688,7 @@ class _ProfilescreenState extends State<Profilescreen> {
               ProfileCubit.get(context).deleteAddress(index);
             },
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: Text("Delete"),
+            child: Text(S.of(context).delete),
           ),
         ],
       ),
@@ -718,7 +720,7 @@ class _ProfilescreenState extends State<Profilescreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "Update Profile",
+              S.of(context).UpdateProfile,
               style: TextStyle(
                 fontSize: 18.sp,
                 fontWeight: FontWeight.bold,
@@ -731,7 +733,7 @@ class _ProfilescreenState extends State<Profilescreen> {
                 color: isDarkMode ? Colors.white : Colors.black,
               ),
               decoration: InputDecoration(
-                labelText: "Name",
+                labelText: S.of(context).Name,
                 labelStyle: TextStyle(color: Theme.of(context).primaryColor),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.r),
@@ -758,7 +760,7 @@ class _ProfilescreenState extends State<Profilescreen> {
                 color: isDarkMode ? Colors.white : Colors.black,
               ),
               decoration: InputDecoration(
-                labelText: "Email",
+                labelText: S.of(context).Email,
                 labelStyle: TextStyle(color: Theme.of(context).primaryColor),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.r),
@@ -786,7 +788,7 @@ class _ProfilescreenState extends State<Profilescreen> {
                 color: isDarkMode ? Colors.white : Colors.black,
               ),
               decoration: InputDecoration(
-                labelText: "Phone",
+                labelText: S.of(context).Phone,
                 labelStyle: TextStyle(color: Theme.of(context).primaryColor),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.r),
@@ -815,7 +817,7 @@ class _ProfilescreenState extends State<Profilescreen> {
                   if (nameController.text.trim().isEmpty ||
                       phoneController.text.trim().isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text("Please fill all fields")),
+                      SnackBar(content: Text(S.of(context).Pleasefill)),
                     );
                     return;
                   }
@@ -823,7 +825,7 @@ class _ProfilescreenState extends State<Profilescreen> {
                   // Validate phone number
                   if (phoneController.text.trim().length != 11) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text("Phone number must be 11 digits")),
+                      SnackBar(content: Text(S.of(context).phoneverfy)),
                     );
                     return;
                   }
@@ -852,12 +854,12 @@ class _ProfilescreenState extends State<Profilescreen> {
                   // Show success message
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text("Profile updated successfully"),
+                      content: Text(S.of(context).Profileupdatedsuccessfully),
                       backgroundColor: Colors.green,
                     ),
                   );
                 },
-                child: Text("Update Profile"),
+                child: Text(S.of(context).UpdateProfile),
               ),
             ),
             SizedBox(height: 20.h),
@@ -871,15 +873,15 @@ class _ProfilescreenState extends State<Profilescreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text("Delete Account"),
+        title: Text(S.of(context).delete_account),
         content: Text(
-          "Are you sure you want to delete your account? This action cannot be undone and all your data will be permanently deleted.",
+          S.of(context).Areyoudeleteaccount,
           style: TextStyle(fontSize: 14.sp),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text("Cancel"),
+            child: Text(S.of(context).Cancel),
           ),
           TextButton(
             onPressed: () {
@@ -888,7 +890,7 @@ class _ProfilescreenState extends State<Profilescreen> {
               _showFinalDeleteConfirmation(context);
             },
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: Text("Delete"),
+            child: Text(S.of(context).delete),
           ),
         ],
       ),
@@ -899,15 +901,15 @@ class _ProfilescreenState extends State<Profilescreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text("Final Confirmation"),
+        title: Text(S.of(context).FinalConfirmation),
         content: Text(
-          "This will permanently delete your account, including order history, saved addresses, and personal information. Are you absolutely sure?",
+          S.of(context).Thiswillpermanentlydeleteyouraccount,
           style: TextStyle(fontSize: 14.sp),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text("Cancel"),
+            child: Text(S.of(context).Cancel),
           ),
           TextButton(
             onPressed: () {
@@ -918,7 +920,7 @@ class _ProfilescreenState extends State<Profilescreen> {
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
             ),
-            child: Text("Yes, Delete My Account"),
+            child: Text(S.of(context).YesDeleteMyAccount),
           ),
         ],
       ),

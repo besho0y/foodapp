@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:foodapp/generated/l10n.dart';
 import 'package:foodapp/models/item.dart';
 import 'package:foodapp/screens/favourits/cubit.dart';
 import 'package:foodapp/screens/favourits/states.dart';
@@ -246,7 +247,7 @@ class _MenuscreenState extends State<Menuscreen> {
                           );
                         },
                         icon: Icon(Icons.star_rate, color: Colors.amber),
-                        label: Text("Reviews"),
+                        label: Text(S.of(context).reviews),
                         style: TextButton.styleFrom(
                           foregroundColor:
                               Theme.of(context).brightness == Brightness.dark

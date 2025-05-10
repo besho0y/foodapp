@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:foodapp/generated/l10n.dart';
 import 'package:foodapp/layout/cubit.dart';
 import 'package:foodapp/models/user.dart';
 import 'package:foodapp/screens/oredrs/cubit.dart';
@@ -815,7 +816,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           barrierDismissible: false,
           builder: (context) => AlertDialog(
             title: Text(
-              "Phone Number Required",
+              S.of(context).phone_required,
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 color: primaryColor,
@@ -823,82 +824,40 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             ),
             content: Form(
               key: formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    "Please add your phone number to continue with checkout.",
-                    style: TextStyle(fontSize: 14.sp),
-                  ),
-                  SizedBox(height: 16.h),
-                  TextFormField(
-                    controller: phoneController,
-                    style: TextStyle(
-                      color: isDarkMode ? Colors.white : Colors.black,
-                    ),
-                    decoration: InputDecoration(
-                      labelText: "Phone Number",
-                      hintText: "Enter your 11-digit phone number",
-                      labelStyle: TextStyle(color: primaryColor),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                        borderSide: BorderSide(color: Colors.grey),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                        borderSide: BorderSide(color: primaryColor, width: 2.0),
-                      ),
-                      filled: true,
-                      fillColor:
-                          isDarkMode ? Colors.black : Colors.grey.shade50,
-                      prefixIcon: Icon(Icons.phone, color: primaryColor),
-                    ),
-                    keyboardType: TextInputType.phone,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return "Phone number is required";
-                      }
-                      if (value.length != 11) {
-                        return "Please enter a valid 11-digit phone number";
-                      }
-                      return null;
-                    },
-                  ),
-                ],
+              child: TextFormField(
+                controller: phoneController,
+                keyboardType: TextInputType.phone,
+                decoration: InputDecoration(
+                  labelText: S.of(context).Phone,
+                  hintText: S.of(context).phone_hint,
+                  prefixIcon: Icon(Icons.phone),
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return S.of(context).phone_required;
+                  }
+                  if (value.length != 11) {
+                    return S.of(context).phone_length_error;
+                  }
+                  return null;
+                },
               ),
             ),
             actions: [
               TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: Text(
-                  "Cancel",
-                  style: TextStyle(color: Colors.grey),
-                ),
+                onPressed: () {
+                  Navigator.of(context).pop(false);
+                },
+                child: Text(S.of(context).cancel),
               ),
               ElevatedButton(
-                onPressed: () async {
+                onPressed: () {
                   if (formKey.currentState!.validate()) {
-                    final profileCubit = ProfileCubit.get(context);
-
-                    // Update the phone number in the user model and Firestore
-                    await profileCubit.updateUserPhone(phoneController.text);
-
-                    Navigator.pop(context, true);
+                    Navigator.of(context).pop(true);
                   }
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryColor,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8.r),
-                  ),
-                ),
-                child: Text(
-                  "Save",
-                  style: TextStyle(color: Colors.white),
-                ),
+                child: Text(S.of(context).save),
               ),
             ],
           ),

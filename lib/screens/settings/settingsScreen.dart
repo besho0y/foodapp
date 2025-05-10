@@ -2,12 +2,15 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_styled_toast/flutter_styled_toast.dart';
+import 'package:foodapp/generated/l10n.dart';
 import 'package:foodapp/layout/cubit.dart';
 import 'package:foodapp/layout/layout.dart';
 import 'package:foodapp/screens/admin%20panel/adminpanelscreen.dart';
 import 'package:foodapp/screens/login/loginScreen.dart';
 import 'package:foodapp/screens/profile/profileScreen.dart';
+import 'package:foodapp/screens/settingdetailsscreen/settingdetails.dart';
 import 'package:foodapp/shared/constants.dart';
+import 'package:foodapp/shared/local_storage.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class Settingsscreen extends StatelessWidget {
@@ -18,18 +21,25 @@ class Settingsscreen extends StatelessWidget {
     bool confirm = await showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            title: Text('Logout'),
-            content: Text('Are you sure you want to logout?'),
+            title: Text(S.of(context).logout_title),
+            content: Text(S.of(context).logout_confirm),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: Text('Cancel'),
+                child: Text(
+                  S.of(context).cancel,
+                  style: TextStyle(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white
+                          : Colors.black),
+                ),
               ),
               ElevatedButton(
                 onPressed: () => Navigator.pop(context, true),
-                child: Text('Logout'),
+                child: Text(S.of(context).logout),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
                 ),
               ),
             ],
@@ -127,6 +137,24 @@ class Settingsscreen extends StatelessWidget {
     return false;
   }
 
+  void _handleLogout(BuildContext context) async {
+    try {
+      await FirebaseAuth.instance.signOut();
+      // Clear cart items from local storage
+      await LocalStorageService.clearCartItems();
+      // Clear cart items from cubit
+      Layoutcubit.get(context).clearCart();
+
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => Loginscreen()),
+        (route) => false,
+      );
+    } catch (e) {
+      print("Error during logout: $e");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // Check if user is logged in
@@ -152,7 +180,7 @@ class Settingsscreen extends StatelessWidget {
                       Icon(Icons.person),
                       SizedBox(width: 5.w),
                       Text(
-                        "Profile",
+                        S.of(context).profile,
                         style: Theme.of(context).textTheme.labelLarge,
                       ),
                     ],
@@ -160,6 +188,24 @@ class Settingsscreen extends StatelessWidget {
                 ),
               ),
             ),
+          GestureDetector(
+            onTap: () => navigateTo(context, Settingdetails()),
+            child: Card(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 5.w),
+                child: Row(
+                  children: [
+                    Icon(Icons.settings),
+                    SizedBox(width: 5.w),
+                    Text(
+                      S.of(context).settings,
+                      style: Theme.of(context).textTheme.labelLarge,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
 
           // Contact us is always shown
           GestureDetector(
@@ -172,7 +218,7 @@ class Settingsscreen extends StatelessWidget {
                     Icon(Icons.call),
                     SizedBox(width: 5.w),
                     Text(
-                      "Contact Us",
+                      S.of(context).contact_us,
                       style: Theme.of(context).textTheme.labelLarge,
                     ),
                   ],
@@ -198,7 +244,7 @@ class Settingsscreen extends StatelessWidget {
                             Icon(Icons.admin_panel_settings),
                             SizedBox(width: 5.w),
                             Text(
-                              "Admin Panel",
+                              S.of(context).admin_panel,
                               style: Theme.of(context).textTheme.labelLarge,
                             ),
                           ],
@@ -224,7 +270,7 @@ class Settingsscreen extends StatelessWidget {
                     Icon(isLoggedIn ? Icons.logout : Icons.login),
                     SizedBox(width: 5.w),
                     Text(
-                      isLoggedIn ? "Logout" : "Login",
+                      isLoggedIn ? S.of(context).logout : S.of(context).login,
                       style: Theme.of(context).textTheme.labelLarge,
                     ),
                   ],

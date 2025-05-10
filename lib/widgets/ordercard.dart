@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:foodapp/generated/l10n.dart';
 
 class OrderCard extends StatefulWidget {
   final dynamic model; // Order model
@@ -95,7 +96,7 @@ class _OrderCardState extends State<OrderCard> {
                 child: Row(
                   children: [
                     Text(
-                      "Order:",
+                      "${S.of(context).order}:",
                       style: Theme.of(context).textTheme.headlineSmall,
                     ),
                     SizedBox(width: 5.w),
@@ -116,7 +117,7 @@ class _OrderCardState extends State<OrderCard> {
                   child: Row(
                     children: [
                       Text(
-                        "Customer:",
+                        "${S.of(context).customer}:",
                         style: Theme.of(context).textTheme.headlineSmall,
                       ),
                       SizedBox(width: 5.w),
@@ -137,12 +138,12 @@ class _OrderCardState extends State<OrderCard> {
                 child: Row(
                   children: [
                     Text(
-                      "Status:",
+                      "${S.of(context).status}:",
                       style: Theme.of(context).textTheme.headlineSmall,
                     ),
                     SizedBox(width: 5.w),
                     Text(
-                      "${model.status}",
+                      _getTranslatedStatus(context, model.status),
                       style: Theme.of(
                         context,
                       ).textTheme.bodyLarge!.copyWith(
@@ -170,7 +171,7 @@ class _OrderCardState extends State<OrderCard> {
                           ),
                           SizedBox(width: 5.w),
                           Text(
-                            "Order Details",
+                            S.of(context).orderdetails,
                             style: Theme.of(
                               context,
                             ).textTheme.titleMedium!.copyWith(
@@ -249,7 +250,7 @@ class _OrderCardState extends State<OrderCard> {
                                       ),
                                     ),
                                     Text(
-                                      "${itemPrice.toStringAsFixed(2)} EGP",
+                                      "${itemPrice.toStringAsFixed(2)} ${S.of(context).egp}",
                                       style: Theme.of(
                                         context,
                                       ).textTheme.bodySmall!.copyWith(
@@ -275,7 +276,7 @@ class _OrderCardState extends State<OrderCard> {
                                       SizedBox(width: 4.w),
                                       Expanded(
                                         child: Text(
-                                          "Note: $comment",
+                                          "${S.of(context).note}: $comment",
                                           style: TextStyle(
                                             fontSize: 12.sp,
                                             fontStyle: FontStyle.italic,
@@ -311,7 +312,7 @@ class _OrderCardState extends State<OrderCard> {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     Text(
-                      "Total: ${calculatedTotal.toStringAsFixed(2)} EGP",
+                      "${S.of(context).total}: ${calculatedTotal.toStringAsFixed(2)} ${S.of(context).egp}",
                       textAlign: TextAlign.end,
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
@@ -364,6 +365,21 @@ class _OrderCardState extends State<OrderCard> {
       return "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
     } catch (e) {
       return dateString;
+    }
+  }
+
+  String _getTranslatedStatus(BuildContext context, String status) {
+    switch (status.toLowerCase()) {
+      case 'delivered':
+        return S.of(context).delivered;
+      case 'pending':
+        return S.of(context).pending;
+      case 'cancelled':
+        return S.of(context).cancelled;
+      case 'processing':
+        return S.of(context).processing;
+      default:
+        return status;
     }
   }
 }

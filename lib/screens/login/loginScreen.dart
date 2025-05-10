@@ -2,16 +2,21 @@ import 'package:conditional_builder_null_safety/conditional_builder_null_safety.
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:foodapp/generated/l10n.dart';
 import 'package:foodapp/screens/login/cubit.dart';
 import 'package:foodapp/screens/login/states.dart';
 import 'package:foodapp/screens/signup/signupScreen.dart';
 import 'package:foodapp/shared/constants.dart';
 
-class Loginscreen extends StatelessWidget {
-  Loginscreen({super.key});
-  final emailcontroller = TextEditingController();
-  final passwordcontroller = TextEditingController();
-  final formKey = GlobalKey<FormState>();
+class Loginscreen extends StatefulWidget {
+  const Loginscreen({super.key});
+
+  @override
+  State<Loginscreen> createState() => _LoginscreenState();
+}
+
+class _LoginscreenState extends State<Loginscreen> {
+  bool _isPasswordVisible = false;
 
   @override
   Widget build(BuildContext context) {
@@ -56,7 +61,7 @@ class Loginscreen extends StatelessWidget {
                     ),
                     SizedBox(height: 30.h),
                     Text(
-                      "Welcome Back",
+                      S.of(context).welcome_back,
                       style: TextStyle(
                         fontSize: 28.sp,
                         fontWeight: FontWeight.bold,
@@ -65,7 +70,7 @@ class Loginscreen extends StatelessWidget {
                     ),
                     SizedBox(height: 10.h),
                     Text(
-                      "Sign in to continue",
+                      S.of(context).sign_in_to_continue,
                       style: TextStyle(
                         fontSize: 16.sp,
                         color: secondaryTextColor,
@@ -87,16 +92,16 @@ class Loginscreen extends StatelessWidget {
                       ),
                       padding: EdgeInsets.all(24.w),
                       child: Form(
-                        key: formKey,
+                        key: cubit.formkey,
                         child: Column(
                           children: [
                             // Email field
                             TextFormField(
-                              controller: emailcontroller,
+                              controller: cubit.emailcontroller,
                               style: TextStyle(color: textColor),
                               decoration: InputDecoration(
                                 labelText: "Email",
-                                hintText: "Enter your email",
+                                hintText: S.of(context).enter_email,
                                 labelStyle:
                                     TextStyle(color: secondaryTextColor),
                                 prefixIcon: Icon(Icons.email_outlined,
@@ -114,24 +119,34 @@ class Loginscreen extends StatelessWidget {
                                 if (value != null && value.isNotEmpty) {
                                   return null;
                                 }
-                                return "Please enter your email";
+                                return S.of(context).email_required;
                               },
                             ),
                             SizedBox(height: 16.h),
                             // Password field
                             TextFormField(
-                              controller: passwordcontroller,
-                              obscureText: true,
+                              controller: cubit.passwordcontroller,
+                              obscureText: !_isPasswordVisible,
                               style: TextStyle(color: textColor),
                               decoration: InputDecoration(
                                 labelText: "Password",
-                                hintText: "Enter your password",
+                                hintText: S.of(context).enter_password,
                                 labelStyle:
                                     TextStyle(color: secondaryTextColor),
                                 prefixIcon: Icon(Icons.lock_outline_rounded,
                                     color: primaryColor),
-                                suffixIcon: Icon(Icons.remove_red_eye_outlined,
-                                    color: secondaryTextColor),
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _isPasswordVisible
+                                        ? Icons.visibility
+                                        : Icons.visibility_off,
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _isPasswordVisible = !_isPasswordVisible;
+                                    });
+                                  },
+                                ),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12.r),
                                   borderSide: BorderSide.none,
@@ -145,7 +160,7 @@ class Loginscreen extends StatelessWidget {
                                 if (value != null && value.isNotEmpty) {
                                   return null;
                                 }
-                                return "Please enter your password";
+                                return S.of(context).password_required;
                               },
                             ),
                             SizedBox(height: 8.h),
@@ -155,7 +170,7 @@ class Loginscreen extends StatelessWidget {
                               child: TextButton(
                                 onPressed: () {},
                                 child: Text(
-                                  "Forgot Password?",
+                                  S.of(context).forgot_password,
                                   style: TextStyle(
                                     color: primaryColor,
                                     fontWeight: FontWeight.w600,
@@ -178,10 +193,11 @@ class Loginscreen extends StatelessWidget {
                                 height: 50.h,
                                 child: ElevatedButton(
                                   onPressed: () {
-                                    if (formKey.currentState!.validate()) {
+                                    if (cubit.formkey.currentState!
+                                        .validate()) {
                                       cubit.login(
-                                        email: emailcontroller.text,
-                                        password: passwordcontroller.text,
+                                        email: cubit.emailcontroller.text,
+                                        password: cubit.passwordcontroller.text,
                                         context: context,
                                       );
                                     }
@@ -194,7 +210,7 @@ class Loginscreen extends StatelessWidget {
                                     elevation: 0,
                                   ),
                                   child: Text(
-                                    "LOG IN",
+                                    S.of(context).log_in_button,
                                     style: TextStyle(
                                       color: Colors.white,
                                       fontSize: 16.sp,
@@ -221,7 +237,7 @@ class Loginscreen extends StatelessWidget {
                         Padding(
                           padding: EdgeInsets.symmetric(horizontal: 16.w),
                           child: Text(
-                            "OR",
+                            S.of(context).or,
                             style: TextStyle(
                               color: secondaryTextColor,
                               fontSize: 14.sp,
@@ -271,7 +287,7 @@ class Loginscreen extends StatelessWidget {
                                 ),
                                 SizedBox(width: 8.w),
                                 Text(
-                                  "Google",
+                                  S.of(context).google,
                                   style: TextStyle(
                                     color: textColor,
                                     fontSize: 14.sp,
@@ -308,7 +324,7 @@ class Loginscreen extends StatelessWidget {
                               ),
                               SizedBox(width: 8.w),
                               Text(
-                                "Apple",
+                                S.of(context).apple,
                                 style: TextStyle(
                                   color: textColor,
                                   fontSize: 14.sp,
@@ -326,7 +342,7 @@ class Loginscreen extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          "Don't have an account?",
+                          S.of(context).dont_have_account,
                           style: TextStyle(
                             color: secondaryTextColor,
                             fontSize: 14.sp,
@@ -337,7 +353,7 @@ class Loginscreen extends StatelessWidget {
                             navigateTo(context, Signupscreen());
                           },
                           child: Text(
-                            "Sign Up",
+                            S.of(context).sign_up,
                             style: TextStyle(
                               color: primaryColor,
                               fontWeight: FontWeight.bold,

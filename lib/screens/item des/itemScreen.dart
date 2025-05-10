@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_styled_toast/flutter_styled_toast.dart';
+import 'package:foodapp/generated/l10n.dart';
 import 'package:foodapp/layout/cubit.dart';
 import 'package:foodapp/shared/constants.dart';
 
@@ -534,7 +535,7 @@ class _ItemscreenState extends State<Itemscreen> {
                     child: TextButton(
                       onPressed: () => addToCart(cubit),
                       child: Text(
-                        "Add to cart",
+                        S.of(context).add_to_cart,
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
                     ),

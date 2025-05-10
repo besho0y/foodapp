@@ -9,3 +9,7 @@ class UpdateCartState extends Layoutstates {}
 class LayoutCartUpdatedState extends Layoutstates {}
 
 class LayoutChangeThemeState extends Layoutstates {}
+
+class ChangeLanguageState extends Layoutstates {}
+
+class LoadSavedLanguageState extends Layoutstates {}

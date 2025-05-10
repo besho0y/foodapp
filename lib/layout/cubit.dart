@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:foodapp/generated/l10n.dart';
 import 'package:foodapp/layout/states.dart';
 import 'package:foodapp/main.dart';
 import 'package:foodapp/models/user.dart';
@@ -13,6 +14,7 @@ import 'package:foodapp/screens/resturants/resturantScreen.dart';
 import 'package:foodapp/screens/settings/settingsScreen.dart';
 import 'package:foodapp/shared/local_storage.dart';
 import 'package:foodapp/shared/themes.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Layoutcubit extends Cubit<Layoutstates> {
   Layoutcubit() : super(LayoutInitState()) {
@@ -44,8 +46,22 @@ class Layoutcubit extends Cubit<Layoutstates> {
   ];
 
   // Default titles for regular users
-  List<String> titles = ["Restaurants", "favourits", "Orders", "Settings"];
+  List<String> titles(BuildContext context) {
+    if (isAdminUser) {
+      return ["Restaurants", S.of(context).admin_panel];
+    } else {
+      return [
+        "Restaurants",
+        S.of(context).favourits,
+        S.of(context).orders,
+        S.of(context).settings,
+      ];
+    }
+  }
+
   List<CartItem> cartitems = [];
+
+  bool isArabic = false;
 
   // Safe initialization method that won't crash the app
   Future<void> _safeInitialize() async {
@@ -103,8 +119,6 @@ class Layoutcubit extends Cubit<Layoutstates> {
         AdminPanelScreen(),
       ];
 
-      titles = ["Restaurants", "Admin Panel"];
-
       // If admin is on a screen that's no longer available, reset to home
       if (currentindex > 1) {
         currentindex = 0;
@@ -124,8 +138,6 @@ class Layoutcubit extends Cubit<Layoutstates> {
         Ordersscreeen(),
         Settingsscreen(),
       ];
-
-      titles = ["Restaurants", "favourits", "Orders", "Settings"];
     }
 
     emit(LayoutChangeNavBar());
@@ -133,40 +145,44 @@ class Layoutcubit extends Cubit<Layoutstates> {
 
   // Check if user is logged in and show login dialog if not
   bool checkUserLoggedIn(BuildContext context, {required String feature}) {
-    bool isLoggedIn = FirebaseAuth.instance.currentUser != null;
-
-    if (!isLoggedIn) {
-      _showLoginRequiredDialog(context, feature);
+    if (FirebaseAuth.instance.currentUser == null) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(S.of(context).login_required),
+          content: Text(feature),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                S.of(context).cancel,
+                style: TextStyle(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white
+                      : Colors.black,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => Loginscreen()),
+                );
+              },
+              child: Text(S.of(context).log_in),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      );
+      return false;
     }
-
-    return isLoggedIn;
-  }
-
-  // Dialog to prompt login
-  void _showLoginRequiredDialog(BuildContext context, String feature) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text("Login Required"),
-        content: Text("You need to log in to $feature."),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text("Cancel"),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => Loginscreen()),
-              );
-            },
-            child: Text("Login"),
-          ),
-        ],
-      ),
-    );
+    return true;
   }
 
   void addToCart({
@@ -233,7 +249,7 @@ class Layoutcubit extends Cubit<Layoutstates> {
     if (index == 1 && !isAdminUser) {
       // This is the favorites tab for regular users
       if (!checkUserLoggedIn(navigatorKey.currentContext!,
-          feature: "access your favorites")) {
+          feature: S.of(navigatorKey.currentContext!).login_to_favorites)) {
         return; // Stay on current tab
       }
     }
@@ -241,7 +257,7 @@ class Layoutcubit extends Cubit<Layoutstates> {
     if (index == 2 && !isAdminUser) {
       // This is the orders tab for regular users
       if (!checkUserLoggedIn(navigatorKey.currentContext!,
-          feature: "view your orders")) {
+          feature: S.of(navigatorKey.currentContext!).login_to_orders)) {
         return; // Stay on current tab
       }
     }
@@ -300,5 +316,22 @@ class Layoutcubit extends Cubit<Layoutstates> {
     cartitems.clear();
     LocalStorageService.saveCartItems(cartitems);
     emit(UpdateCartState());
+  }
+
+  void toggleLanguage() {
+    isArabic = !isArabic;
+    SharedPreferences.getInstance().then((prefs) {
+      prefs.setBool('isArabic', isArabic);
+    });
+    S.load(isArabic ? const Locale('ar') : const Locale('en'));
+    emit(ChangeLanguageState());
+  }
+
+  void loadSavedLanguage() {
+    SharedPreferences.getInstance().then((prefs) {
+      isArabic = prefs.getBool('isArabic') ?? false;
+      S.load(isArabic ? const Locale('ar') : const Locale('en'));
+      emit(LoadSavedLanguageState());
+    });
   }
 }

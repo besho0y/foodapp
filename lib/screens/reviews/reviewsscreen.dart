@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:foodapp/generated/l10n.dart';
 import 'package:foodapp/models/review.dart';
 import 'package:foodapp/screens/resturants/cubit.dart';
 
@@ -194,7 +195,7 @@ class _ReviewsscreenState extends State<Reviewsscreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Reviews'),
+        title: Text(S.of(context).reviews),
         leading: IconButton(
           icon: Icon(Icons.arrow_back_ios),
           onPressed: () => Navigator.pop(context),
@@ -221,7 +222,7 @@ class _ReviewsscreenState extends State<Reviewsscreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      "Average Rating",
+                      S.of(context).average_rating,
                       style: TextStyle(
                         fontSize: 16.sp,
                         fontWeight: FontWeight.bold,
@@ -248,7 +249,7 @@ class _ReviewsscreenState extends State<Reviewsscreen> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text("${_reviews.length} reviews",
+                    Text("${_reviews.length} ${S.of(context).reviews}",
                         style: TextStyle(color: Colors.grey)),
                   ],
                 ),
@@ -269,7 +270,7 @@ class _ReviewsscreenState extends State<Reviewsscreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "Write a Review",
+                  S.of(context).write_review,
                   style: TextStyle(
                     fontSize: 16.sp,
                     fontWeight: FontWeight.bold,
@@ -282,7 +283,7 @@ class _ReviewsscreenState extends State<Reviewsscreen> {
                   controller: _reviewController,
                   maxLines: 3,
                   decoration: InputDecoration(
-                    hintText: "Share your experience...",
+                    hintText: S.of(context).review_hint,
                     border: OutlineInputBorder(),
                   ),
                 ),
@@ -305,7 +306,7 @@ class _ReviewsscreenState extends State<Reviewsscreen> {
                                 strokeWidth: 2,
                               ),
                             )
-                          : Text('Submit Review'),
+                          : Text(S.of(context).submit),
                     ),
                   ],
                 ),
@@ -326,7 +327,7 @@ class _ReviewsscreenState extends State<Reviewsscreen> {
                                 size: 50.sp, color: Colors.grey),
                             SizedBox(height: 10.h),
                             Text(
-                              "No reviews yet. Be the first to review!",
+                              S.of(context).no_reviews,
                               style: TextStyle(color: Colors.grey),
                             ),
                           ],

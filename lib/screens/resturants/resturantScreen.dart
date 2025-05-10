@@ -2,6 +2,7 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:foodapp/generated/l10n.dart';
 import 'package:foodapp/screens/resturants/cubit.dart';
 import 'package:foodapp/screens/resturants/states.dart';
 import 'package:foodapp/shared/colors.dart';
@@ -26,11 +27,7 @@ class Resturantscreen extends StatelessWidget {
         }
       },
       builder: (context, state) {
-        if (state is RestuarantsLoadingState) {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
-        }
+        final cats = cubit.categories(context);
 
         return Padding(
           padding: EdgeInsets.all(12.0.w),
@@ -71,10 +68,10 @@ class Resturantscreen extends StatelessWidget {
                     height: 100.h,
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
-                      itemCount: cubit.categories.length,
+                      itemCount: cats.length,
                       separatorBuilder: (_, __) => SizedBox(width: 10.w),
                       itemBuilder: (context, index) {
-                        var category = cubit.categories[index];
+                        var category = cats[index];
                         return GestureDetector(
                           onTap: () {
                             cubit.filterRestaurants(category["name"]);
@@ -113,7 +110,7 @@ class Resturantscreen extends StatelessWidget {
                 SliverToBoxAdapter(child: SizedBox(height: 16.h)),
 
                 // Restaurant Grid
-                if (cubit.restaurants.isEmpty)
+                if (state is RestuarantsLoadingState)
                   SliverFillRemaining(
                     child: Center(
                       child: Column(
@@ -124,9 +121,32 @@ class Resturantscreen extends StatelessWidget {
                           ),
                           SizedBox(height: 20.h),
                           Text(
-                            'Loading restaurants...',
+                            S.of(context).loadingres,
                             style: TextStyle(
                               fontSize: 16.sp,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                else if (cubit.restaurants.isEmpty)
+                  SliverFillRemaining(
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.restaurant_menu,
+                            size: 64.sp,
+                            color: Colors.grey[400],
+                          ),
+                          SizedBox(height: 16.h),
+                          Text(
+                            "No restaurants found",
+                            style: TextStyle(
+                              fontSize: 18.sp,
                               color: Colors.grey[600],
                             ),
                           ),

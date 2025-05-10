@@ -18,6 +18,10 @@ class Logincubit extends Cubit<LoginStates> {
   Logincubit() : super(LoginInitialState());
   static Logincubit get(context) => BlocProvider.of(context);
 
+  final formkey = GlobalKey<FormState>();
+  final emailcontroller = TextEditingController();
+  final passwordcontroller = TextEditingController();
+
   void login(
       {required String email,
       required String password,
@@ -238,5 +242,12 @@ class Logincubit extends Cubit<LoginStates> {
         );
       }
     }
+  }
+
+  @override
+  Future<void> close() {
+    emailcontroller.dispose();
+    passwordcontroller.dispose();
+    return super.close();
   }
 }

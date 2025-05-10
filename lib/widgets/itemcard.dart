@@ -7,6 +7,8 @@ import 'package:foodapp/shared/constants.dart';
 
 Widget itemcard(context, bool fromFavourites, Item model, dynamic items) {
   var cubit = Favouritecubit.get(context);
+  final isRTL = Directionality.of(context) == TextDirection.rtl;
+
   return Padding(
     padding: EdgeInsets.only(bottom: 5.h),
     child: GestureDetector(
@@ -31,13 +33,14 @@ Widget itemcard(context, bool fromFavourites, Item model, dynamic items) {
           ),
           Positioned(
             top: 5.h,
-            right: -5.w,
+            right: isRTL ? null : -5.w,
+            left: isRTL ? -5.w : null,
             child: SizedBox(
               width: 320.w,
               height: 110.h,
               child: Card(
                 child: Padding(
-                  padding: EdgeInsets.all(8),
+                  padding: EdgeInsets.all(8.h),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -96,7 +99,8 @@ Widget itemcard(context, bool fromFavourites, Item model, dynamic items) {
           ),
           Positioned(
             top: 20.h,
-            left: -15,
+            left: isRTL ? null : -13.w,
+            right: isRTL ? -13.w : null,
             child: Container(
               width: 100,
               height: 100,
@@ -123,10 +127,10 @@ ImageProvider _getImageProvider(String imageUrl) {
       return AssetImage(imageUrl);
     } else {
       // Default fallback image
-      return AssetImage('assets/images/items/default.jpg');
+      return const AssetImage('assets/image/category/default.jpg');
     }
   } catch (e) {
     print("Error creating image provider: $e");
-    return AssetImage('assets/images/items/default.jpg');
+    return const AssetImage('assets/images/items/default.jpg');
   }
 }

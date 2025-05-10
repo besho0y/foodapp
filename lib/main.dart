@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:foodapp/firebase_options.dart';
 import 'package:foodapp/layout/cubit.dart';
@@ -14,9 +15,13 @@ import 'package:foodapp/screens/login/loginScreen.dart';
 import 'package:foodapp/screens/oredrs/cubit.dart';
 import 'package:foodapp/screens/profile/cubit.dart';
 import 'package:foodapp/screens/resturants/cubit.dart';
+import 'package:foodapp/screens/settingdetailsscreen/settingdetails.dart';
 import 'package:foodapp/screens/signup/cubit.dart';
 import 'package:foodapp/shared/blocObserver.dart';
 import 'package:foodapp/shared/paymob_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'generated/l10n.dart';
 // Import the generated file
 
 // Global navigator key for access across the app
@@ -39,18 +44,29 @@ void main() async {
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown, // Only portrait modes
   ]);
-  runApp(const MyApp());
+
+  final prefs = await SharedPreferences.getInstance();
+  final isArabic = prefs.getBool('isArabic') ?? false;
+
+  runApp(MyApp(isArabic: isArabic));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final bool isArabic;
+  const MyApp({super.key, required this.isArabic});
 
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider(create: (context) => Layoutcubit()),
+        BlocProvider(
+          create: (context) {
+            final cubit = Layoutcubit();
+            cubit.isArabic = isArabic;
+            return cubit;
+          },
+        ),
         BlocProvider(
           create: (context) {
             final cubit = Restuarantscubit();
@@ -78,6 +94,16 @@ class MyApp extends StatelessWidget {
           return BlocBuilder<Layoutcubit, Layoutstates>(
             builder: (context, state) {
               return MaterialApp(
+                locale: Layoutcubit.get(context).isArabic
+                    ? const Locale('ar')
+                    : const Locale('en'),
+                localizationsDelegates: const [
+                  S.delegate,
+                  GlobalMaterialLocalizations.delegate,
+                  GlobalWidgetsLocalizations.delegate,
+                  GlobalCupertinoLocalizations.delegate,
+                ],
+                supportedLocales: S.delegate.supportedLocales,
                 debugShowCheckedModeBanner: false,
                 title: 'Food App',
                 // You can use the library anywhere in the app even in theme

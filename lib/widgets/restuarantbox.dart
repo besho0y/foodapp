@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:foodapp/generated/l10n.dart';
 import 'package:foodapp/screens/menu/menuScreen.dart';
 import 'package:foodapp/shared/constants.dart';
 
@@ -56,7 +57,7 @@ Widget resturantbox(context, model) => GestureDetector(
                       Icon(Icons.star_rate_rounded, color: Colors.amber),
                       SizedBox(width: 5.w),
                       Text(
-                        "${model.rating > 0 ? model.rating.toStringAsFixed(1) : 'No ratings'}",
+                        "${model.rating > 0 ? model.rating.toStringAsFixed(1) : S.of(context).no_ratings}",
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ],

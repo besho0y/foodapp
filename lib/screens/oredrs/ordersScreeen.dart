@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:foodapp/generated/l10n.dart';
 import 'package:foodapp/screens/oredrs/cubit.dart';
 import 'package:foodapp/screens/oredrs/states.dart';
 import 'package:foodapp/widgets/ordercard.dart';
@@ -54,7 +55,7 @@ class _OrdersscreeenState extends State<Ordersscreeen> {
                 ),
                 SizedBox(height: 20.h),
                 Text(
-                  "No orders yet",
+                  S.of(context).noorders,
                   style: TextStyle(
                     fontSize: 20.sp,
                     fontWeight: FontWeight.bold,
@@ -62,7 +63,7 @@ class _OrdersscreeenState extends State<Ordersscreeen> {
                 ),
                 SizedBox(height: 10.h),
                 Text(
-                  "Your order history will appear here",
+                  S.of(context).yourorderhistorywillappearhere,
                   style: TextStyle(
                     fontSize: 16.sp,
                     color: Colors.grey,
@@ -86,7 +87,7 @@ class _OrdersscreeenState extends State<Ordersscreeen> {
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 10.w),
                     child: Text(
-                      "Your Orders",
+                      S.of(context).yourorders,
                       style: TextStyle(
                         fontSize: 20.sp,
                         fontWeight: FontWeight.bold,
@@ -95,7 +96,7 @@ class _OrdersscreeenState extends State<Ordersscreeen> {
                   ),
                   SizedBox(height: 5.h),
                   Text(
-                    "    You have ${uniqueOrders.length} orders",
+                    "    ${S.of(context).youhave} ${uniqueOrders.length} ${S.of(context).orders}",
                     style: TextStyle(
                       fontSize: 14.sp,
                       color: Colors.grey,

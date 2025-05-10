@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:foodapp/generated/l10n.dart';
 import 'package:foodapp/layout/cubit.dart';
 import 'package:foodapp/models/item.dart';
 import 'package:foodapp/models/order.dart' as app_models;
@@ -164,18 +165,26 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
                   bool confirm = await showDialog(
                         context: context,
                         builder: (context) => AlertDialog(
-                          title: Text('Logout'),
-                          content: Text('Are you sure you want to logout?'),
+                          title: Text(S.of(context).logout_title),
+                          content: Text(S.of(context).logout_confirm),
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.pop(context, false),
-                              child: Text('Cancel'),
+                              child: Text(
+                                S.of(context).cancel,
+                                style: TextStyle(
+                                    color: Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? Colors.white
+                                        : Colors.black),
+                              ),
                             ),
                             ElevatedButton(
                               onPressed: () => Navigator.pop(context, true),
-                              child: Text('Logout'),
+                              child: Text(S.of(context).logout),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.red,
+                                foregroundColor: Colors.white,
                               ),
                             ),
                           ],
