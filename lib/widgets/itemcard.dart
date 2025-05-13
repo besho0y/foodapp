@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:foodapp/generated/l10n.dart';
 import 'package:foodapp/models/item.dart';
+import 'package:foodapp/models/resturant.dart';
 import 'package:foodapp/screens/favourits/cubit.dart';
 import 'package:foodapp/screens/item%20des/itemScreen.dart';
 import 'package:foodapp/shared/constants.dart';
@@ -8,6 +10,19 @@ import 'package:foodapp/shared/constants.dart';
 Widget itemcard(context, bool fromFavourites, Item model, dynamic items) {
   var cubit = Favouritecubit.get(context);
   final isRTL = Directionality.of(context) == TextDirection.rtl;
+
+  // Get the restaurant from the items list
+  Restuarants? restaurant;
+  if (items is List<Restuarants>) {
+    try {
+      restaurant = items.firstWhere(
+        (r) => r.menuItems.any((item) => item.id == model.id),
+      );
+    } catch (e) {
+      // Restaurant not found
+      restaurant = null;
+    }
+  }
 
   return Padding(
     padding: EdgeInsets.only(bottom: 5.h),
@@ -17,10 +32,17 @@ Widget itemcard(context, bool fromFavourites, Item model, dynamic items) {
           context,
           Itemscreen(
             name: model.name,
+            nameAr: model.nameAr,
             description: model.description,
+            descriptionAr: model.descriptionAr,
             price: model.price,
             img: model.img,
             items: items,
+            category: model.category,
+            restaurantId: restaurant?.id ?? '',
+            restaurantName: restaurant?.name ?? '',
+            restaurantNameAr: restaurant?.nameAr ?? '',
+            deliveryFee: restaurant?.deliveryFee ?? '0',
           ),
         );
       },
@@ -49,19 +71,27 @@ Widget itemcard(context, bool fromFavourites, Item model, dynamic items) {
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          if (restaurant != null) ...[
+                            Text(
+                              isRTL ? restaurant.nameAr : restaurant.name,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodySmall
+                                  ?.copyWith(
+                                    color: Theme.of(context).primaryColor,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                            ),
+                            SizedBox(height: 2.h),
+                          ],
                           Text(
-                            model.name,
+                            isRTL ? model.nameAr : model.name,
                             style: Theme.of(context).textTheme.bodyMedium,
                           ),
-                          SizedBox(
-                            height: 20.h,
-                            width: 230.w,
-                            child: Text(
-                              model.description,
-                              style: Theme.of(context).textTheme.bodySmall,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                          SizedBox(height: 5.h),
+                          Text(
+                            isRTL ? model.descriptionAr : model.description,
+                            style: Theme.of(context).textTheme.bodySmall,
                           ),
                           SizedBox(
                             width: 220.w,
@@ -69,7 +99,7 @@ Widget itemcard(context, bool fromFavourites, Item model, dynamic items) {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                  "${model.price} egp",
+                                  "${model.price} ${S.of(context).egp}",
                                   style:
                                       Theme.of(context).textTheme.labelMedium,
                                 ),

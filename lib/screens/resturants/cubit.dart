@@ -1,87 +1,68 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:foodapp/generated/l10n.dart';
+import 'package:foodapp/models/category.dart';
 import 'package:foodapp/models/item.dart';
 import 'package:foodapp/models/resturant.dart';
 import 'package:foodapp/screens/resturants/states.dart';
 
 class Restuarantscubit extends Cubit<ResturantsStates> {
-  Restuarantscubit() : super(ResturantsInitialState());
+  Restuarantscubit() : super(ResturantsInitialState()) {
+    // Initialize data on creation
+    initializeData();
+  }
   static Restuarantscubit get(context) => BlocProvider.of(context);
-  List<Restuarants> restaurants = [];
+
+  // Single source of truth for restaurants
+  final List<Restuarants> _allRestuarants = [];
+  // Getter for filtered/displayed restaurants
+  List<Restuarants> get restaurants => _filteredRestaurants ?? _allRestuarants;
+  // Temporary list for filtered results
+  List<Restuarants>? _filteredRestaurants;
+
+  List<Category> categories = [];
+  bool _isInitialized = false;
 
   List<String> banners = [
     "assets/images/banners/banner1.png",
     "assets/images/banners/banner2.png",
     "assets/images/banners/banner3.png",
   ];
-  List<Restuarants> allRestuarants = [];
 
-  List<Map<String, dynamic>> categories(BuildContext context) => [
-        {"name": S.of(context).all, "img": "assets/images/categories/all.png"},
-        {
-          "name": S.of(context).fastfood,
-          "img": "assets/images/categories/fastfood.png"
-        },
-        {
-          "name": S.of(context).seafood,
-          "img": "assets/images/categories/seafood.PNG"
-        },
-        {
-          "name": S.of(context).sweets,
-          "img": "assets/images/categories/sweets.png"
-        },
-        {
-          "name": S.of(context).drinks,
-          "img": "assets/images/categories/drinks.png"
-        },
-      ];
-
-  List<String> itemcategories = ["All"]; // Default category
-
-  // Get menu categories for a specific restaurant
-  List<String> getRestaurantMenuCategories(String restaurantId) {
-    try {
-      // Find the restaurant
-      final restaurant = restaurants.firstWhere(
-        (r) => r.id == restaurantId,
-        orElse: () => throw Exception('Restaurant not found'),
-      );
-
-      // Get unique categories from restaurant's menu items
-      final uniqueCategories = <String>{};
-      for (var item in restaurant.menuItems) {
-        if (item.category.isNotEmpty && item.category != "Uncategorized") {
-          uniqueCategories.add(item.category);
-        }
-      }
-
-      // Return categories with "All" as the first option
-      return ["All", ...uniqueCategories.toList()];
-    } catch (e) {
-      print("Error getting menu categories for restaurant: $e");
-      return ["All"]; // Return default category
+  // Initialize all data
+  Future<void> initializeData() async {
+    if (_isInitialized) {
+      print("Data already initialized, skipping...");
+      return;
     }
-  }
 
-  void getRestuarants() async {
-    print("Starting to fetch restaurants...");
-    // Clear all data before loading
-    allRestuarants.clear();
-    restaurants.clear();
-    itemcategories = ["All"]; // Reset to default category only
+    print("Initializing data...");
     emit(RestuarantsLoadingState());
 
     try {
-      print("Fetching restaurants from Firestore...");
+      // Get categories first
+      await _fetchCategories();
+
+      // Then get restaurants
+      await _fetchRestaurants();
+
+      _isInitialized = true;
+      emit(RestuarantsGetDataSuccessState());
+    } catch (e) {
+      print("Error initializing data: $e");
+      emit(RestuarantsErrorState(e.toString()));
+    }
+  }
+
+  // Private method to fetch restaurants
+  Future<void> _fetchRestaurants() async {
+    print("Starting to fetch restaurants...");
+    try {
       final restaurantSnapshots =
           await FirebaseFirestore.instance.collection("restaurants").get();
       print("Found ${restaurantSnapshots.docs.length} restaurants");
 
       if (restaurantSnapshots.docs.isEmpty) {
         print("No restaurants found in Firestore");
-        emit(RestuarantsGetDataSuccessState()); // Emit success even when empty
         return;
       }
 
@@ -111,6 +92,9 @@ class Restuarantscubit extends Cubit<ResturantsStates> {
               price: (itemData['price'] as num?)?.toDouble() ?? 0.0,
               img: itemData['img'] ?? '',
               category: itemData['category'] ?? '',
+              nameAr: itemData['namear'] ?? '',
+              descriptionAr: itemData['descriptionar'] ?? '',
+              categoryAr: itemData['categoryar'] ?? '',
             );
           }).toList();
 
@@ -118,10 +102,12 @@ class Restuarantscubit extends Cubit<ResturantsStates> {
           Restuarants restaurant = Restuarants(
             id: restaurantId,
             name: data['resname'] ?? '',
+            nameAr: data['namear'] ?? '',
             menuItems: items,
             img: data['img'] ?? 'assets/images/restuarants/store.jpg',
             rating: (data['rating'] as num?)?.toDouble() ?? 0.0,
             category: data['category']?.toString() ?? 'fast food',
+            categoryAr: data['categoryar']?.toString() ?? 'طعام سريع',
             deliveryFee: data['delivery fee']?.toString() ?? '50',
             deliveryTime: data['delivery time']?.toString() ?? '30-45 min',
             ordersnum: data['ordersnumber'] is num
@@ -135,26 +121,155 @@ class Restuarantscubit extends Cubit<ResturantsStates> {
                 : null,
           );
 
-          allRestuarants.add(restaurant);
+          _allRestuarants.add(restaurant);
         } catch (e) {
           print("Error processing restaurant ${doc.id}: $e");
           // Continue with next restaurant
         }
       }
 
-      // Copy to restaurants list for display
-      restaurants = List.from(allRestuarants);
-      print("Successfully loaded ${restaurants.length} restaurants");
-      emit(RestuarantsGetDataSuccessState());
+      print("Successfully loaded ${_allRestuarants.length} restaurants");
     } catch (e) {
       print("Error loading restaurants: $e");
+      rethrow;
+    }
+  }
+
+  // Private method to fetch categories
+  Future<void> _fetchCategories() async {
+    try {
+      print("Starting to fetch restaurant categories...");
+
+      final categoriesRef =
+          FirebaseFirestore.instance.collection("restuarants_categories");
+      print("Attempting to access collection: ${categoriesRef.path}");
+
+      final QuerySnapshot categoriesSnapshot;
+      try {
+        categoriesSnapshot = await categoriesRef.get();
+        print("Successfully connected to Firebase");
+      } catch (e) {
+        print("Firebase connection error: $e");
+        // If collection doesn't exist, create it with test data
+        if (e is FirebaseException &&
+            (e.code == 'permission-denied' || e.code == 'not-found')) {
+          print("Categories collection not found, creating test data...");
+          await addTestCategory();
+          return;
+        }
+        rethrow;
+      }
+
+      print(
+          "Raw snapshot data: ${categoriesSnapshot.docs.map((doc) => doc.data()).toList()}");
+      print("Number of categories found: ${categoriesSnapshot.docs.length}");
+
+      categories.clear();
+
+      // Add the "All" category first
+      categories.add(Category(
+          en: "All", ar: "الكل", img: "assets/images/categories/all.png"));
+
+      if (categoriesSnapshot.docs.isEmpty) {
+        print(
+            "No restaurant categories found in Firebase. Adding a test category...");
+        await addTestCategory();
+        return;
+      }
+
+      for (var doc in categoriesSnapshot.docs) {
+        try {
+          final data = doc.data() as Map<String, dynamic>;
+          print("Processing category document: ${doc.id}");
+          print("Category data: $data");
+
+          if (data['en'] != null && data['ar'] != null) {
+            final category = Category(
+                en: data['en'].toString(),
+                ar: data['ar'].toString(),
+                img: data['img']?.toString() ??
+                    'assets/images/categories/${data['en'].toString().toLowerCase()}.png');
+            categories.add(category);
+            print("Added category: ${category.toString()}");
+          } else {
+            print(
+                "Invalid category data in document ${doc.id}: missing required fields");
+          }
+        } catch (e) {
+          print("Error processing category ${doc.id}: $e");
+        }
+      }
+
+      print(
+          "Final categories list: ${categories.map((c) => c.toString()).toList()}");
+    } catch (e) {
+      print("Error in getCategories: $e");
+      rethrow;
+    }
+  }
+
+  // Filter restaurants by category
+  void filterRestaurants(Category category) {
+    try {
+      print("Filtering restaurants for category: ${category.toString()}");
+      emit(RestuarantsLoadingState());
+
+      if (category.en == "All") {
+        print("Selected 'All' category - showing all restaurants");
+        _filteredRestaurants = null; // Use _allRestuarants
+      } else {
+        print("Filtering for category: ${category.en}/${category.ar}");
+        _filteredRestaurants = _allRestuarants.where((restaurant) {
+          bool matches =
+              restaurant.category.toLowerCase() == category.en.toLowerCase() ||
+                  restaurant.categoryAr == category.ar;
+          print(
+              "Restaurant ${restaurant.name}: category=${restaurant.category}, categoryAr=${restaurant.categoryAr}, matches=$matches");
+          return matches;
+        }).toList();
+        print("Found ${_filteredRestaurants?.length} matching restaurants");
+      }
+
+      emit(RestaurantsFilteredState());
+    } catch (e) {
+      print("Error filtering restaurants: $e");
       emit(RestuarantsErrorState(e.toString()));
     }
+  }
+
+  void search(String value) {
+    emit(RestuarantsLoadingState());
+    if (value.trim().isEmpty) {
+      _filteredRestaurants = null; // Use _allRestuarants
+    } else {
+      final lowerValue = value.toLowerCase();
+      _filteredRestaurants = _allRestuarants
+          .where((restaurant) =>
+              restaurant.name.toLowerCase().contains(lowerValue))
+          .toList();
+    }
+    emit(RestuarantsGetDataSuccessState());
+  }
+
+  // Reset restaurant data and state
+  void resetRestaurants() {
+    print("Resetting restaurant data and state...");
+    _allRestuarants.clear();
+    _filteredRestaurants = null;
+    _isInitialized = false;
+    emit(ResturantsInitialState());
+    initializeData(); // Reinitialize all data
+  }
+
+  // Get category name based on locale
+  String getCategoryName(Category category, bool isArabic) {
+    return isArabic ? category.ar : category.en;
   }
 
   // Function to calculate average rating from reviews
   Future<double> getAverageRating(String restaurantId) async {
     try {
+      print("Fetching reviews for restaurant: $restaurantId");
       final reviewsSnapshot = await FirebaseFirestore.instance
           .collection("restaurants")
           .doc(restaurantId)
@@ -162,49 +277,140 @@ class Restuarantscubit extends Cubit<ResturantsStates> {
           .get();
 
       if (reviewsSnapshot.docs.isEmpty) {
-        return 0.0; // Default rating if no reviews
+        print("No reviews found for restaurant: $restaurantId");
+        return 0.0;
       }
 
       double totalRating = 0.0;
+      int validReviews = 0;
+
       for (var doc in reviewsSnapshot.docs) {
-        final data = doc.data();
-        if (data.containsKey('rating')) {
-          totalRating += double.parse(data['rating'].toString());
+        try {
+          final data = doc.data();
+          if (data.containsKey('rating')) {
+            final rating = double.tryParse(data['rating'].toString());
+            if (rating != null && rating >= 0 && rating <= 5) {
+              totalRating += rating;
+              validReviews++;
+            }
+          }
+        } catch (e) {
+          print("Error processing review ${doc.id}: $e");
         }
       }
 
+      if (validReviews == 0) {
+        print("No valid ratings found for restaurant: $restaurantId");
+        return 0.0;
+      }
+
       // Format to one decimal place for consistency
-      double average = totalRating / reviewsSnapshot.docs.length;
-      return double.parse(average.toStringAsFixed(1));
+      double average = totalRating / validReviews;
+      double roundedAverage = double.parse(average.toStringAsFixed(1));
+
+      // Update restaurant's rating in Firestore
+      await FirebaseFirestore.instance
+          .collection("restaurants")
+          .doc(restaurantId)
+          .update({'rating': roundedAverage});
+
+      print(
+          "Updated average rating for restaurant $restaurantId: $roundedAverage");
+      return roundedAverage;
     } catch (e) {
-      print("Error fetching average rating: $e");
+      print("Error calculating average rating: $e");
       return 0.0;
     }
   }
 
-  void filterRestaurants(String categoryName) {
-    if (categoryName == "All") {
-      restaurants = List.from(allRestuarants);
-    } else {
-      restaurants = allRestuarants
-          .where((restaurant) => restaurant.category == categoryName)
-          .toList();
+  // Add a review to a restaurant
+  Future<void> addReview({
+    required String restaurantId,
+    required double rating,
+    required String comment,
+    required String userId,
+    String? userName,
+  }) async {
+    try {
+      print("Adding review for restaurant: $restaurantId");
+
+      if (rating < 0 || rating > 5) {
+        throw Exception("Rating must be between 0 and 5");
+      }
+
+      final reviewData = {
+        'rating': rating,
+        'comment': comment,
+        'userId': userId,
+        'userName': userName ?? 'Anonymous',
+        'timestamp': FieldValue.serverTimestamp(),
+      };
+
+      await FirebaseFirestore.instance
+          .collection("restaurants")
+          .doc(restaurantId)
+          .collection("reviews")
+          .add(reviewData);
+
+      print("Review added successfully");
+
+      // Update the average rating
+      await getAverageRating(restaurantId);
+
+      // Update the restaurant in our local list
+      final index = _allRestuarants.indexWhere((r) => r.id == restaurantId);
+      if (index != -1) {
+        final restaurant = _allRestuarants[index];
+        final newRating = await getAverageRating(restaurantId);
+        _allRestuarants[index] = Restuarants(
+          id: restaurant.id,
+          name: restaurant.name,
+          nameAr: restaurant.nameAr,
+          menuItems: restaurant.menuItems,
+          img: restaurant.img,
+          rating: newRating,
+          category: restaurant.category,
+          categoryAr: restaurant.categoryAr,
+          deliveryFee: restaurant.deliveryFee,
+          deliveryTime: restaurant.deliveryTime,
+          ordersnum: restaurant.ordersnum,
+          categories: restaurant.categories,
+          menuCategories: restaurant.menuCategories,
+        );
+        emit(RestuarantsGetDataSuccessState());
+      }
+    } catch (e) {
+      print("Error adding review: $e");
+      emit(RestuarantsErrorState(e.toString()));
     }
-    emit(RestaurantsFilteredState());
   }
 
-  void search(String value) {
-    emit(RestuarantsLoadingState()); // Optional
-    if (value.trim().isEmpty) {
-      restaurants = allRestuarants;
-    } else {
-      final lowerValue = value.toLowerCase();
-      restaurants = allRestuarants
-          .where((restaurant) =>
-              restaurant.name.toLowerCase().contains(lowerValue))
-          .toList();
+  // Get reviews for a restaurant
+  Future<List<Map<String, dynamic>>> getReviews(String restaurantId) async {
+    try {
+      print("Fetching reviews for restaurant: $restaurantId");
+      final reviewsSnapshot = await FirebaseFirestore.instance
+          .collection("restaurants")
+          .doc(restaurantId)
+          .collection("reviews")
+          .orderBy('timestamp', descending: true)
+          .get();
+
+      return reviewsSnapshot.docs.map((doc) {
+        final data = doc.data();
+        return {
+          'id': doc.id,
+          'rating': double.tryParse(data['rating'].toString()) ?? 0.0,
+          'comment': data['comment'] ?? '',
+          'userId': data['userId'] ?? '',
+          'userName': data['userName'] ?? 'Anonymous',
+          'timestamp': data['timestamp']?.toDate() ?? DateTime.now(),
+        };
+      }).toList();
+    } catch (e) {
+      print("Error fetching reviews: $e");
+      return [];
     }
-    emit(RestuarantsGetDataSuccessState());
   }
 
   // Add a test restaurant to Firestore for testing
@@ -250,9 +456,6 @@ class Restuarantscubit extends Cubit<ResturantsStates> {
       });
 
       print("Added menu items to test restaurant");
-
-      // Reload restaurants to include the new one
-      getRestuarants();
     } catch (e) {
       print("Error adding test restaurant: $e");
       emit(RestuarantsErrorState(e.toString()));
@@ -271,9 +474,6 @@ class Restuarantscubit extends Cubit<ResturantsStates> {
       if (snapshot.docs.isEmpty) {
         print("No restaurants found in Firestore, creating a sample one...");
         await addTestRestaurant();
-      } else {
-        print("Found existing restaurants in Firestore");
-        getRestuarants();
       }
     } catch (e) {
       print("Error checking for restaurants: $e");
@@ -281,14 +481,37 @@ class Restuarantscubit extends Cubit<ResturantsStates> {
     }
   }
 
-  // Reset restaurant data and state
-  void resetRestaurants() {
-    print("Resetting restaurant data and state...");
-    allRestuarants.clear();
-    restaurants.clear();
-    emit(ResturantsInitialState());
+  // Add a test category to Firebase
+  Future<void> addTestCategory() async {
+    try {
+      print("Adding test category to Firebase...");
+      await FirebaseFirestore.instance
+          .collection("restuarants_categories")
+          .add({
+        'en': 'Pizza',
+        'ar': 'بيتزا',
+        'img': 'assets/images/categories/pizza.png'
+      });
+      print("Test category added successfully");
 
-    // Reload restaurants
-    getRestuarants();
+      // Refresh categories
+      await _fetchCategories();
+    } catch (e) {
+      print("Error adding test category: $e");
+      emit(RestuarantsErrorState(e.toString()));
+    }
+  }
+
+  // Public method to refresh restaurants
+  Future<void> refreshRestaurants() async {
+    emit(RestuarantsLoadingState());
+    try {
+      _allRestuarants.clear();
+      await _fetchRestaurants();
+      emit(RestuarantsGetDataSuccessState());
+    } catch (e) {
+      print("Error refreshing restaurants: $e");
+      emit(RestuarantsErrorState(e.toString()));
+    }
   }
 }

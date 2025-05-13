@@ -65,7 +65,7 @@ class Settingdetails extends StatelessWidget {
                         BoxShadow(
                           color: Colors.black.withOpacity(0.05),
                           blurRadius: 10,
-                          offset: Offset(0, 5),
+                          offset: const Offset(0, 5),
                         ),
                       ],
                     ),
@@ -109,7 +109,7 @@ class Settingdetails extends StatelessWidget {
                           child: AnimatedToggleSwitch<bool>.rolling(
                             current: cubit.isArabic,
                             values: const [true, false],
-                            onChanged: (value) => cubit.toggleLanguage(),
+                            onChanged: (value) => cubit.changeLanguage(),
                             iconBuilder: (value, size) {
                               return Container(
                                 width: 35.w,
@@ -183,7 +183,7 @@ class Settingdetails extends StatelessWidget {
               color: isDark ? Colors.white : Colors.black87,
             ),
           ),
-          Spacer(),
+          const Spacer(),
           child,
         ],
       ),

@@ -4,72 +4,217 @@ import 'package:foodapp/models/item.dart';
 
 class Restuarants {
   String name;
+  String nameAr;
   List<Item> menuItems = [];
   String img;
   double rating;
   String category;
+  String categoryAr;
   String deliveryTime;
   String deliveryFee;
   int ordersnum;
   String id;
   List<String> categories;
-  List<String>? menuCategories; // Menu categories for items
+  List<String>? menuCategories;
 
-  Restuarants(
-      {required this.name,
-      required this.menuItems,
-      required this.img,
-      required this.rating,
-      required this.category,
-      required this.deliveryFee,
-      required this.ordersnum,
-      required this.deliveryTime,
-      required this.id,
-      required this.categories,
-      this.menuCategories});
+  Restuarants({
+    required this.name,
+    required this.nameAr,
+    required this.menuItems,
+    required this.img,
+    required this.rating,
+    required this.category,
+    required this.categoryAr,
+    required this.deliveryFee,
+    required this.ordersnum,
+    required this.deliveryTime,
+    required this.id,
+    required this.categories,
+    this.menuCategories,
+  }) {
+    // Validate required fields
+    if (name.isEmpty) throw ArgumentError('Restaurant name cannot be empty');
+    if (nameAr.isEmpty)
+      throw ArgumentError('Arabic restaurant name cannot be empty');
+    if (category.isEmpty) throw ArgumentError('Category cannot be empty');
+    if (categoryAr.isEmpty)
+      throw ArgumentError('Arabic category cannot be empty');
+    if (id.isEmpty) throw ArgumentError('Restaurant ID cannot be empty');
+
+    // Ensure categories is not null
+    categories = categories.isEmpty ? ['Uncategorized'] : categories;
+  }
 
   Restuarants.fromJson(Map<String, dynamic> json)
-      : name = json['resname'] ?? '',
-        menuItems = (json['items'] as List<dynamic>?)
-                ?.map(
-                    (element) => Item.fromJson(element as Map<String, dynamic>))
-                .toList() ??
-            [],
-        id = json['id'] ?? '',
-        img = json['img'] ?? 'assets/images/restuarants/store.jpg',
-        rating =
-            json['rating'] is num ? (json['rating'] as num).toDouble() : 0.0,
-        deliveryFee = json['delivery fee']?.toString() ?? '50',
-        deliveryTime = json['delivery time']?.toString() ?? '1 day',
-        ordersnum = json['ordersnumber'] is num
-            ? (json['ordersnumber'] as num).toInt()
-            : 0,
-        categories = json['categories'] is List
-            ? List<String>.from(json['categories'])
-            : [],
-        menuCategories = json['menuCategories'] is List
-            ? List<String>.from(json['menuCategories'])
-            : null,
-        category = json["category"]?.toString() ?? "fast food";
+      :
+        // Initialize with safe defaults and validation
+        name = json['resname']?.toString() ?? '',
+        nameAr = json['namear']?.toString() ?? 'مطعم',
+        id = json['id']?.toString() ?? '',
+        img = json['img']?.toString() ?? 'assets/images/restuarants/store.jpg',
+        rating = _parseRating(json['rating']),
+        deliveryFee = _parseDeliveryFee(json['delivery fee']),
+        deliveryTime = json['delivery time']?.toString() ?? '30-45 min',
+        ordersnum = _parseOrdersNumber(json['ordersnumber']),
+        category = json['category']?.toString() ?? 'fast food',
+        categoryAr = json['categoryar']?.toString() ?? 'طعام سريع',
+        categories = _parseCategories(json['categories']),
+        menuCategories = _parseMenuCategories(json['menuCategories']) {
+    try {
+      // Parse menu items with error handling
+      if (json['items'] is List) {
+        menuItems = (json['items'] as List)
+            .map((item) {
+              try {
+                return Item.fromJson(item as Map<String, dynamic>);
+              } catch (e) {
+                print('Error parsing menu item: $e');
+                return null;
+              }
+            })
+            .where((item) => item != null)
+            .cast<Item>()
+            .toList();
+      }
+
+      // Validate required fields after initialization
+      if (name.isEmpty) name = 'Unnamed Restaurant';
+      if (nameAr.isEmpty) nameAr = 'مطعم بدون اسم';
+      if (category.isEmpty) category = 'Uncategorized';
+      if (categoryAr.isEmpty) categoryAr = 'غير مصنف';
+    } catch (e) {
+      print('Error initializing restaurant from JSON: $e');
+      rethrow;
+    }
+  }
+
+  // Static helper methods for parsing JSON values
+  static double _parseRating(dynamic value) {
+    if (value == null) return 0.0;
+    if (value is num) return value.toDouble();
+    if (value is String) {
+      try {
+        return double.parse(value);
+      } catch (e) {
+        print('Error parsing rating: $e');
+        return 0.0;
+      }
+    }
+    return 0.0;
+  }
+
+  static String _parseDeliveryFee(dynamic value) {
+    print("\n=== Parsing Restaurant Delivery Fee ===");
+    print("Original Value: $value");
+
+    if (value == null) {
+      print("Value is null, returning 0");
+      return '0';
+    }
+
+    // Handle different formats
+    String fee = value.toString().trim();
+    print("Trimmed Fee: $fee");
+
+    // If empty, return 0
+    if (fee.isEmpty) {
+      print("Fee is empty, returning 0");
+      return '0';
+    }
+
+    // Try to clean and parse the number
+    try {
+      String cleanFee = fee.replaceAll(RegExp(r'[^0-9.]'), '');
+      print("Cleaned Fee: $cleanFee");
+
+      if (cleanFee.isEmpty) {
+        print("No valid numbers in fee, returning 0");
+        return '0';
+      }
+
+      double parsedFee = double.parse(cleanFee);
+      print("Parsed Fee: $parsedFee");
+
+      if (parsedFee <= 0) {
+        print("Fee is 0 or negative, returning 0");
+        return '0';
+      }
+
+      print("Final Fee: $parsedFee");
+      print("=== Parsing Complete ===\n");
+      return parsedFee.toString(); // Return clean number string
+    } catch (e) {
+      print("Error parsing fee: $e");
+      return '0';
+    }
+  }
+
+  static int _parseOrdersNumber(dynamic value) {
+    if (value == null) return 0;
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    if (value is String) {
+      try {
+        return int.parse(value);
+      } catch (e) {
+        print('Error parsing orders number: $e');
+        return 0;
+      }
+    }
+    return 0;
+  }
+
+  static List<String> _parseCategories(dynamic value) {
+    if (value == null) return ['Uncategorized'];
+    if (value is List) {
+      try {
+        return List<String>.from(value);
+      } catch (e) {
+        print('Error parsing categories: $e');
+        return ['Uncategorized'];
+      }
+    }
+    return ['Uncategorized'];
+  }
+
+  static List<String>? _parseMenuCategories(dynamic value) {
+    if (value == null) return null;
+    if (value is List) {
+      try {
+        return List<String>.from(value);
+      } catch (e) {
+        print('Error parsing menu categories: $e');
+        return null;
+      }
+    }
+    return null;
+  }
 
   Map<String, dynamic> toJson() {
-    return {
-      'resname': name,
-      'id': id,
-      'img': img,
-      'rating': rating,
-      'category': category,
-      'delivery fee': deliveryFee,
-      'delivery time': deliveryTime,
-      'ordersnumber': ordersnum,
-      'categories': categories,
-      'menuCategories': menuCategories,
-      'items': menuItems.map((item) => item.toJson()).toList(),
-    };
+    try {
+      return {
+        'resname': name,
+        'namear': nameAr,
+        'id': id,
+        'img': img,
+        'rating': rating,
+        'category': category,
+        'categoryar': categoryAr,
+        'delivery fee': deliveryFee,
+        'delivery time': deliveryTime,
+        'ordersnumber': ordersnum,
+        'categories': categories,
+        'menuCategories': menuCategories,
+        'items': menuItems.map((item) => item.toJson()).toList(),
+      };
+    } catch (e) {
+      print('Error converting restaurant to JSON: $e');
+      rethrow;
+    }
   }
 
   @override
   String toString() {
-    return 'Restaurant: $name, ID: $id, Category: $category, Items: ${menuItems.length}';
+    return 'Restaurant: $name ($nameAr), ID: $id, Category: $category';
   }
 }

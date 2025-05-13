@@ -12,3 +12,10 @@ class RestuarantsErrorState extends ResturantsStates {
   final String error;
   RestuarantsErrorState(this.error);
 }
+
+// New category-related states
+class CategoriesLoadedState extends ResturantsStates {}
+
+class CategoryAddedState extends ResturantsStates {}
+
+class CategoryDeletedState extends ResturantsStates {}

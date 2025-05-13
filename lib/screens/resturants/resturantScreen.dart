@@ -2,65 +2,90 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:foodapp/generated/l10n.dart';
+import 'package:foodapp/models/category.dart';
 import 'package:foodapp/screens/resturants/cubit.dart';
 import 'package:foodapp/screens/resturants/states.dart';
 import 'package:foodapp/shared/colors.dart';
-import 'package:foodapp/widgets/restuarantbox.dart';
+import 'package:foodapp/widgets/restaurantbox.dart';
 
-class Resturantscreen extends StatelessWidget {
+class Resturantscreen extends StatefulWidget {
   const Resturantscreen({super.key});
+
+  @override
+  State<Resturantscreen> createState() => _ResturantscreenState();
+}
+
+class _ResturantscreenState extends State<Resturantscreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Data is already initialized in cubit constructor
+  }
 
   @override
   Widget build(BuildContext context) {
     var cubit = Restuarantscubit.get(context);
+    bool isArabic = Localizations.localeOf(context).languageCode == 'ar';
 
     return BlocConsumer<Restuarantscubit, ResturantsStates>(
       listener: (context, state) {
         if (state is RestuarantsErrorState) {
-          print("Error loading restaurants: ${state.error}");
+          print("Error: ${state.error}");
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text("Error: ${state.error}")),
           );
-        } else if (state is RestuarantsGetDataSuccessState) {
-          print("Restaurants loaded successfully: ${cubit.restaurants.length}");
         }
       },
       builder: (context, state) {
-        final cats = cubit.categories(context);
-
-        return Padding(
-          padding: EdgeInsets.all(12.0.w),
-          child: RefreshIndicator(
+        return Scaffold(
+          body: RefreshIndicator(
             onRefresh: () async {
-              await Future.delayed(Duration(milliseconds: 500));
-              cubit.getRestuarants();
+              // Only refresh restaurants data
+              await cubit.refreshRestaurants();
             },
             color: Colors.deepOrange,
+            backgroundColor: Theme.of(context).cardColor,
             child: CustomScrollView(
               slivers: [
                 // Banner
                 SliverToBoxAdapter(
-                  child: CarouselSlider.builder(
-                    itemCount: cubit.banners.length,
-                    itemBuilder: (context, index, realIdx) => ClipRRect(
-                      borderRadius: BorderRadius.circular(16.r),
-                      child: Image.asset(
-                        cubit.banners[index],
-                        fit: BoxFit.cover,
-                        width: double.infinity,
-                      ),
-                    ),
+                  child: CarouselSlider(
                     options: CarouselOptions(
-                      height: 160.h,
+                      height: 150.h,
+                      viewportFraction: 0.8,
+                      initialPage: 0,
+                      enableInfiniteScroll: true,
+                      reverse: false,
                       autoPlay: true,
+                      autoPlayInterval: const Duration(seconds: 3),
+                      autoPlayAnimationDuration:
+                          const Duration(milliseconds: 800),
+                      autoPlayCurve: Curves.fastOutSlowIn,
                       enlargeCenterPage: true,
-                      viewportFraction: 0.9,
-                      autoPlayCurve: Curves.easeInOut,
+                      scrollDirection: Axis.horizontal,
                     ),
+                    items: cubit.banners.map((banner) {
+                      return Builder(
+                        builder: (BuildContext context) {
+                          return Container(
+                            width: MediaQuery.of(context).size.width,
+                            margin: EdgeInsets.symmetric(horizontal: 5.w),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(20.r),
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(20.r),
+                              child: Image.asset(
+                                banner,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    }).toList(),
                   ),
                 ),
-                SliverToBoxAdapter(child: SizedBox(height: 16.h)),
 
                 // Categories
                 SliverToBoxAdapter(
@@ -68,13 +93,13 @@ class Resturantscreen extends StatelessWidget {
                     height: 100.h,
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
-                      itemCount: cats.length,
+                      itemCount: cubit.categories.length,
                       separatorBuilder: (_, __) => SizedBox(width: 10.w),
                       itemBuilder: (context, index) {
-                        var category = cats[index];
+                        Category category = cubit.categories[index];
                         return GestureDetector(
                           onTap: () {
-                            cubit.filterRestaurants(category["name"]);
+                            cubit.filterRestaurants(category);
                           },
                           child: Column(
                             children: [
@@ -90,13 +115,13 @@ class Resturantscreen extends StatelessWidget {
                                   shape: BoxShape.circle,
                                 ),
                                 child: Image.asset(
-                                  category["img"],
+                                  category.img,
                                   fit: BoxFit.contain,
                                 ),
                               ),
                               SizedBox(height: 6.h),
                               Text(
-                                category["name"],
+                                cubit.getCategoryName(category, isArabic),
                                 style: Theme.of(context).textTheme.labelMedium,
                                 textAlign: TextAlign.center,
                               ),
@@ -107,68 +132,34 @@ class Resturantscreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                SliverToBoxAdapter(child: SizedBox(height: 16.h)),
 
-                // Restaurant Grid
-                if (state is RestuarantsLoadingState)
-                  SliverFillRemaining(
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          CircularProgressIndicator(
-                            color: Colors.deepOrange,
+                // Restaurants Grid
+                SliverPadding(
+                  padding: EdgeInsets.all(16.w),
+                  sliver: state is RestuarantsLoadingState
+                      ? const SliverFillRemaining(
+                          child: Center(
+                            child: CircularProgressIndicator(),
                           ),
-                          SizedBox(height: 20.h),
-                          Text(
-                            S.of(context).loadingres,
-                            style: TextStyle(
-                              fontSize: 16.sp,
-                              color: Colors.grey[600],
-                            ),
+                        )
+                      : SliverGrid(
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            mainAxisSpacing: 10.h,
+                            crossAxisSpacing: 10.w,
+                            childAspectRatio: 0.8,
                           ),
-                        ],
-                      ),
-                    ),
-                  )
-                else if (cubit.restaurants.isEmpty)
-                  SliverFillRemaining(
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.restaurant_menu,
-                            size: 64.sp,
-                            color: Colors.grey[400],
+                          delegate: SliverChildBuilderDelegate(
+                            (context, index) {
+                              return RestaurantBox(
+                                restaurant: cubit.restaurants[index],
+                              );
+                            },
+                            childCount: cubit.restaurants.length,
                           ),
-                          SizedBox(height: 16.h),
-                          Text(
-                            "No restaurants found",
-                            style: TextStyle(
-                              fontSize: 18.sp,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  )
-                else
-                  SliverGrid(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        return resturantbox(context, cubit.restaurants[index]);
-                      },
-                      childCount: cubit.restaurants.length,
-                    ),
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      mainAxisSpacing: 12.h,
-                      crossAxisSpacing: 10.w,
-                      childAspectRatio: 0.8,
-                    ),
-                  ),
+                        ),
+                ),
               ],
             ),
           ),

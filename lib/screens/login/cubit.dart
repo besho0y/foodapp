@@ -40,10 +40,10 @@ class Logincubit extends Cubit<LoginStates> {
       profileCubit.getuserdata();
 
       // Navigate to the Layout
-      navigateAndFinish(context, Layout());
+      navigateAndFinish(context, const Layout());
 
       // After navigation, ensure we're on the first tab
-      Future.delayed(Duration(milliseconds: 100), () {
+      Future.delayed(const Duration(milliseconds: 100), () {
         if (navigatorKey.currentContext != null) {
           final layoutCubit = Layoutcubit.get(navigatorKey.currentContext!);
           layoutCubit.changenavbar(0); // Change to the first tab
@@ -200,10 +200,10 @@ class Logincubit extends Cubit<LoginStates> {
             profileCubit.getuserdata();
 
             // Navigate to the Layout
-            navigateAndFinish(context, Layout());
+            navigateAndFinish(context, const Layout());
 
             // After navigation, ensure we're on the first tab
-            Future.delayed(Duration(milliseconds: 100), () {
+            Future.delayed(const Duration(milliseconds: 100), () {
               if (navigatorKey.currentContext != null) {
                 final layoutCubit =
                     Layoutcubit.get(navigatorKey.currentContext!);
@@ -234,6 +234,77 @@ class Logincubit extends Cubit<LoginStates> {
       if (context != null) {
         showToast(
           "Google Sign-In Error: ${error.toString().substring(0, math.min(100, error.toString().length))}",
+          context: context,
+          duration: const Duration(seconds: 3),
+          backgroundColor: Colors.red,
+          textStyle: const TextStyle(color: Colors.white, fontSize: 16.0),
+          position: StyledToastPosition.bottom,
+        );
+      }
+    }
+  }
+
+  Future<void> signinwithapple({BuildContext? context}) async {
+    emit(LoginLoadingState());
+    try {
+      // Get Apple Sign In credentials
+      final appleProvider = AppleAuthProvider();
+      final UserCredential userCredential =
+          await FirebaseAuth.instance.signInWithProvider(appleProvider);
+
+      final User? user = userCredential.user;
+
+      if (user != null) {
+        // Check if user exists in Firestore
+        final userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
+
+        if (!userDoc.exists) {
+          // Create user in Firestore if they don't exist
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .set({
+            'name': user.displayName ?? '',
+            'email': user.email ?? '',
+            'phone': user.phoneNumber ?? '',
+            'uid': user.uid,
+            'orderIds': [],
+          });
+        }
+
+        // Save user login state
+        await LocalStorageService.saveUserLogin(user.uid, user.email ?? '');
+
+        emit(LoginSuccessState());
+
+        if (context != null) {
+          // Load user data before navigation
+          ProfileCubit profileCubit = ProfileCubit.get(context);
+          profileCubit.getuserdata();
+
+          // Navigate to the Layout
+          navigateAndFinish(context, const Layout());
+
+          // After navigation, ensure we're on the first tab
+          Future.delayed(const Duration(milliseconds: 100), () {
+            if (navigatorKey.currentContext != null) {
+              final layoutCubit = Layoutcubit.get(navigatorKey.currentContext!);
+              layoutCubit.changenavbar(0); // Change to the first tab
+            }
+          });
+        }
+      } else {
+        throw Exception("Firebase user is null after sign-in");
+      }
+    } catch (error) {
+      print("Apple Sign-In Error: $error");
+      emit(LoginErrorlState());
+      if (context != null) {
+        showToast(
+          "Apple Sign-In Error: ${error.toString().substring(0, math.min(100, error.toString().length))}",
           context: context,
           duration: const Duration(seconds: 3),
           backgroundColor: Colors.red,

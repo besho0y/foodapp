@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:foodapp/generated/l10n.dart';
 
 class OrderCardAdmin extends StatefulWidget {
   final dynamic model; // Order model
@@ -223,7 +224,7 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
                                 size: 14.sp, color: Colors.blue[700]),
                             SizedBox(width: 4.w),
                             Text(
-                              "Customer: ",
+                              "${S.of(context).customer}: ",
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: smallScreen ? 11.sp : 12.sp,
@@ -252,7 +253,7 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
                               size: 14.sp, color: Colors.blue[700]),
                           SizedBox(width: 4.w),
                           Text(
-                            "Phone: ",
+                            "${S.of(context).phone}: ",
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: smallScreen ? 11.sp : 12.sp,
@@ -302,7 +303,7 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
                                 size: 14.sp, color: Colors.blue[700]),
                             SizedBox(width: 4.w),
                             Text(
-                              "User ID: ",
+                              "${S.of(context).user_id}: ",
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: smallScreen ? 10.sp : 11.sp,
@@ -380,7 +381,7 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
                       ),
                       SizedBox(width: 6.w),
                       Text(
-                        "Status:",
+                        "${S.of(context).status}:",
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: smallScreen ? 13.sp : 14.sp,
@@ -484,15 +485,15 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
                               ),
                               SizedBox(width: 6.w),
                               Text(
-                                "Order Items (${model.items.length})",
+                                "${S.of(context).order_items} (${model.items.length})",
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: smallScreen ? 13.sp : 14.sp,
                                 ),
                               ),
-                              Spacer(),
+                              const Spacer(),
                               Text(
-                                "Total: ${calculatedTotal.toStringAsFixed(2)} EGP",
+                                "${S.of(context).total}: ${calculatedTotal.toStringAsFixed(2)} EGP",
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: smallScreen ? 13.sp : 14.sp,
@@ -513,7 +514,7 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
 
                       // Expandable item list
                       AnimatedCrossFade(
-                        firstChild: SizedBox(height: 0),
+                        firstChild: const SizedBox(height: 0),
                         secondChild: ConstrainedBox(
                           constraints: BoxConstraints(
                             maxHeight: 250.h,
@@ -524,7 +525,7 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Divider(height: 1),
+                                  const Divider(height: 1),
                                   // Header row
                                   Padding(
                                     padding:
@@ -534,7 +535,7 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
                                         Expanded(
                                           flex: 4,
                                           child: Text(
-                                            "Item",
+                                            "${S.of(context).item}",
                                             style: TextStyle(
                                               fontWeight: FontWeight.bold,
                                               fontSize:
@@ -547,7 +548,7 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
                                           flex: 1,
                                           child: Center(
                                             child: Text(
-                                              "Qty",
+                                              "${S.of(context).qty}",
                                               style: TextStyle(
                                                 fontWeight: FontWeight.bold,
                                                 fontSize:
@@ -560,7 +561,7 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
                                         Expanded(
                                           flex: 2,
                                           child: Text(
-                                            "Price",
+                                            "${S.of(context).item_price}",
                                             style: TextStyle(
                                               fontWeight: FontWeight.bold,
                                               fontSize:
@@ -625,7 +626,17 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
                                                 Expanded(
                                                   flex: 4,
                                                   child: Text(
-                                                    itemName,
+                                                    Directionality.of(
+                                                                context) ==
+                                                            TextDirection.rtl
+                                                        ? (item is Map
+                                                            ? item['nameAr'] ??
+                                                                item['name']
+                                                            : item.nameAr ??
+                                                                item.name)
+                                                        : (item is Map
+                                                            ? item['name']
+                                                            : item.name),
                                                     style: TextStyle(
                                                       fontSize: smallScreen
                                                           ? 11.sp
@@ -669,7 +680,7 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
                                                 Expanded(
                                                   flex: 2,
                                                   child: Text(
-                                                    "${itemPrice.toStringAsFixed(2)} EGP",
+                                                    "${itemPrice.toStringAsFixed(2)} ${S.of(context).egp}",
                                                     style: TextStyle(
                                                       fontSize: smallScreen
                                                           ? 10.sp
@@ -730,7 +741,7 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
                                             CrossAxisAlignment.end,
                                         children: [
                                           Text(
-                                            "Delivery Fee: 30.00 EGP",
+                                            "${S.of(context).delivery_fee}: 30.00 ${S.of(context).egp}",
                                             style: TextStyle(
                                               fontSize:
                                                   smallScreen ? 10.sp : 11.sp,
@@ -749,7 +760,7 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
                                                   color: Colors.green[300]!),
                                             ),
                                             child: Text(
-                                              "Total: ${calculatedTotal.toStringAsFixed(2)} EGP",
+                                              "${S.of(context).total}: ${calculatedTotal.toStringAsFixed(2)} ${S.of(context).egp}",
                                               style: TextStyle(
                                                 fontWeight: FontWeight.bold,
                                                 fontSize:
@@ -785,14 +796,14 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
 
   String _truncateId(String id) {
     if (id.length > 8) {
-      return id.substring(0, 8) + "...";
+      return "${id.substring(0, 8)}...";
     }
     return id;
   }
 
   String _truncateUserId(String userId) {
     if (userId.length > 16) {
-      return userId.substring(0, 16) + "...";
+      return "${userId.substring(0, 16)}...";
     }
     return userId;
   }
@@ -813,7 +824,7 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
               Icon(Icons.location_on, size: 14.sp, color: Colors.red),
               SizedBox(width: 3.w),
               Text(
-                "Delivery Address",
+                "${S.of(context).delivery_address}",
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: smallScreen ? 11.sp : 12.sp,
@@ -843,7 +854,7 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
             ),
           ] else
             Text(
-              "No address provided",
+              "${S.of(context).no_address_provided}",
               style: TextStyle(
                 fontStyle: FontStyle.italic,
                 fontSize: smallScreen ? 10.sp : 11.sp,
@@ -877,7 +888,7 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
               ),
               SizedBox(width: 3.w),
               Text(
-                "Payment",
+                "${S.of(context).payment}",
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: smallScreen ? 11.sp : 12.sp,

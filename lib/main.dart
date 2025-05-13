@@ -15,7 +15,6 @@ import 'package:foodapp/screens/login/loginScreen.dart';
 import 'package:foodapp/screens/oredrs/cubit.dart';
 import 'package:foodapp/screens/profile/cubit.dart';
 import 'package:foodapp/screens/resturants/cubit.dart';
-import 'package:foodapp/screens/settingdetailsscreen/settingdetails.dart';
 import 'package:foodapp/screens/signup/cubit.dart';
 import 'package:foodapp/shared/blocObserver.dart';
 import 'package:foodapp/shared/paymob_service.dart';
@@ -70,9 +69,8 @@ class MyApp extends StatelessWidget {
         BlocProvider(
           create: (context) {
             final cubit = Restuarantscubit();
-            // Ensure restaurants exist and are loaded when the app starts
-            print("Initializing restaurant cubit and checking data...");
-            cubit.ensureRestaurantsExist();
+            // Initialization is handled in constructor
+            print("Creating restaurant cubit instance...");
             return cubit;
           },
         ),
@@ -110,9 +108,9 @@ class MyApp extends StatelessWidget {
                 theme: cubit.isdark,
                 navigatorKey:
                     navigatorKey, // Add navigator key for global access
-                home: Layout(),
+                home: const Layout(),
                 routes: {
-                  '/login': (context) => Loginscreen(),
+                  '/login': (context) => const Loginscreen(),
                 },
               );
             },

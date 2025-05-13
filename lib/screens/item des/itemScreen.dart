@@ -9,19 +9,31 @@ class Itemscreen extends StatefulWidget {
   const Itemscreen({
     super.key,
     required this.name,
+    required this.nameAr,
     required this.description,
+    required this.descriptionAr,
     required this.price,
     required this.img,
     this.items = const [],
     this.category = '',
+    required this.restaurantId,
+    required this.restaurantName,
+    required this.restaurantNameAr,
+    required this.deliveryFee,
   });
 
   final String name;
+  final String nameAr;
   final String description;
+  final String descriptionAr;
   final double price;
   final String img;
   final dynamic items;
   final String category;
+  final String restaurantId;
+  final String restaurantName;
+  final String restaurantNameAr;
+  final String deliveryFee;
 
   @override
   State<Itemscreen> createState() => _ItemscreenState();
@@ -109,16 +121,22 @@ class _ItemscreenState extends State<Itemscreen> {
     cubit.addToCart(
       context: context,
       name: widget.name,
+      nameAr: widget.nameAr,
       price: widget.price,
       quantity: quantity,
       img: widget.img,
       comment: _commentController.text.trim(),
+      restaurantId: widget.restaurantId,
+      restaurantName: widget.restaurantName,
+      restaurantNameAr: widget.restaurantNameAr,
+      deliveryFee: widget.deliveryFee,
     );
 
     Navigator.pop(context);
 
+    final isRTL = Directionality.of(context) == TextDirection.rtl;
     showToast(
-      'Added ${quantity}x ${widget.name} to cart',
+      'Added ${quantity}x ${isRTL ? widget.nameAr : widget.name} to cart',
       context: context,
       duration: const Duration(seconds: 3),
       backgroundColor: Colors.green,
@@ -335,6 +353,7 @@ class _ItemscreenState extends State<Itemscreen> {
   @override
   Widget build(BuildContext context) {
     final cubit = Layoutcubit.get(context);
+    final isRTL = Directionality.of(context) == TextDirection.rtl;
 
     return Scaffold(
       body: Stack(
@@ -376,7 +395,7 @@ class _ItemscreenState extends State<Itemscreen> {
                         ),
                         child: Card(
                           margin: EdgeInsets.zero,
-                          shape: RoundedRectangleBorder(
+                          shape: const RoundedRectangleBorder(
                             borderRadius: BorderRadius.zero,
                           ),
                           child: Padding(
@@ -385,12 +404,14 @@ class _ItemscreenState extends State<Itemscreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  widget.name,
+                                  isRTL ? widget.nameAr : widget.name,
                                   style: Theme.of(context).textTheme.bodyMedium,
                                 ),
                                 SizedBox(height: 10.h),
                                 Text(
-                                  widget.description,
+                                  isRTL
+                                      ? widget.descriptionAr
+                                      : widget.description,
                                   style: Theme.of(context).textTheme.bodySmall,
                                 ),
                                 SizedBox(height: 10.h),
@@ -411,9 +432,10 @@ class _ItemscreenState extends State<Itemscreen> {
                                 TextField(
                                   controller: _commentController,
                                   decoration: InputDecoration(
-                                    hintText: "Add special request or comment",
-                                    labelText: "Special Request",
-                                    prefixIcon: Icon(Icons.comment),
+                                    hintText:
+                                        S.of(context).special_request_hint,
+                                    labelText: S.of(context).special_request,
+                                    prefixIcon: const Icon(Icons.comment),
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(8.r),
                                     ),
@@ -453,7 +475,7 @@ class _ItemscreenState extends State<Itemscreen> {
                                               ),
                                               SizedBox(height: 5.h),
                                               Text(
-                                                item.name,
+                                                isRTL ? item.nameAr : item.name,
                                                 style: Theme.of(
                                                   context,
                                                 ).textTheme.bodySmall,
@@ -473,12 +495,25 @@ class _ItemscreenState extends State<Itemscreen> {
                                                     cubit.addToCart(
                                                       context: context,
                                                       name: item.name,
+                                                      nameAr: item.nameAr,
                                                       price: item.price,
                                                       quantity: 1,
                                                       img: item.img,
+                                                      restaurantId:
+                                                          widget.restaurantId,
+                                                      restaurantName:
+                                                          widget.restaurantName,
+                                                      restaurantNameAr: widget
+                                                          .restaurantNameAr,
+                                                      deliveryFee:
+                                                          widget.deliveryFee,
                                                     );
+                                                    final isRTL =
+                                                        Directionality.of(
+                                                                context) ==
+                                                            TextDirection.rtl;
                                                     showToast(
-                                                      'Added ${item.name} to cart',
+                                                      'Added ${isRTL ? item.nameAr : item.name} to cart',
                                                       context: context,
                                                       duration: const Duration(
                                                           seconds: 3),
@@ -494,9 +529,8 @@ class _ItemscreenState extends State<Itemscreen> {
                                                               .bottom,
                                                     );
                                                   },
-                                                  icon: Icon(
-                                                    Icons.add_shopping_cart,
-                                                    size: 20.sp,
+                                                  icon: const Icon(
+                                                    Icons.add_circle,
                                                     color: Colors.green,
                                                   ),
                                                 ),

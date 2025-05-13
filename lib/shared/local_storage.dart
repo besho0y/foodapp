@@ -16,8 +16,15 @@ class LocalStorageService {
   static Future<void> saveCartItems(List<CartItem> cartItems) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final cartItemsJson =
-          cartItems.map((item) => jsonEncode(item.toJson())).toList();
+      final cartItemsJson = cartItems.map((item) {
+        var json = item.toJson();
+        print('Saving cart item:');
+        print('- name: ${json['name']}');
+        print('- price: ${json['price']}');
+        print('- quantity: ${json['quantity']}');
+        print('- deliveryFee: ${json['deliveryFee']}');
+        return jsonEncode(json);
+      }).toList();
       await prefs.setStringList(CART_ITEMS_KEY, cartItemsJson);
     } catch (e) {
       print("Error saving cart items: $e");
@@ -30,8 +37,25 @@ class LocalStorageService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final cartItemsJson = prefs.getStringList(CART_ITEMS_KEY) ?? [];
+
+      print('Loading cart items from storage:');
       return cartItemsJson
-          .map((itemJson) => CartItem.fromJson(jsonDecode(itemJson)))
+          .map((itemJson) {
+            try {
+              final Map<String, dynamic> json = jsonDecode(itemJson);
+              print('Loading item:');
+              print('- name: ${json['name']}');
+              print('- price: ${json['price']}');
+              print('- quantity: ${json['quantity']}');
+              print('- deliveryFee: ${json['deliveryFee']}');
+              return CartItem.fromJson(json);
+            } catch (e) {
+              print('Error parsing cart item: $e');
+              return null;
+            }
+          })
+          .where((item) => item != null)
+          .cast<CartItem>()
           .toList();
     } catch (e) {
       print("Error getting cart items: $e");

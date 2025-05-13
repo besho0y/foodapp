@@ -6,6 +6,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:foodapp/generated/l10n.dart';
 import 'package:foodapp/layout/cubit.dart';
 import 'package:foodapp/layout/states.dart';
+import 'package:foodapp/models/user.dart';
 import 'package:foodapp/screens/checkout/checkout_screen.dart';
 import 'package:foodapp/screens/login/loginScreen.dart';
 import 'package:foodapp/screens/profile/cubit.dart';
@@ -84,11 +85,11 @@ class _LayoutState extends State<Layout> {
                             ),
                             ElevatedButton(
                               onPressed: () => Navigator.pop(context, true),
-                              child: Text(S.of(context).yes),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.red,
                                 foregroundColor: Colors.white,
                               ),
+                              child: Text(S.of(context).yes),
                             ),
                           ],
                         ),
@@ -133,11 +134,11 @@ class _LayoutState extends State<Layout> {
                                         ),
                                       ],
                                     ),
-                                    Spacer(),
+                                    const Spacer(),
                                     CircleAvatar(
                                       radius: 25.r,
                                       backgroundColor: Colors.grey[300],
-                                      child: Icon(
+                                      child: const Icon(
                                         Icons.person_outline,
                                         color: Colors.black,
                                       ),
@@ -234,7 +235,8 @@ class _LayoutState extends State<Layout> {
                                                       onPressed: () =>
                                                           Navigator.of(context)
                                                               .pop(),
-                                                      icon: Icon(Icons.close),
+                                                      icon: const Icon(
+                                                          Icons.close),
                                                     ),
                                                   ],
                                                 ),
@@ -272,7 +274,10 @@ class _LayoutState extends State<Layout> {
                                                               SizedBox(
                                                                   height: 8.h),
                                                               Text(
-                                                                "Add items to your cart to get started",
+                                                                S
+                                                                    .of(context)
+                                                                    .cart_items_count(
+                                                                        0),
                                                                 style:
                                                                     TextStyle(
                                                                   fontSize:
@@ -348,23 +353,36 @@ class _LayoutState extends State<Layout> {
                                                                           CrossAxisAlignment
                                                                               .start,
                                                                       children: [
-                                                                        Text(
-                                                                          cubit
-                                                                              .cartitems[index]
-                                                                              .name,
-                                                                          style:
-                                                                              TextStyle(
-                                                                            fontSize:
-                                                                                16.sp,
-                                                                            fontWeight:
-                                                                                FontWeight.bold,
-                                                                          ),
-                                                                        ),
+                                                                        Builder(builder:
+                                                                            (context) {
+                                                                          final isRTL =
+                                                                              Directionality.of(context) == TextDirection.rtl;
+                                                                          final item =
+                                                                              cubit.cartitems[index];
+                                                                          print(
+                                                                              'Cart Item Debug:');
+                                                                          print(
+                                                                              'isRTL: $isRTL');
+                                                                          print(
+                                                                              'name: ${item.name}');
+                                                                          print(
+                                                                              'nameAr: ${item.nameAr}');
+                                                                          return Text(
+                                                                            isRTL
+                                                                                ? item.nameAr
+                                                                                : item.name,
+                                                                            style:
+                                                                                TextStyle(
+                                                                              fontSize: 16.sp,
+                                                                              fontWeight: FontWeight.bold,
+                                                                            ),
+                                                                          );
+                                                                        }),
                                                                         SizedBox(
                                                                             height:
                                                                                 5.h),
                                                                         Text(
-                                                                          "${cubit.cartitems[index].price} EGP",
+                                                                          "${cubit.cartitems[index].price} ${Directionality.of(context) == TextDirection.rtl ? 'جنيه' : 'EGP'}",
                                                                           style:
                                                                               TextStyle(
                                                                             fontSize:
@@ -442,38 +460,148 @@ class _LayoutState extends State<Layout> {
                                                 if (cubit.cartitems.isNotEmpty)
                                                   Column(
                                                     children: [
-                                                      Divider(),
+                                                      const Divider(),
                                                       Padding(
                                                         padding: EdgeInsets
                                                             .symmetric(
                                                                 horizontal:
                                                                     16.w,
                                                                 vertical: 10.h),
-                                                        child: Row(
-                                                          mainAxisAlignment:
-                                                              MainAxisAlignment
-                                                                  .spaceBetween,
+                                                        child: Column(
                                                           children: [
-                                                            Text(
-                                                              'Total:',
-                                                              style: TextStyle(
-                                                                fontSize: 18.sp,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold,
-                                                              ),
+                                                            Row(
+                                                              mainAxisAlignment:
+                                                                  MainAxisAlignment
+                                                                      .spaceBetween,
+                                                              children: [
+                                                                Text(
+                                                                  S
+                                                                      .of(context)
+                                                                      .items,
+                                                                  style:
+                                                                      TextStyle(
+                                                                    fontSize:
+                                                                        16.sp,
+                                                                  ),
+                                                                ),
+                                                                Text(
+                                                                  '${cubit.calculateSubtotal().toStringAsFixed(2)} ${S.of(context).egp}',
+                                                                  style:
+                                                                      TextStyle(
+                                                                    fontSize:
+                                                                        16.sp,
+                                                                  ),
+                                                                ),
+                                                              ],
                                                             ),
-                                                            Text(
-                                                              '${cubit.calculateTotalPrice().toStringAsFixed(2)} EGP',
-                                                              style: TextStyle(
-                                                                fontSize: 18.sp,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold,
-                                                                color: Theme.of(
-                                                                        context)
-                                                                    .primaryColor,
-                                                              ),
+                                                            SizedBox(
+                                                                height: 8.h),
+                                                            // Calculate total delivery fees
+                                                            Builder(
+                                                              builder:
+                                                                  (context) {
+                                                                // Calculate total delivery fees
+                                                                double
+                                                                    totalDeliveryFee =
+                                                                    0.0;
+
+                                                                // Group by restaurant to avoid duplicates
+                                                                final restaurantGroups =
+                                                                    groupItemsByRestaurant(
+                                                                        cubit
+                                                                            .cartitems);
+
+                                                                // Add one delivery fee per restaurant
+                                                                restaurantGroups
+                                                                    .forEach((_,
+                                                                        items) {
+                                                                  try {
+                                                                    double fee =
+                                                                        double.parse(items
+                                                                            .first
+                                                                            .deliveryFee);
+                                                                    totalDeliveryFee +=
+                                                                        fee;
+                                                                  } catch (e) {
+                                                                    print(
+                                                                        'Error parsing fee: $e');
+                                                                  }
+                                                                });
+
+                                                                // Show single row with total delivery fees
+                                                                return Padding(
+                                                                  padding: EdgeInsets
+                                                                      .only(
+                                                                          bottom:
+                                                                              8.h),
+                                                                  child: Row(
+                                                                    mainAxisAlignment:
+                                                                        MainAxisAlignment
+                                                                            .spaceBetween,
+                                                                    children: [
+                                                                      Text(
+                                                                        restaurantGroups.length >
+                                                                                1
+                                                                            ? '${S.of(context).delivery_fee} (${restaurantGroups.length})'
+                                                                            : S.of(context).delivery_fee,
+                                                                        style:
+                                                                            TextStyle(
+                                                                          fontSize:
+                                                                              14.sp,
+                                                                          color:
+                                                                              Colors.grey[600],
+                                                                        ),
+                                                                      ),
+                                                                      Text(
+                                                                        '${totalDeliveryFee.toStringAsFixed(2)} ${S.of(context).egp}',
+                                                                        style:
+                                                                            TextStyle(
+                                                                          fontSize:
+                                                                              14.sp,
+                                                                          color:
+                                                                              Colors.grey[600],
+                                                                        ),
+                                                                      ),
+                                                                    ],
+                                                                  ),
+                                                                );
+                                                              },
+                                                            ),
+                                                            Divider(
+                                                                height: 16.h),
+                                                            Row(
+                                                              mainAxisAlignment:
+                                                                  MainAxisAlignment
+                                                                      .spaceBetween,
+                                                              children: [
+                                                                Text(
+                                                                  S
+                                                                      .of(context)
+                                                                      .total_amount,
+                                                                  style:
+                                                                      TextStyle(
+                                                                    fontSize:
+                                                                        18.sp,
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .bold,
+                                                                  ),
+                                                                ),
+                                                                Text(
+                                                                  '${cubit.calculateTotalPrice().toStringAsFixed(2)} ${S.of(context).egp}',
+                                                                  style:
+                                                                      TextStyle(
+                                                                    fontSize:
+                                                                        18.sp,
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .bold,
+                                                                    color: Theme.of(
+                                                                            context)
+                                                                        .primaryColor,
+                                                                  ),
+                                                                ),
+                                                              ],
                                                             ),
                                                           ],
                                                         ),
@@ -508,7 +636,9 @@ class _LayoutState extends State<Layout> {
                                                                           12.h),
                                                             ),
                                                             child: Text(
-                                                              'Proceed to Checkout',
+                                                              S
+                                                                  .of(context)
+                                                                  .checkout,
                                                               style: TextStyle(
                                                                 fontSize: 16.sp,
                                                               ),
@@ -588,18 +718,39 @@ class _LayoutState extends State<Layout> {
               Navigator.pop(context);
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => Loginscreen()),
+                MaterialPageRoute(builder: (context) => const Loginscreen()),
               );
             },
-            child: Text(S.of(context).log_in),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
             ),
+            child: Text(S.of(context).log_in),
           ),
         ],
       ),
     );
+  }
+
+  Map<String, List<CartItem>> groupItemsByRestaurant(List<CartItem> items) {
+    // Group items by restaurant ID to avoid duplicate fees
+    Map<String, List<CartItem>> restaurantGroups = {};
+
+    for (var item in items) {
+      if (!restaurantGroups.containsKey(item.restaurantId)) {
+        restaurantGroups[item.restaurantId] = [];
+      }
+      restaurantGroups[item.restaurantId]!.add(item);
+    }
+
+    // Print debug info
+    print("\nGrouping cart items by restaurant:");
+    restaurantGroups.forEach((restaurantId, restaurantItems) {
+      print(
+          "- ${restaurantItems.first.restaurantName}: ${restaurantItems.length} items");
+    });
+
+    return restaurantGroups;
   }
 
   Widget _buildCartItemImage(String imageUrl) {

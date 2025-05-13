@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:foodapp/generated/l10n.dart';
 import 'package:foodapp/screens/login/cubit.dart';
+import 'package:foodapp/screens/login/forgotPasswordScreen.dart';
 import 'package:foodapp/screens/login/states.dart';
 import 'package:foodapp/screens/signup/signupScreen.dart';
 import 'package:foodapp/shared/constants.dart';
@@ -51,7 +52,7 @@ class _LoginscreenState extends State<Loginscreen> {
                         color: primaryColor.withOpacity(0.1),
                         shape: BoxShape.circle,
                       ),
-                      child: Center(
+                      child: const Center(
                         child: Icon(
                           Icons.restaurant_menu,
                           size: 60,
@@ -98,13 +99,13 @@ class _LoginscreenState extends State<Loginscreen> {
                             // Email field
                             TextFormField(
                               controller: cubit.emailcontroller,
-                              style: TextStyle(color: textColor),
+                              style: const TextStyle(color: textColor),
                               decoration: InputDecoration(
                                 labelText: "Email",
                                 hintText: S.of(context).enter_email,
                                 labelStyle:
-                                    TextStyle(color: secondaryTextColor),
-                                prefixIcon: Icon(Icons.email_outlined,
+                                    const TextStyle(color: secondaryTextColor),
+                                prefixIcon: const Icon(Icons.email_outlined,
                                     color: primaryColor),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12.r),
@@ -127,13 +128,14 @@ class _LoginscreenState extends State<Loginscreen> {
                             TextFormField(
                               controller: cubit.passwordcontroller,
                               obscureText: !_isPasswordVisible,
-                              style: TextStyle(color: textColor),
+                              style: const TextStyle(color: textColor),
                               decoration: InputDecoration(
                                 labelText: "Password",
                                 hintText: S.of(context).enter_password,
                                 labelStyle:
-                                    TextStyle(color: secondaryTextColor),
-                                prefixIcon: Icon(Icons.lock_outline_rounded,
+                                    const TextStyle(color: secondaryTextColor),
+                                prefixIcon: const Icon(
+                                    Icons.lock_outline_rounded,
                                     color: primaryColor),
                                 suffixIcon: IconButton(
                                   icon: Icon(
@@ -168,7 +170,15 @@ class _LoginscreenState extends State<Loginscreen> {
                             Align(
                               alignment: Alignment.centerRight,
                               child: TextButton(
-                                onPressed: () {},
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          const ForgotPasswordScreen(),
+                                    ),
+                                  );
+                                },
                                 child: Text(
                                   S.of(context).forgot_password,
                                   style: TextStyle(
@@ -300,38 +310,43 @@ class _LoginscreenState extends State<Loginscreen> {
                         ),
                         SizedBox(width: 20.w),
                         // Apple button
-                        Container(
-                          width: 120.w,
-                          height: 50.h,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12.r),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
-                                blurRadius: 10,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Image.asset(
-                                "assets/images/signinLogos/apple.png",
-                                width: 24.w,
-                                height: 24.h,
-                              ),
-                              SizedBox(width: 8.w),
-                              Text(
-                                S.of(context).apple,
-                                style: TextStyle(
-                                  color: textColor,
-                                  fontSize: 14.sp,
-                                  fontWeight: FontWeight.w500,
+                        GestureDetector(
+                          onTap: () {
+                            cubit.signinwithapple(context: context);
+                          },
+                          child: Container(
+                            width: 120.w,
+                            height: 50.h,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12.r),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.05),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 2),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Image.asset(
+                                  "assets/images/signinLogos/apple.png",
+                                  width: 24.w,
+                                  height: 24.h,
+                                ),
+                                SizedBox(width: 8.w),
+                                Text(
+                                  S.of(context).apple,
+                                  style: TextStyle(
+                                    color: textColor,
+                                    fontSize: 14.sp,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ],
@@ -350,7 +365,7 @@ class _LoginscreenState extends State<Loginscreen> {
                         ),
                         TextButton(
                           onPressed: () {
-                            navigateTo(context, Signupscreen());
+                            navigateTo(context, const Signupscreen());
                           },
                           child: Text(
                             S.of(context).sign_up,

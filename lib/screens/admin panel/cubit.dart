@@ -116,7 +116,9 @@ class AdminPanelCubit extends Cubit<AdminPanelStates> {
   // Add new restaurant
   Future<void> addRestaurant({
     required String name,
+    required String nameAr,
     required String category,
+    required String categoryAr,
     required String deliveryFee,
     required String deliveryTime,
     required File? imageFile,
@@ -151,7 +153,9 @@ class AdminPanelCubit extends Cubit<AdminPanelStates> {
           .doc(restaurantId)
           .set({
         'resname': name,
+        'namear': nameAr,
         'category': category,
+        'categoryar': categoryAr,
         'delivery fee': deliveryFee,
         'delivery time': deliveryTime,
         'img': imageUrl,
@@ -205,11 +209,13 @@ class AdminPanelCubit extends Cubit<AdminPanelStates> {
   Future<void> addItem({
     required String restaurantId,
     required String name,
+    required String nameAr,
     required String description,
+    required String descriptionAr,
     required double price,
-    required String category, // Main category (for backward compatibility)
-    required List<String> categories, // New parameter for multiple categories
-    required File? imageFile,
+    required String category,
+    required List<String> categories,
+    File? imageFile,
   }) async {
     emit(AddingItemState());
     try {
@@ -232,11 +238,13 @@ class AdminPanelCubit extends Cubit<AdminPanelStates> {
           .doc(itemId)
           .set({
         'name': name,
+        'nameAr': nameAr,
         'description': description,
+        'descriptionAr': descriptionAr,
         'price': price,
         'img': imageUrl,
-        'category': category, // Keep for backward compatibility
-        'categories': categories, // Store multiple categories
+        'category': category,
+        'categories': categories,
       });
 
       await getRestaurants();
@@ -515,9 +523,7 @@ class AdminPanelCubit extends Cubit<AdminPanelStates> {
       // First get the unique categories from this restaurant's menu items
       final uniqueCategories = <String>{};
       for (var item in restaurant.menuItems) {
-        if (item.category != null &&
-            item.category.isNotEmpty &&
-            item.category != "Uncategorized") {
+        if (item.category.isNotEmpty && item.category != "Uncategorized") {
           uniqueCategories.add(item.category);
         }
 

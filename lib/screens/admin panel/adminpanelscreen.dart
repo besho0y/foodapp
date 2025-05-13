@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -33,7 +34,11 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
   // Restaurant form controllers
   final TextEditingController _restaurantNameController =
       TextEditingController();
+  final TextEditingController _restaurantNameArController =
+      TextEditingController();
   final TextEditingController _restaurantCategoryController =
+      TextEditingController();
+  final TextEditingController _restaurantCategoryArController =
       TextEditingController();
   final TextEditingController _deliveryFeeController = TextEditingController();
   final TextEditingController _deliveryTimeController = TextEditingController();
@@ -41,13 +46,18 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
 
   // Item form controllers
   final TextEditingController _itemNameController = TextEditingController();
+  final TextEditingController _itemNameArController = TextEditingController();
   final TextEditingController _itemDescriptionController =
+      TextEditingController();
+  final TextEditingController _itemDescriptionArController =
       TextEditingController();
   final TextEditingController _itemPriceController = TextEditingController();
   final TextEditingController _itemCategoryController = TextEditingController();
 
   // Category form controllers
   final TextEditingController _categoryNameController = TextEditingController();
+  final TextEditingController _categoryNameArController =
+      TextEditingController();
 
   String? selectedRestaurantId;
   File? _restaurantImageFile;
@@ -56,11 +66,12 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
   List<String> selectedCategories = [];
   List<app_models.Order> allOrders = [];
   bool isLoadingOrders = false;
+  File? _categoryImageFile;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
     selectedCategories = []; // Initialize empty categories list
     // Load restaurants when the screen initializes
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -73,15 +84,20 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
   void dispose() {
     _tabController.dispose();
     _restaurantNameController.dispose();
+    _restaurantNameArController.dispose();
     _restaurantCategoryController.dispose();
+    _restaurantCategoryArController.dispose();
     _deliveryFeeController.dispose();
     _deliveryTimeController.dispose();
     _categoriesController.dispose();
     _itemNameController.dispose();
+    _itemNameArController.dispose();
     _itemDescriptionController.dispose();
+    _itemDescriptionArController.dispose();
     _itemPriceController.dispose();
     _itemCategoryController.dispose();
     _categoryNameController.dispose();
+    _categoryNameArController.dispose();
     super.dispose();
   }
 
@@ -160,6 +176,16 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
           appBar: AppBar(
             actions: [
               IconButton(
+                onPressed: () {
+                  Layoutcubit.get(context).changeLanguage();
+                },
+                icon: Icon(
+                  Icons.language,
+                  size: 25.sp,
+                ),
+                tooltip: 'Toggle Language',
+              ),
+              IconButton(
                 onPressed: () async {
                   // Show confirmation dialog
                   bool confirm = await showDialog(
@@ -181,11 +207,11 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
                             ),
                             ElevatedButton(
                               onPressed: () => Navigator.pop(context, true),
-                              child: Text(S.of(context).logout),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.red,
                                 foregroundColor: Colors.white,
                               ),
+                              child: Text(S.of(context).logout),
                             ),
                           ],
                         ),
@@ -212,7 +238,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
                     }
                   }
                 },
-                icon: Icon(Icons.logout),
+                icon: const Icon(Icons.logout),
                 tooltip: 'Logout',
               ),
               IconButton(
@@ -231,11 +257,13 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
               labelColor: Theme.of(context).primaryColor,
               unselectedLabelColor: Colors.grey,
               indicatorColor: Theme.of(context).primaryColor,
-              tabs: const [
-                Tab(text: 'Restaurants'),
-                Tab(text: 'Items'),
-                Tab(text: 'Categories'),
-                Tab(text: 'All Orders'),
+              isScrollable: true,
+              tabs: [
+                Tab(text: S.of(context).admin_restaurants),
+                Tab(text: S.of(context).admin_items),
+                Tab(text: S.of(context).admin_categories),
+                Tab(text: S.of(context).admin_orders),
+                Tab(text: S.of(context).restaurant_categories),
               ],
             ),
           ),
@@ -246,6 +274,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
               _buildItemsTab(cubit, state),
               _buildCategoriesTab(cubit, state),
               _buildAllOrdersTab(cubit, state),
+              _buildRestaurantCategoriesTab(cubit, state),
             ],
           ),
         );
@@ -264,16 +293,16 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Add New Restaurant',
+                  S.of(context).add_restaurant,
                   style: TextStyle(
                     fontSize: 18.sp,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 IconButton(
-                  icon: Icon(Icons.refresh),
+                  icon: const Icon(Icons.refresh),
                   onPressed: () => cubit.getRestaurants(),
-                  tooltip: 'Refresh restaurants',
+                  tooltip: S.of(context).refresh,
                 ),
               ],
             ),
@@ -285,10 +314,22 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
                   defaultTextField(
                     controller: _restaurantNameController,
                     type: TextInputType.text,
-                    label: 'Restaurant Name',
+                    label: S.of(context).Name,
                     validate: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter restaurant name';
+                        return S.of(context).please_fill_all_fields;
+                      }
+                      return null;
+                    },
+                  ),
+                  SizedBox(height: 12.h),
+                  defaultTextField(
+                    controller: _restaurantNameArController,
+                    type: TextInputType.text,
+                    label: '${S.of(context).Name} (${S.of(context).arabic})',
+                    validate: (value) {
+                      if (value == null || value.isEmpty) {
+                        return S.of(context).please_fill_all_fields;
                       }
                       return null;
                     },
@@ -297,10 +338,23 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
                   defaultTextField(
                     controller: _restaurantCategoryController,
                     type: TextInputType.text,
-                    label: 'Main Category',
+                    label: S.of(context).category,
                     validate: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter main category';
+                        return S.of(context).please_fill_all_fields;
+                      }
+                      return null;
+                    },
+                  ),
+                  SizedBox(height: 12.h),
+                  defaultTextField(
+                    controller: _restaurantCategoryArController,
+                    type: TextInputType.text,
+                    label:
+                        '${S.of(context).category} (${S.of(context).arabic})',
+                    validate: (value) {
+                      if (value == null || value.isEmpty) {
+                        return S.of(context).please_fill_all_fields;
                       }
                       return null;
                     },
@@ -309,10 +363,10 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
                   defaultTextField(
                     controller: _deliveryFeeController,
                     type: TextInputType.number,
-                    label: 'Delivery Fee',
+                    label: S.of(context).delivery_fee,
                     validate: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter delivery fee';
+                        return S.of(context).please_fill_all_fields;
                       }
                       return null;
                     },
@@ -321,10 +375,10 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
                   defaultTextField(
                     controller: _deliveryTimeController,
                     type: TextInputType.text,
-                    label: 'Delivery Time',
+                    label: S.of(context).delivery_time,
                     validate: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter delivery time';
+                        return S.of(context).please_fill_all_fields;
                       }
                       return null;
                     },
@@ -333,10 +387,11 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
                   defaultTextField(
                     controller: _categoriesController,
                     type: TextInputType.text,
-                    label: 'Categories (comma separated)',
+                    label:
+                        '${S.of(context).categories} (${S.of(context).comma_separated})',
                     validate: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter at least one category';
+                        return S.of(context).please_fill_all_fields;
                       }
                       return null;
                     },
@@ -357,16 +412,17 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
                             print("Error selecting image: $e");
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                  content: Text('Error selecting image: $e')),
+                                  content: Text(
+                                      '${S.of(context).error}: ${e.toString()}')),
                             );
                           }
                         },
-                        child: const Text('Select Image'),
+                        child: Text(S.of(context).select_image),
                       ),
                       SizedBox(width: 16.w),
                       _restaurantImageFile != null
-                          ? Text('Image selected')
-                          : const Text('No image selected'),
+                          ? Text(S.of(context).image_selected)
+                          : Text(S.of(context).no_image_selected),
                     ],
                   ),
                   SizedBox(height: 20.h),
@@ -374,7 +430,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
                       ? const CircularProgressIndicator()
                       : ElevatedButton(
                           onPressed: () => _submitRestaurantForm(cubit),
-                          child: const Text('Add Restaurant'),
+                          child: Text(S.of(context).add_restaurant),
                         ),
                 ],
               ),
@@ -384,7 +440,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Existing Restaurants',
+                  S.of(context).restaurants,
                   style: TextStyle(
                     fontSize: 18.sp,
                     fontWeight: FontWeight.bold,
@@ -393,16 +449,17 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
                 Row(
                   children: [
                     Text(
-                      'Count: ${cubit.restaurants.length}',
+                      '${S.of(context).count}: ${cubit.restaurants.length}',
                       style: TextStyle(
                         fontSize: 14.sp,
                         color: Colors.grey,
                       ),
                     ),
                     IconButton(
-                      icon: Icon(Icons.add_circle_outline, color: Colors.green),
+                      icon: const Icon(Icons.add_circle_outline,
+                          color: Colors.green),
                       onPressed: () => _addTestRestaurant(cubit),
-                      tooltip: 'Add test restaurant (Debug)',
+                      tooltip: S.of(context).add_restaurant,
                     ),
                   ],
                 ),
@@ -413,22 +470,22 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
               Center(
                   child: Column(
                 children: [
-                  CircularProgressIndicator(),
+                  const CircularProgressIndicator(),
                   SizedBox(height: 10.h),
-                  Text('Loading restaurants...'),
+                  Text(S.of(context).loading),
                 ],
               ))
             else if (cubit.restaurants.isEmpty)
               Center(
                 child: Column(
                   children: [
-                    Icon(Icons.no_food, size: 60, color: Colors.grey),
+                    const Icon(Icons.no_food, size: 60, color: Colors.grey),
                     SizedBox(height: 10.h),
-                    Text('No restaurants found'),
+                    Text(S.of(context).no_data),
                     SizedBox(height: 10.h),
                     ElevatedButton(
                       onPressed: () => cubit.getRestaurants(),
-                      child: Text('Refresh'),
+                      child: Text(S.of(context).refresh),
                     ),
                   ],
                 ),
@@ -436,7 +493,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
             else
               ListView.builder(
                 shrinkWrap: true,
-                physics: NeverScrollableScrollPhysics(),
+                physics: const NeverScrollableScrollPhysics(),
                 itemCount: cubit.restaurants.length,
                 itemBuilder: (context, index) {
                   final restaurant = cubit.restaurants[index];
@@ -489,7 +546,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Add New Item',
+              S.of(context).add_new_item,
               style: TextStyle(
                 fontSize: 18.sp,
                 fontWeight: FontWeight.bold,
@@ -498,8 +555,8 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
             SizedBox(height: 16.h),
             DropdownButtonFormField<String>(
               decoration: InputDecoration(
-                labelText: 'Select Restaurant',
-                border: OutlineInputBorder(),
+                labelText: S.of(context).select_restaurant,
+                border: const OutlineInputBorder(),
                 labelStyle: TextStyle(color: Theme.of(context).primaryColor),
                 focusedBorder: OutlineInputBorder(
                   borderSide: BorderSide(
@@ -550,7 +607,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
                   defaultTextField(
                     controller: _itemNameController,
                     type: TextInputType.text,
-                    label: 'Item Name',
+                    label: S.of(context).item_name,
                     validate: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Please enter item name';
@@ -560,9 +617,22 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
                   ),
                   SizedBox(height: 12.h),
                   defaultTextField(
+                    controller: _itemNameArController,
+                    type: TextInputType.text,
+                    label:
+                        '${S.of(context).item_name} (${S.of(context).arabic})',
+                    validate: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter Arabic item name';
+                      }
+                      return null;
+                    },
+                  ),
+                  SizedBox(height: 12.h),
+                  defaultTextField(
                     controller: _itemDescriptionController,
                     type: TextInputType.multiline,
-                    label: 'Description',
+                    label: S.of(context).item_description,
                     validate: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Please enter description';
@@ -572,9 +642,22 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
                   ),
                   SizedBox(height: 12.h),
                   defaultTextField(
+                    controller: _itemDescriptionArController,
+                    type: TextInputType.multiline,
+                    label:
+                        '${S.of(context).item_description} (${S.of(context).arabic})',
+                    validate: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter Arabic description';
+                      }
+                      return null;
+                    },
+                  ),
+                  SizedBox(height: 12.h),
+                  defaultTextField(
                     controller: _itemPriceController,
                     type: TextInputType.number,
-                    label: 'Price',
+                    label: S.of(context).item_price,
                     validate: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Please enter price';
@@ -605,29 +688,75 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
                             );
                           }
                         },
-                        child: const Text('Select Image'),
+                        child: Text(S.of(context).select_image),
                       ),
                       SizedBox(width: 16.w),
                       _itemImageFile != null
-                          ? const Text('Image selected')
-                          : const Text('No image selected'),
+                          ? Text(S.of(context).image_selected)
+                          : Text(S.of(context).no_image_selected),
                     ],
                   ),
                   SizedBox(height: 20.h),
                   state is AddingItemState
                       ? const CircularProgressIndicator()
                       : ElevatedButton(
-                          onPressed: selectedRestaurantId == null
-                              ? null
-                              : () => _submitItemForm(cubit),
-                          child: const Text('Add Item'),
+                          onPressed: () async {
+                            if (_itemFormKey.currentState!.validate()) {
+                              if (selectedRestaurantId == null) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(S
+                                        .of(context)
+                                        .select_restaurant_for_item),
+                                  ),
+                                );
+                                return;
+                              }
+
+                              try {
+                                await cubit.addItem(
+                                  restaurantId: selectedRestaurantId!,
+                                  name: _itemNameController.text,
+                                  nameAr: _itemNameArController.text,
+                                  description: _itemDescriptionController.text,
+                                  descriptionAr:
+                                      _itemDescriptionArController.text,
+                                  price:
+                                      double.parse(_itemPriceController.text),
+                                  category: _itemCategoryController.text,
+                                  categories: selectedCategories,
+                                  imageFile: _itemImageFile,
+                                );
+
+                                _clearItemForm();
+                                _itemImageFile = null;
+                                setState(() {});
+
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                        S.of(context).item_added_successfully),
+                                    backgroundColor: Colors.green,
+                                  ),
+                                );
+                              } catch (e) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Error adding item: $e'),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                              }
+                            }
+                          },
+                          child: Text(S.of(context).add_item),
                         ),
                 ],
               ),
             ),
             SizedBox(height: 24.h),
             Text(
-              'Restaurant Items',
+              S.of(context).restaurant_items,
               style: TextStyle(
                 fontSize: 18.sp,
                 fontWeight: FontWeight.bold,
@@ -646,14 +775,14 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.error_outline,
+                          const Icon(Icons.error_outline,
                               color: Colors.red, size: 48),
                           SizedBox(height: 16.h),
                           Text('Error displaying items: ${e.toString()}'),
                           SizedBox(height: 8.h),
                           ElevatedButton(
                             onPressed: () => cubit.getRestaurants(),
-                            child: Text('Refresh Data'),
+                            child: const Text('Refresh Data'),
                           ),
                         ],
                       ),
@@ -662,7 +791,8 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
                 },
               )
             else
-              const Center(child: Text('Select a restaurant to view items')),
+              Center(
+                  child: Text(S.of(context).select_restaurant_to_view_items)),
           ],
         ),
       ),
@@ -692,8 +822,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
       displayedItems = restaurant.menuItems
           .where((item) =>
               item.category == selectedCategory ||
-              (item.categories != null &&
-                  item.categories.contains(selectedCategory)))
+              (item.categories.contains(selectedCategory)))
           .toList();
     }
 
@@ -704,7 +833,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
 
     return ListView.builder(
       shrinkWrap: true,
-      physics: NeverScrollableScrollPhysics(),
+      physics: const NeverScrollableScrollPhysics(),
       itemCount: displayedItems.length,
       itemBuilder: (context, index) {
         final item = displayedItems[index];
@@ -724,7 +853,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Add New Category',
+              S.of(context).add_new_category,
               style: TextStyle(
                 fontSize: 18.sp,
                 fontWeight: FontWeight.bold,
@@ -733,8 +862,8 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
             SizedBox(height: 16.h),
             DropdownButtonFormField<String>(
               decoration: InputDecoration(
-                labelText: 'Select Restaurant',
-                border: OutlineInputBorder(),
+                labelText: S.of(context).select_restaurant,
+                border: const OutlineInputBorder(),
                 labelStyle: TextStyle(color: Theme.of(context).primaryColor),
                 focusedBorder: OutlineInputBorder(
                   borderSide: BorderSide(
@@ -781,127 +910,379 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
                   defaultTextField(
                     controller: _categoryNameController,
                     type: TextInputType.text,
-                    label: 'Category Name',
+                    label:
+                        '${S.of(context).category_name_english} (${S.of(context).english})',
                     validate: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter category name';
+                        return S
+                            .of(context)
+                            .please_enter_category_name_in_english;
                       }
                       return null;
                     },
+                  ),
+                  SizedBox(height: 12.h),
+                  defaultTextField(
+                    controller: _categoryNameArController,
+                    type: TextInputType.text,
+                    label:
+                        '${S.of(context).category_name_arabic} (${S.of(context).arabic})',
+                    validate: (value) {
+                      if (value == null || value.isEmpty) {
+                        return S
+                            .of(context)
+                            .please_enter_category_name_in_arabic;
+                      }
+                      return null;
+                    },
+                  ),
+                  SizedBox(height: 12.h),
+                  Row(
+                    children: [
+                      ElevatedButton(
+                        onPressed: () async {
+                          try {
+                            final imageFile = await cubit.pickImage();
+                            if (imageFile != null) {
+                              setState(() {
+                                _categoryImageFile = imageFile;
+                              });
+                            }
+                          } catch (e) {
+                            print("Error selecting image: $e");
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                  content: Text('Error selecting image: $e')),
+                            );
+                          }
+                        },
+                        child: Text(S.of(context).select_image),
+                      ),
+                      SizedBox(width: 16.w),
+                      _categoryImageFile != null
+                          ? Text(S.of(context).image_selected)
+                          : Text(S.of(context).no_image_selected),
+                    ],
                   ),
                   SizedBox(height: 20.h),
                   state is AddingCategoryState
                       ? const CircularProgressIndicator()
                       : ElevatedButton(
-                          onPressed: selectedRestaurantId == null
-                              ? null
-                              : () => _submitCategoryForm(cubit),
-                          child: const Text('Add Category'),
+                          onPressed: () async {
+                            if (_categoryFormKey.currentState!.validate()) {
+                              try {
+                                String imageUrl =
+                                    'assets/images/categories/all.png';
+                                final categoryName = _categoryNameController
+                                    .text
+                                    .toLowerCase()
+                                    .replaceAll(' ', '_');
+
+                                if (_categoryImageFile != null) {
+                                  // Create storage reference with category name
+                                  final storageRef = FirebaseStorage.instance
+                                      .ref()
+                                      .child('categories')
+                                      .child('$categoryName.jpg');
+
+                                  // Upload image
+                                  await storageRef.putFile(_categoryImageFile!);
+
+                                  // Get download URL
+                                  imageUrl = await storageRef.getDownloadURL();
+                                } else {
+                                  // If no image selected, use the default image path with category name
+                                  imageUrl =
+                                      'assets/images/categories/$categoryName.png';
+                                }
+
+                                // Add to Firestore
+                                await FirebaseFirestore.instance
+                                    .collection('restuarants_categories')
+                                    .add({
+                                  'en': _categoryNameController.text,
+                                  'ar': _categoryNameArController.text,
+                                  'img': imageUrl,
+                                });
+
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content:
+                                        Text('Category added successfully'),
+                                    backgroundColor: Colors.green,
+                                  ),
+                                );
+
+                                // Clear form
+                                _categoryNameController.clear();
+                                _categoryNameArController.clear();
+                                setState(() {
+                                  _categoryImageFile = null;
+                                });
+                              } catch (e) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Error adding category: $e'),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                              }
+                            }
+                          },
+                          child: Text(S.of(context).add_category),
                         ),
                 ],
               ),
             ),
             SizedBox(height: 24.h),
             Text(
-              'Restaurant Categories',
+              S.of(context).existing_categories,
               style: TextStyle(
                 fontSize: 18.sp,
                 fontWeight: FontWeight.bold,
               ),
             ),
             SizedBox(height: 16.h),
-            if (selectedRestaurantId != null)
-              _buildCategoriesForRestaurant(cubit, selectedRestaurantId!)
-            else
-              const Center(
-                  child: Text('Select a restaurant to view categories')),
+            StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('restuarants_categories')
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                }
+
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                final categories = snapshot.data?.docs ?? [];
+
+                if (categories.isEmpty) {
+                  return const Center(child: Text('No categories found'));
+                }
+
+                return ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: categories.length,
+                  itemBuilder: (context, index) {
+                    final category =
+                        categories[index].data() as Map<String, dynamic>;
+                    return ListTile(
+                      leading: CircleAvatar(
+                        backgroundImage: AssetImage(category['img'] ??
+                            'assets/images/categories/default.png'),
+                      ),
+                      title: Text(category['en'] ?? ''),
+                      subtitle: Text(category['ar'] ?? ''),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.red),
+                        onPressed: () async {
+                          try {
+                            await categories[index].reference.delete();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Category deleted successfully'),
+                                backgroundColor: Colors.green,
+                              ),
+                            );
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Error deleting category: $e'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        },
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildCategoriesForRestaurant(
-      AdminPanelCubit cubit, String restaurantId) {
-    final restaurant = cubit.restaurants.firstWhere(
-      (r) => r.id == restaurantId,
-      orElse: () => throw Exception('Restaurant not found'),
-    );
-
-    if (restaurant.categories.isEmpty) {
-      return const Center(
-          child: Text('No categories found for this restaurant'));
-    }
-
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: NeverScrollableScrollPhysics(),
-      itemCount: restaurant.categories.length,
-      itemBuilder: (context, index) {
-        final category = restaurant.categories[index];
-        return ListTile(
-          title: Text(category),
-          trailing: IconButton(
-            icon: const Icon(Icons.delete, color: Colors.red),
-            onPressed: () => _deleteCategory(cubit, restaurantId, category),
-          ),
-        );
-      },
-    );
-  }
-
-  void _submitRestaurantForm(AdminPanelCubit cubit) {
+  void _submitRestaurantForm(AdminPanelCubit cubit) async {
     if (_restaurantFormKey.currentState!.validate()) {
-      final categoriesList = _categoriesController.text
-          .split(',')
-          .map((e) => e.trim())
-          .where((e) => e.isNotEmpty)
-          .toList();
+      try {
+        // Parse and validate categories
+        final categoriesList = _categoriesController.text
+            .split(',')
+            .map((e) => e.trim())
+            .where((e) => e.isNotEmpty)
+            .toList();
 
-      cubit.addRestaurant(
-        name: _restaurantNameController.text,
-        category: _restaurantCategoryController.text,
-        deliveryFee: _deliveryFeeController.text,
-        deliveryTime: _deliveryTimeController.text,
-        imageFile: _restaurantImageFile,
-        categories: categoriesList,
-      );
-    }
-  }
+        if (categoriesList.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Please enter at least one category'),
+              backgroundColor: Colors.red,
+            ),
+          );
+          return;
+        }
 
-  void _submitItemForm(AdminPanelCubit cubit) {
-    if (_itemFormKey.currentState!.validate() && selectedRestaurantId != null) {
-      // Make sure we have at least one category
-      if (selectedCategories.isEmpty) {
-        // Show an error message if no categories selected
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Please select at least one category')),
+        // Show loading indicator
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          },
         );
-        return;
+
+        await cubit.addRestaurant(
+          name: _restaurantNameController.text.trim(),
+          nameAr: _restaurantNameArController.text.trim(),
+          category: _restaurantCategoryController.text.trim(),
+          categoryAr: _restaurantCategoryArController.text.trim(),
+          deliveryFee: _deliveryFeeController.text.trim(),
+          deliveryTime: _deliveryTimeController.text.trim(),
+          imageFile: _restaurantImageFile,
+          categories: categoriesList,
+        );
+
+        // Close loading dialog
+        if (mounted && Navigator.of(context).canPop()) {
+          Navigator.of(context).pop();
+        }
+
+        // Clear form and show success message
+        _clearRestaurantForm();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Restaurant added successfully'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } catch (e) {
+        // Close loading dialog
+        if (mounted && Navigator.of(context).canPop()) {
+          Navigator.of(context).pop();
+        }
+
+        // Show error message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error adding restaurant: ${e.toString()}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
-
-      // Use the first selected category as the main category
-      String mainCategory = selectedCategories.first;
-
-      cubit.addItem(
-        restaurantId: selectedRestaurantId!,
-        name: _itemNameController.text,
-        description: _itemDescriptionController.text,
-        price: double.parse(_itemPriceController.text),
-        category: mainCategory, // First selected category as main
-        categories: selectedCategories, // All selected categories
-        imageFile: _itemImageFile,
-      );
     }
   }
 
-  void _submitCategoryForm(AdminPanelCubit cubit) {
-    if (_categoryFormKey.currentState!.validate() &&
-        selectedRestaurantId != null) {
-      cubit.addCategory(
-        restaurantId: selectedRestaurantId!,
-        categoryName: _categoryNameController.text,
-      );
+  void _submitItemForm(AdminPanelCubit cubit) async {
+    if (_itemFormKey.currentState!.validate()) {
+      try {
+        if (selectedRestaurantId == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Please select a restaurant'),
+              backgroundColor: Colors.red,
+            ),
+          );
+          return;
+        }
+
+        // Validate price
+        final double price;
+        try {
+          price = double.parse(_itemPriceController.text.trim());
+          if (price <= 0) {
+            throw const FormatException('Price must be greater than 0');
+          }
+        } catch (e) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Please enter a valid price'),
+              backgroundColor: Colors.red,
+            ),
+          );
+          return;
+        }
+
+        // Validate categories
+        if (selectedCategories.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Please select at least one category'),
+              backgroundColor: Colors.red,
+            ),
+          );
+          return;
+        }
+
+        // Show loading indicator
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          },
+        );
+
+        await cubit.addItem(
+          restaurantId: selectedRestaurantId!,
+          name: _itemNameController.text.trim(),
+          nameAr: _itemNameArController.text.trim(),
+          description: _itemDescriptionController.text.trim(),
+          descriptionAr: _itemDescriptionArController.text.trim(),
+          price: price,
+          category: _itemCategoryController.text.trim(),
+          categories: selectedCategories,
+          imageFile: _itemImageFile,
+        );
+
+        // Close loading dialog
+        if (mounted && Navigator.of(context).canPop()) {
+          Navigator.of(context).pop();
+        }
+
+        // Clear form and show success message
+        _clearItemForm();
+        setState(() {
+          _itemImageFile = null;
+        });
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Item added successfully'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } catch (e) {
+        // Close loading dialog
+        if (mounted && Navigator.of(context).canPop()) {
+          Navigator.of(context).pop();
+        }
+
+        // Show error message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error adding item: ${e.toString()}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
     }
   }
 
@@ -910,28 +1291,72 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Restaurant'),
-        content: const Text('Are you sure you want to delete this restaurant?'),
+        content: const Text(
+            'Are you sure you want to delete this restaurant? This action cannot be undone.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () {
-              Navigator.pop(context);
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.red,
+            ),
+            onPressed: () async {
+              try {
+                Navigator.pop(context); // Close confirmation dialog
 
-              // Reset state if we're deleting the currently selected restaurant
-              if (selectedRestaurantId == restaurantId) {
-                setState(() {
-                  selectedRestaurantId = null;
-                  selectedCategories = [];
-                  _itemCategoryController.clear();
-                  _categoryNameController.clear();
-                });
+                // Show loading indicator
+                showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (BuildContext context) {
+                    return const Center(
+                      child: CircularProgressIndicator(),
+                    );
+                  },
+                );
+
+                // Reset state if we're deleting the currently selected restaurant
+                if (selectedRestaurantId == restaurantId) {
+                  setState(() {
+                    selectedRestaurantId = null;
+                    selectedCategories = [];
+                    _itemCategoryController.clear();
+                  });
+                }
+
+                await cubit.deleteRestaurant(restaurantId);
+
+                // Close loading dialog
+                if (mounted && Navigator.of(context).canPop()) {
+                  Navigator.of(context).pop();
+                }
+
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Restaurant deleted successfully'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                }
+              } catch (e) {
+                // Close loading dialog
+                if (mounted && Navigator.of(context).canPop()) {
+                  Navigator.of(context).pop();
+                }
+
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content:
+                          Text('Error deleting restaurant: ${e.toString()}'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
               }
-
-              // Then delete the restaurant
-              cubit.deleteRestaurant(restaurantId);
             },
             child: const Text('Delete'),
           ),
@@ -945,46 +1370,65 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Item'),
-        content: const Text('Are you sure you want to delete this item?'),
+        content: const Text(
+            'Are you sure you want to delete this item? This action cannot be undone.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              cubit.deleteItem(
-                restaurantId: restaurantId,
-                itemId: itemId,
-              );
-            },
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
-  }
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.red,
+            ),
+            onPressed: () async {
+              try {
+                Navigator.pop(context); // Close confirmation dialog
 
-  void _deleteCategory(
-      AdminPanelCubit cubit, String restaurantId, String categoryName) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Category'),
-        content: const Text('Are you sure you want to delete this category?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              cubit.deleteCategory(
-                restaurantId: restaurantId,
-                categoryName: categoryName,
-              );
+                // Show loading indicator
+                showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (BuildContext context) {
+                    return const Center(
+                      child: CircularProgressIndicator(),
+                    );
+                  },
+                );
+
+                await cubit.deleteItem(
+                  restaurantId: restaurantId,
+                  itemId: itemId,
+                );
+
+                // Close loading dialog
+                if (mounted && Navigator.of(context).canPop()) {
+                  Navigator.of(context).pop();
+                }
+
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Item deleted successfully'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                }
+              } catch (e) {
+                // Close loading dialog
+                if (mounted && Navigator.of(context).canPop()) {
+                  Navigator.of(context).pop();
+                }
+
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Error deleting item: ${e.toString()}'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
             },
             child: const Text('Delete'),
           ),
@@ -995,7 +1439,9 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
 
   void _clearRestaurantForm() {
     _restaurantNameController.clear();
+    _restaurantNameArController.clear();
     _restaurantCategoryController.clear();
+    _restaurantCategoryArController.clear();
     _deliveryFeeController.clear();
     _deliveryTimeController.clear();
     _categoriesController.clear();
@@ -1006,7 +1452,9 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
 
   void _clearItemForm() {
     _itemNameController.clear();
+    _itemNameArController.clear();
     _itemDescriptionController.clear();
+    _itemDescriptionArController.clear();
     _itemPriceController.clear();
     _itemCategoryController.clear();
     setState(() {
@@ -1017,6 +1465,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
 
   void _clearCategoryForm() {
     _categoryNameController.clear();
+    _categoryNameArController.clear();
   }
 
   // Debug function to add a test restaurant
@@ -1025,7 +1474,9 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
       // Using null for imageFile - will use the default image from assets/images/restuarants/store.jpg
       await cubit.addRestaurant(
         name: "Test Restaurant ${DateTime.now().millisecondsSinceEpoch}",
+        nameAr: "مطعم تجريبي ${DateTime.now().millisecondsSinceEpoch}",
         category: "Fast Food",
+        categoryAr: "طعام سريع",
         deliveryFee: "50",
         deliveryTime: "30-45 min",
         imageFile: null, // null will use the default image from assets
@@ -1033,7 +1484,8 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
       );
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Test restaurant added with default image')),
+        const SnackBar(
+            content: Text('Test restaurant added with default image')),
       );
     } catch (e) {
       print("Error adding test restaurant: $e");
@@ -1046,12 +1498,13 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
   // Debug function to directly retrieve and print restaurant documents
   void _debugRestaurants(AdminPanelCubit cubit) async {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Debugging restaurants - check console output')),
+      const SnackBar(
+          content: Text('Debugging restaurants - check console output')),
     );
 
     try {
       // Directly check if we can get the restaurant document shown in your screenshot
-      final docId = "UO76KZea0RVA5hqQKw1z";
+      const docId = "UO76KZea0RVA5hqQKw1z";
       final docSnapshot = await FirebaseFirestore.instance
           .collection("restaurants")
           .doc(docId)
@@ -1086,7 +1539,8 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
       } else {
         print("DIRECT ACCESS - Restaurant document not found: $docId");
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Restaurant document not found: $docId')),
+          const SnackBar(
+              content: Text('Restaurant document not found: $docId')),
         );
       }
 
@@ -1118,7 +1572,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Select Categories:',
+          S.of(context).select_category,
           style: TextStyle(
             fontSize: 16.sp,
             fontWeight: FontWeight.bold,
@@ -1142,7 +1596,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
                   return FilterChip(
                     label: Text(
                       category,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Colors.black,
                       ),
                     ),
@@ -1181,7 +1635,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'All Orders',
+                  S.of(context).admin_orders,
                   style: TextStyle(
                     fontSize: 18.sp,
                     fontWeight: FontWeight.bold,
@@ -1189,14 +1643,14 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
                 ),
                 ElevatedButton.icon(
                   onPressed: _fetchAllOrders,
-                  icon: Icon(Icons.refresh),
-                  label: Text('Refresh'),
+                  icon: const Icon(Icons.refresh),
+                  label: Text(S.of(context).refresh),
                 ),
               ],
             ),
             SizedBox(height: 16.h),
             if (isLoadingOrders)
-              Center(child: CircularProgressIndicator())
+              const Center(child: CircularProgressIndicator())
             else if (allOrders.isEmpty)
               Center(
                 child: Column(
@@ -1209,7 +1663,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
                     ),
                     SizedBox(height: 20.h),
                     Text(
-                      "No orders found",
+                      S.of(context).no_orders_found,
                       style: TextStyle(
                         fontSize: 20.sp,
                         fontWeight: FontWeight.bold,
@@ -1224,7 +1678,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
                 child: RefreshIndicator(
                   onRefresh: _fetchAllOrders,
                   child: ListView.builder(
-                    physics: AlwaysScrollableScrollPhysics(),
+                    physics: const AlwaysScrollableScrollPhysics(),
                     shrinkWrap: true,
                     itemCount: allOrders.length,
                     itemBuilder: (context, index) {
@@ -1237,7 +1691,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
                               context: context,
                               barrierDismissible: false,
                               builder: (BuildContext context) {
-                                return Center(
+                                return const Center(
                                   child: CircularProgressIndicator(),
                                 );
                               },
@@ -1264,8 +1718,9 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
                             if (mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text(
-                                      'Order status updated to: $newStatus'),
+                                  content: Text(S
+                                      .of(context)
+                                      .order_status_updated_to(newStatus)),
                                   backgroundColor: Colors.green,
                                 ),
                               );
@@ -1280,8 +1735,10 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
                             if (mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text(
-                                      'Error updating order status: $error'),
+                                  content: Text(S
+                                      .of(context)
+                                      .error_updating_order_status(
+                                          error.toString())),
                                   backgroundColor: Colors.red,
                                 ),
                               );
@@ -1293,6 +1750,223 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
                   ),
                 ),
               ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRestaurantCategoriesTab(
+      AdminPanelCubit cubit, AdminPanelStates state) {
+    return SingleChildScrollView(
+      child: Padding(
+        padding: EdgeInsets.all(16.r),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              S.of(context).restaurant_categories,
+              style: TextStyle(
+                fontSize: 18.sp,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: 16.h),
+            Form(
+              key: _categoryFormKey,
+              child: Column(
+                children: [
+                  defaultTextField(
+                    controller: _categoryNameController,
+                    type: TextInputType.text,
+                    label: S.of(context).category_name_english,
+                    validate: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter category name in English';
+                      }
+                      return null;
+                    },
+                  ),
+                  SizedBox(height: 12.h),
+                  defaultTextField(
+                    controller: _categoryNameArController,
+                    type: TextInputType.text,
+                    label: S.of(context).category_name_arabic,
+                    validate: (value) {
+                      if (value == null || value.isEmpty) {
+                        return S
+                            .of(context)
+                            .please_enter_category_name_in_arabic;
+                      }
+                      return null;
+                    },
+                  ),
+                  SizedBox(height: 12.h),
+                  Row(
+                    children: [
+                      ElevatedButton(
+                        onPressed: () async {
+                          try {
+                            final imageFile = await cubit.pickImage();
+                            if (imageFile != null) {
+                              setState(() {
+                                _categoryImageFile = imageFile;
+                              });
+                            }
+                          } catch (e) {
+                            print("Error selecting image: $e");
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                  content: Text('Error selecting image: $e')),
+                            );
+                          }
+                        },
+                        child: Text(S.of(context).select_image),
+                      ),
+                      SizedBox(width: 16.w),
+                      _categoryImageFile != null
+                          ? Text(S.of(context).image_selected)
+                          : Text(S.of(context).no_image_selected),
+                    ],
+                  ),
+                  SizedBox(height: 20.h),
+                  state is AddingCategoryState
+                      ? const CircularProgressIndicator()
+                      : ElevatedButton(
+                          onPressed: () async {
+                            if (_categoryFormKey.currentState!.validate()) {
+                              try {
+                                String imageUrl =
+                                    'assets/images/categories/all.png';
+                                final categoryName = _categoryNameController
+                                    .text
+                                    .toLowerCase()
+                                    .replaceAll(' ', '_');
+
+                                if (_categoryImageFile != null) {
+                                  // Create storage reference with category name
+                                  final storageRef = FirebaseStorage.instance
+                                      .ref()
+                                      .child('categories')
+                                      .child('$categoryName.jpg');
+
+                                  // Upload image
+                                  await storageRef.putFile(_categoryImageFile!);
+
+                                  // Get download URL
+                                  imageUrl = await storageRef.getDownloadURL();
+                                } else {
+                                  // If no image selected, use the default image path with category name
+                                  imageUrl =
+                                      'assets/images/categories/$categoryName.png';
+                                }
+
+                                // Add to Firestore
+                                await FirebaseFirestore.instance
+                                    .collection('restuarants_categories')
+                                    .add({
+                                  'en': _categoryNameController.text,
+                                  'ar': _categoryNameArController.text,
+                                  'img': imageUrl,
+                                });
+
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content:
+                                        Text('Category added successfully'),
+                                    backgroundColor: Colors.green,
+                                  ),
+                                );
+
+                                // Clear form
+                                _categoryNameController.clear();
+                                _categoryNameArController.clear();
+                                setState(() {
+                                  _categoryImageFile = null;
+                                });
+                              } catch (e) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Error adding category: $e'),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                              }
+                            }
+                          },
+                          child: Text(S.of(context).add_category),
+                        ),
+                ],
+              ),
+            ),
+            SizedBox(height: 24.h),
+            Text(
+              S.of(context).existing_categories,
+              style: TextStyle(
+                fontSize: 18.sp,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: 16.h),
+            StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('restuarants_categories')
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                }
+
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                final categories = snapshot.data?.docs ?? [];
+
+                if (categories.isEmpty) {
+                  return const Center(child: Text('No categories found'));
+                }
+
+                return ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: categories.length,
+                  itemBuilder: (context, index) {
+                    final category =
+                        categories[index].data() as Map<String, dynamic>;
+                    return ListTile(
+                      leading: CircleAvatar(
+                        backgroundImage: AssetImage(category['img'] ??
+                            'assets/images/categories/default.png'),
+                      ),
+                      title: Text(category['en'] ?? ''),
+                      subtitle: Text(category['ar'] ?? ''),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.red),
+                        onPressed: () async {
+                          try {
+                            await categories[index].reference.delete();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Category deleted successfully'),
+                                backgroundColor: Colors.green,
+                              ),
+                            );
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Error deleting category: $e'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        },
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
           ],
         ),
       ),
@@ -1319,8 +1993,32 @@ class RestaurantListItem extends StatelessWidget {
           backgroundImage: _getImageProvider(restaurant.img),
           backgroundColor: Colors.grey,
         ),
-        title: Text(restaurant.name),
-        subtitle: Text('${restaurant.category} • ${restaurant.deliveryTime}'),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(restaurant.name),
+            Text(
+              restaurant.nameAr,
+              style: TextStyle(
+                fontSize: 12.sp,
+                color: Colors.grey,
+              ),
+            ),
+          ],
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('${restaurant.category} • ${restaurant.deliveryTime}'),
+            Text(
+              restaurant.categoryAr,
+              style: TextStyle(
+                fontSize: 12.sp,
+                color: Colors.grey,
+              ),
+            ),
+          ],
+        ),
         trailing: IconButton(
           icon: const Icon(Icons.delete, color: Colors.red),
           onPressed: onDelete,
@@ -1338,11 +2036,11 @@ class RestaurantListItem extends StatelessWidget {
         return AssetImage(imageUrl);
       } else {
         // Default fallback image
-        return AssetImage('assets/images/restuarants/store.jpg');
+        return const AssetImage('assets/images/restuarants/store.jpg');
       }
     } catch (e) {
       print("Error loading image: $e");
-      return AssetImage('assets/images/restuarants/store.jpg');
+      return const AssetImage('assets/images/restuarants/store.jpg');
     }
   }
 }
@@ -1366,8 +2064,82 @@ class ItemListItem extends StatelessWidget {
           backgroundImage: _getImageProvider(item.img),
           backgroundColor: Colors.grey,
         ),
-        title: Text(item.name),
-        subtitle: Text('${item.category} • \$${item.price.toStringAsFixed(2)}'),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    item.name,
+                    style: TextStyle(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white
+                          : Colors.black,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const Text(
+                  " • ",
+                  style: TextStyle(
+                    color: Colors.grey,
+                  ),
+                ),
+                Expanded(
+                  child: Text(
+                    item.nameAr,
+                    style: TextStyle(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white
+                          : Colors.black,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('${item.category} • \$${item.price.toStringAsFixed(2)}'),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    item.description,
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      color: Colors.grey,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                Text(
+                  " • ",
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    color: Colors.grey,
+                  ),
+                ),
+                Expanded(
+                  child: Text(
+                    item.descriptionAr,
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      color: Colors.grey,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
         trailing: IconButton(
           icon: const Icon(Icons.delete, color: Colors.red),
           onPressed: onDelete,
@@ -1385,11 +2157,11 @@ class ItemListItem extends StatelessWidget {
         return AssetImage(imageUrl);
       } else {
         // Default fallback image
-        return AssetImage('assets/images/items/default.jpg');
+        return const AssetImage('assets/images/items/default.jpg');
       }
     } catch (e) {
       print("Error loading image: $e");
-      return AssetImage('assets/images/items/default.jpg');
+      return const AssetImage('assets/images/items/default.jpg');
     }
   }
 }

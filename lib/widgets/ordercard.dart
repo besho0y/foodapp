@@ -157,7 +157,7 @@ class _OrderCardState extends State<OrderCard> {
 
               /// Expandable Description
               AnimatedCrossFade(
-                firstChild: SizedBox.shrink(),
+                firstChild: const SizedBox.shrink(),
                 secondChild: Padding(
                   padding: EdgeInsets.symmetric(vertical: 8.h),
                   child: Column(
@@ -226,7 +226,14 @@ class _OrderCardState extends State<OrderCard> {
                                     Expanded(
                                       flex: 2,
                                       child: Text(
-                                        itemName,
+                                        Directionality.of(context) ==
+                                                TextDirection.rtl
+                                            ? (item is Map
+                                                ? item['nameAr'] ?? item['name']
+                                                : item.nameAr ?? item.name)
+                                            : (item is Map
+                                                ? item['name']
+                                                : item.name),
                                         style: Theme.of(
                                           context,
                                         ).textTheme.bodyLarge!.copyWith(

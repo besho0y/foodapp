@@ -53,9 +53,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text("Checkout"),
+        title: Text(S.of(context).checkout),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new),
+          icon: const Icon(Icons.arrow_back_ios_new),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -63,7 +63,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         listener: (context, state) {},
         builder: (context, state) {
           if (state is ProfileLoading) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           }
 
           return Column(
@@ -79,15 +79,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           Expanded(
                             child: OutlinedButton(
                               onPressed: details.onStepCancel,
-                              child: Text('Back'),
+                              child: Text(S.of(context).back),
                             ),
                           ),
                         if (_currentStep > 0) SizedBox(width: 12.w),
                         Expanded(
                           child: ElevatedButton(
                             onPressed: details.onStepContinue,
-                            child: Text(
-                                _currentStep == 1 ? 'Place Order' : 'Next'),
+                            child: Text(_currentStep == 1
+                                ? S.of(context).place_order
+                                : S.of(context).next),
                           ),
                         ),
                       ],
@@ -97,7 +98,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     if (_currentStep == 0) {
                       if (selectedAddress == null) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Please select an address')),
+                          SnackBar(
+                              content:
+                                  Text(S.of(context).select_address_error)),
                         );
                         return;
                       }
@@ -109,8 +112,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         if (transferReferenceController.text.isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                                content: Text(
-                                    'Please enter the transfer reference number')),
+                                content:
+                                    Text(S.of(context).enter_reference_number)),
                           );
                           return;
                         }
@@ -129,12 +132,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   },
                   steps: [
                     Step(
-                      title: Text('Address'),
+                      title: Text(S.of(context).select_delivery_address),
                       content: _buildAddressStep(),
                       isActive: _currentStep >= 0,
                     ),
                     Step(
-                      title: Text('Payment'),
+                      title: Text(S.of(context).select_payment_method),
                       content: _buildPaymentStep(),
                       isActive: _currentStep >= 1,
                     ),
@@ -151,7 +154,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     BoxShadow(
                       color: Colors.black.withOpacity(0.05),
                       blurRadius: 10,
-                      offset: Offset(0, -5),
+                      offset: const Offset(0, -5),
                     ),
                   ],
                 ),
@@ -159,7 +162,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Order Summary',
+                      S.of(context).order_summary,
                       style: TextStyle(
                         fontSize: 18.sp,
                         fontWeight: FontWeight.bold,
@@ -169,32 +172,64 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Items (${cartItems.length})'),
+                        Text('${S.of(context).items} (${cartItems.length})'),
                         Text(
-                            '${layoutCubit.calculateTotalPrice().toStringAsFixed(2)} EGP'),
+                            '${layoutCubit.calculateSubtotal().toStringAsFixed(2)} ${S.of(context).egp}'),
                       ],
                     ),
                     SizedBox(height: 5.h),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('Delivery Fee'),
-                        Text('30.00 EGP'),
-                      ],
+                    // Calculate total delivery fees from all restaurants
+                    Builder(
+                      builder: (context) {
+                        // Calculate total delivery fees
+                        double totalDeliveryFee = 0.0;
+
+                        // Group by restaurant to avoid duplicates
+                        final restaurantGroups =
+                            groupItemsByRestaurant(cartItems);
+
+                        // Add one delivery fee per restaurant
+                        restaurantGroups.forEach((_, items) {
+                          try {
+                            double fee = double.parse(items.first.deliveryFee);
+                            totalDeliveryFee += fee;
+                          } catch (e) {
+                            print('Error parsing fee: $e');
+                          }
+                        });
+
+                        // Show single row with total delivery fees
+                        return Padding(
+                          padding: EdgeInsets.only(bottom: 5.h),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                restaurantGroups.length > 1
+                                    ? '${S.of(context).delivery_fee} (${restaurantGroups.length})'
+                                    : S.of(context).delivery_fee,
+                              ),
+                              Text(
+                                '${totalDeliveryFee.toStringAsFixed(2)} ${S.of(context).egp}',
+                              ),
+                            ],
+                          ),
+                        );
+                      },
                     ),
                     Divider(height: 20.h),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Total',
+                          S.of(context).total,
                           style: TextStyle(
                             fontSize: 16.sp,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         Text(
-                          '${(layoutCubit.calculateTotalPrice() + 30).toStringAsFixed(2)} EGP',
+                          '${layoutCubit.calculateTotalPrice().toStringAsFixed(2)} ${S.of(context).egp}',
                           style: TextStyle(
                             fontSize: 16.sp,
                             fontWeight: FontWeight.bold,
@@ -212,6 +247,27 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
+  Map<String, List<CartItem>> groupItemsByRestaurant(List<CartItem> items) {
+    // Group items by restaurant ID to avoid duplicate fees
+    Map<String, List<CartItem>> restaurantGroups = {};
+
+    for (var item in items) {
+      if (!restaurantGroups.containsKey(item.restaurantId)) {
+        restaurantGroups[item.restaurantId] = [];
+      }
+      restaurantGroups[item.restaurantId]!.add(item);
+    }
+
+    // Print debug info
+    print("\nGrouping cart items by restaurant in checkout:");
+    restaurantGroups.forEach((restaurantId, restaurantItems) {
+      print(
+          "- ${restaurantItems.first.restaurantName}: ${restaurantItems.length} items");
+    });
+
+    return restaurantGroups;
+  }
+
   Widget _buildAddressStep() {
     final profileCubit = ProfileCubit.get(context);
     final addresses = profileCubit.user.addresses;
@@ -224,13 +280,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             ? Center(
                 child: Column(
                   children: [
-                    Icon(Icons.location_off, size: 60, color: Colors.grey),
+                    const Icon(Icons.location_off,
+                        size: 60, color: Colors.grey),
                     SizedBox(height: 16.h),
-                    Text('No saved addresses found'),
+                    const Text('No saved addresses found'),
                     SizedBox(height: 10.h),
                     ElevatedButton(
                       onPressed: () => _showAddAddressBottomSheet(context),
-                      child: Text('Add New Address'),
+                      child: Text(S.of(context).add_address),
                     ),
                   ],
                 ),
@@ -324,8 +381,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     width: double.infinity,
                     child: OutlinedButton.icon(
                       onPressed: () => _showAddAddressBottomSheet(context),
-                      icon: Icon(Icons.add),
-                      label: Text('Add New Address'),
+                      icon: const Icon(Icons.add),
+                      label: Text(S.of(context).add_address),
                     ),
                   ),
                 ],
@@ -340,7 +397,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Select Payment Method',
+          S.of(context).select_payment_method,
           style: TextStyle(
             fontSize: 16.sp,
             fontWeight: FontWeight.bold,
@@ -350,24 +407,24 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
         // Cash on delivery payment method
         _buildPaymentMethodCard(
-          title: 'Cash on Delivery',
-          subtitle: 'Pay when your order is delivered',
+          title: S.of(context).cash_on_delivery,
+          subtitle: S.of(context).cash_on_delivery_subtitle,
           icon: Icons.payments_outlined,
           value: 'cash',
         ),
 
         // Credit card payment method
         _buildPaymentMethodCard(
-          title: 'Credit / Debit Card',
-          subtitle: 'Pay now with your card',
+          title: S.of(context).credit_card,
+          subtitle: S.of(context).credit_card_subtitle,
           icon: Icons.credit_card,
           value: 'card',
         ),
 
         // InstaPay payment method
         _buildPaymentMethodCard(
-          title: 'InstaPay',
-          subtitle: 'Transfer to our InstaPay account',
+          title: S.of(context).instapay,
+          subtitle: S.of(context).instapay_subtitle,
           icon: Icons.mobile_friendly,
           value: 'instapay',
         ),
@@ -454,7 +511,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'InstaPay Details',
+            S.of(context).instapay_details,
             style: TextStyle(
               fontSize: 16.sp,
               fontWeight: FontWeight.bold,
@@ -468,8 +525,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 fontSize: 14.sp,
               ),
               children: [
-                TextSpan(text: "1. Open your Instapay app\n"),
-                TextSpan(text: "2. Send payment to: "),
+                TextSpan(text: "${S.of(context).instapay_step1}\n"),
+                TextSpan(text: "${S.of(context).instapay_step2} "),
                 TextSpan(
                   text: instapayPhoneNumber,
                   style: TextStyle(
@@ -477,18 +534,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     color: Theme.of(context).primaryColor,
                   ),
                 ),
-                TextSpan(text: "\n3. Enter the amount: EGP "),
+                TextSpan(text: "\n${S.of(context).instapay_step3} "),
                 TextSpan(
                   text:
-                      "${(Layoutcubit.get(context).calculateTotalPrice() + 30).toStringAsFixed(2)}",
+                      "${(Layoutcubit.get(context).calculateTotalPrice() + 30).toStringAsFixed(2)} ${S.of(context).egp}",
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     color: Theme.of(context).primaryColor,
                   ),
                 ),
-                TextSpan(
-                    text:
-                        "\n4. Complete the transfer and enter the reference number below"),
+                TextSpan(text: "\n${S.of(context).instapay_step4}"),
               ],
             ),
           ),
@@ -497,11 +552,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             onPressed: () {
               Clipboard.setData(ClipboardData(text: instapayPhoneNumber));
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Phone number copied to clipboard')),
+                SnackBar(content: Text(S.of(context).copy_phone_number)),
               );
             },
-            icon: Icon(Icons.copy),
-            label: Text("Copy Phone Number"),
+            icon: const Icon(Icons.copy),
+            label: Text(S.of(context).copy_phone_number),
             style: OutlinedButton.styleFrom(
               side: BorderSide(color: Theme.of(context).primaryColor),
             ),
@@ -510,11 +565,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           TextField(
             controller: transferReferenceController,
             decoration: InputDecoration(
-              labelText: 'Transfer Reference Number',
-              hintText:
-                  'Enter the reference number from your Instapay transfer',
-              border: OutlineInputBorder(),
-              prefixIcon: Icon(Icons.numbers),
+              labelText: S.of(context).transfer_reference,
+              hintText: S.of(context).transfer_reference_hint,
+              border: const OutlineInputBorder(),
+              prefixIcon: const Icon(Icons.numbers),
             ),
             keyboardType: TextInputType.text,
           ),
@@ -525,8 +579,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               onPressed: () {
                 _verifyPayment(context);
               },
-              icon: Icon(Icons.check_circle),
-              label: Text("Verify Payment"),
+              icon: const Icon(Icons.check_circle),
+              label: Text(S.of(context).verify_payment),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Theme.of(context).primaryColor,
               ),
@@ -543,11 +597,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               ),
               child: Row(
                 children: [
-                  Icon(Icons.check_circle, color: Colors.green),
+                  const Icon(Icons.check_circle, color: Colors.green),
                   SizedBox(width: 8.w),
                   Expanded(
                     child: Text(
-                      "Payment verified successfully! You can now place your order.",
+                      S.of(context).payment_verified,
                       style: TextStyle(color: Colors.green.shade800),
                     ),
                   ),
@@ -583,7 +637,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "Add New Address",
+              S.of(context).add_address,
               style: TextStyle(
                 fontSize: 18.sp,
                 fontWeight: FontWeight.bold,
@@ -593,23 +647,23 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             TextField(
               controller: titleController,
               decoration: InputDecoration(
-                labelText: "Address Title (e.g. Home, Work)",
-                border: OutlineInputBorder(),
+                labelText: S.of(context).AddressTitle,
+                border: const OutlineInputBorder(),
               ),
             ),
             SizedBox(height: 12.h),
             TextField(
               controller: addressController,
               decoration: InputDecoration(
-                labelText: "Full Address",
-                border: OutlineInputBorder(),
+                labelText: S.of(context).FullAddress,
+                border: const OutlineInputBorder(),
               ),
               maxLines: 3,
             ),
             SizedBox(height: 12.h),
             StatefulBuilder(
               builder: (context, setState) => CheckboxListTile(
-                title: Text("Set as default address"),
+                title: Text(S.of(context).Setdefaultaddress),
                 value: isDefault,
                 onChanged: (value) {
                   setState(() {
@@ -627,7 +681,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   if (titleController.text.trim().isEmpty ||
                       addressController.text.trim().isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text("Please fill all fields")),
+                      SnackBar(content: Text(S.of(context).Pleasefill)),
                     );
                     return;
                   }
@@ -647,7 +701,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
                   Navigator.pop(context);
                 },
-                child: Text("Save Address"),
+                child: Text(S.of(context).SaveAddress),
               ),
             ),
             SizedBox(height: 20.h),
@@ -660,7 +714,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   void _verifyPayment(BuildContext context) {
     if (transferReferenceController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please enter the transfer reference number')),
+        SnackBar(content: Text(S.of(context).enter_reference_number)),
       );
       return;
     }
@@ -674,9 +728,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              CircularProgressIndicator(),
+              const CircularProgressIndicator(),
               SizedBox(height: 16.h),
-              Text("Verifying payment..."),
+              Text(S.of(context).verifying_payment),
             ],
           ),
         );
@@ -684,7 +738,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
 
     // Simulate payment verification with a delay
-    Future.delayed(Duration(seconds: 2), () {
+    Future.delayed(const Duration(seconds: 2), () {
       Navigator.pop(context); // Close the loading dialog
 
       // For demo purposes, consider all payments valid if reference number is provided
@@ -694,7 +748,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Payment verified successfully!'),
+          content: Text(S.of(context).payment_verified),
           backgroundColor: Colors.green,
         ),
       );
@@ -719,7 +773,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     if (selectedAddress == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Please select a delivery address'),
+          content: Text(S.of(context).select_address_error),
           backgroundColor: Colors.red,
         ),
       );
@@ -730,7 +784,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     if (paymentMethod == 'instapay' && !paymentVerified) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Please verify your InstaPay payment first'),
+          content: Text(S.of(context).payment_verification_failed),
           backgroundColor: Colors.red,
         ),
       );
@@ -747,7 +801,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         context: context,
         barrierDismissible: false,
         builder: (BuildContext context) {
-          return Center(
+          return const Center(
             child: CircularProgressIndicator(),
           );
         },
@@ -776,8 +830,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           // Payment failed
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(paymentResult['message'] ??
-                  'Payment failed. Please try again.'),
+              content: Text(
+                  paymentResult['message'] ?? S.of(context).payment_failed),
               backgroundColor: Colors.red,
             ),
           );
@@ -789,7 +843,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Payment error: $e'),
+            content: Text('${S.of(context).payment_failed}: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -817,7 +871,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           builder: (context) => AlertDialog(
             title: Text(
               S.of(context).phone_required,
-              style: TextStyle(
+              style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 color: primaryColor,
               ),
@@ -830,8 +884,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 decoration: InputDecoration(
                   labelText: S.of(context).Phone,
                   hintText: S.of(context).phone_hint,
-                  prefixIcon: Icon(Icons.phone),
-                  border: OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.phone),
+                  border: const OutlineInputBorder(),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -874,7 +928,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     if (selectedAddress == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Please select a delivery address'),
+          content: Text(S.of(context).select_address_error),
           backgroundColor: Colors.red,
         ),
       );
@@ -882,7 +936,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     }
 
     // Generate a unique order ID
-    final orderId = Uuid().v4();
+    final orderId = const Uuid().v4();
 
     // Calculate the total price (items + delivery fee)
     final totalPrice =
@@ -892,14 +946,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     final orderData = {
       'id': orderId,
       'userId': profileCubit.user.uid,
-      'userName': profileCubit.user.name, // Add the user's name
+      'userName': profileCubit.user.name,
       'items': layoutCubit.cartitems.map((item) => item.toJson()).toList(),
       'total': totalPrice,
       'address': selectedAddress!.toJson(),
       'paymentMethod': paymentMethod,
       'paymentReference':
           paymentMethod == 'instapay' ? transferReferenceController.text : null,
-      'status': 'Pending', // Ensure status is set to Pending
+      'status': 'Pending',
       'date': DateTime.now().toString(),
     };
 
@@ -909,16 +963,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         context: context,
         barrierDismissible: false,
         builder: (BuildContext context) {
-          return Center(
+          return const Center(
             child: CircularProgressIndicator(),
           );
         },
       );
 
-      // Add the order through the order cubit (which will handle adding to global orders collection)
+      // Add the order through the order cubit
       await orderCubit.addOrder(orderData);
 
-      // Also update the user's orderIds list in memory
+      // Update the user's orderIds list in memory
       if (!profileCubit.user.orderIds.contains(orderId)) {
         profileCubit.user.orderIds.add(orderId);
       }
@@ -938,7 +992,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Order placed successfully!'),
+          content: Text(S.of(context).order_placed),
           backgroundColor: Colors.green,
         ),
       );
@@ -953,7 +1007,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       // Show error message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error placing order: $error'),
+          content: Text('${S.of(context).order_error}: $error'),
           backgroundColor: Colors.red,
         ),
       );

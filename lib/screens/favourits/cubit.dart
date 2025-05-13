@@ -35,6 +35,24 @@ class Favouritecubit extends Cubit<FavouriteState> {
         // Add to favorites if not already present
         if (!favIds.contains(item.id)) {
           favIds.add(item.id);
+          // Store the complete item data in Firestore
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(currentUser.uid)
+              .collection('favorite_items')
+              .doc(item.id)
+              .set({
+            'id': item.id,
+            'name': item.name,
+            'nameAr': item.nameAr,
+            'description': item.description,
+            'descriptionAr': item.descriptionAr,
+            'price': item.price,
+            'img': item.img,
+            'category': item.category,
+            'categoryAr': item.categoryAr,
+            'categories': item.categories,
+          });
         }
         favourites.add(item);
         emit(FavouriteAddState());
@@ -42,10 +60,17 @@ class Favouritecubit extends Cubit<FavouriteState> {
         // Remove from favorites
         favIds.removeWhere((id) => id == item.id);
         favourites.removeWhere((i) => i.id == item.id);
+        // Also remove the item data from Firestore
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(currentUser.uid)
+            .collection('favorite_items')
+            .doc(item.id)
+            .delete();
         emit(FavouriteRemoveState());
       }
 
-      // Update Firestore
+      // Update Firestore with favorite IDs
       await userDoc.set({'favourites': favIds}, SetOptions(merge: true));
     } catch (e) {
       print("Error toggling favorite: $e");
@@ -98,80 +123,107 @@ class Favouritecubit extends Cubit<FavouriteState> {
         return;
       }
 
-      // First approach: Get ALL items from Firestore and then filter by ID
-      print("Loading all items to filter favorites");
+      // First try to load from favorite_items collection
+      for (String id in favIds) {
+        try {
+          final itemDoc = await FirebaseFirestore.instance
+              .collection('users')
+              .doc(currentUser.uid)
+              .collection('favorite_items')
+              .doc(id)
+              .get();
 
-      // This will hold ALL items across all restaurants
-      Map<String, Item> allItems = {};
-
-      // Get items from main collection
-      try {
-        final itemsSnapshot =
-            await FirebaseFirestore.instance.collection('items').get();
-        print("Found ${itemsSnapshot.docs.length} items in main collection");
-
-        for (var doc in itemsSnapshot.docs) {
-          final data = doc.data();
-          data['id'] = doc.id; // Ensure ID is set
-          final item = Item.fromJson(data);
-          allItems[doc.id] = item;
+          if (itemDoc.exists && itemDoc.data() != null) {
+            final data = itemDoc.data()!;
+            final item = Item(
+              id: data['id'] ?? '',
+              name: data['name'] ?? '',
+              nameAr: data['nameAr'] ?? '',
+              description: data['description'] ?? '',
+              descriptionAr: data['descriptionAr'] ?? '',
+              price: (data['price'] as num?)?.toDouble() ?? 0.0,
+              img: data['img'] ?? '',
+              category: data['category'] ?? '',
+              categoryAr: data['categoryAr'] ?? '',
+              categories: data['categories'] is List
+                  ? List<String>.from(data['categories'])
+                  : [],
+            );
+            item.isfavourite = true;
+            favourites.add(item);
+            continue; // Skip to next item since we found this one
+          }
+        } catch (e) {
+          print("Error loading favorite item $id: $e");
         }
-      } catch (e) {
-        print("Error loading main items: $e");
-      }
 
-      // Get items from all restaurant subcollections
-      try {
-        final restaurantsSnapshot =
-            await FirebaseFirestore.instance.collection('restaurants').get();
-        print("Found ${restaurantsSnapshot.docs.length} restaurants");
+        // If item not found in favorite_items, try restaurants collection
+        try {
+          bool found = false;
+          final restaurantsSnapshot =
+              await FirebaseFirestore.instance.collection('restaurants').get();
 
-        for (var restaurantDoc in restaurantsSnapshot.docs) {
-          try {
-            final itemsSnapshot = await FirebaseFirestore.instance
+          for (var restaurantDoc in restaurantsSnapshot.docs) {
+            final itemDoc = await FirebaseFirestore.instance
                 .collection('restaurants')
                 .doc(restaurantDoc.id)
                 .collection('items')
+                .doc(id)
                 .get();
 
-            print(
-                "Found ${itemsSnapshot.docs.length} items in restaurant ${restaurantDoc.id}");
+            if (itemDoc.exists && itemDoc.data() != null) {
+              final data = itemDoc.data()!;
+              data['id'] = id;
+              final item = Item(
+                id: data['id'] ?? '',
+                name: data['name'] ?? '',
+                nameAr: data['namear'] ?? '', // Note the different field name
+                description: data['description'] ?? '',
+                descriptionAr: data['descriptionar'] ??
+                    '', // Note the different field name
+                price: (data['price'] as num?)?.toDouble() ?? 0.0,
+                img: data['img'] ?? '',
+                category: data['category'] ?? '',
+                categoryAr:
+                    data['categoryar'] ?? '', // Note the different field name
+                categories: data['categories'] is List
+                    ? List<String>.from(data['categories'])
+                    : [],
+              );
+              item.isfavourite = true;
+              favourites.add(item);
 
-            for (var doc in itemsSnapshot.docs) {
-              final data = doc.data();
-              data['id'] = doc.id; // Ensure ID is set
-              final item = Item.fromJson(data);
-              allItems[doc.id] = item;
+              // Store the item data in favorite_items for future use
+              await FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(currentUser.uid)
+                  .collection('favorite_items')
+                  .doc(id)
+                  .set({
+                'id': item.id,
+                'name': item.name,
+                'nameAr': item.nameAr,
+                'description': item.description,
+                'descriptionAr': item.descriptionAr,
+                'price': item.price,
+                'img': item.img,
+                'category': item.category,
+                'categoryAr': item.categoryAr,
+                'categories': item.categories,
+              });
+
+              found = true;
+              break;
             }
-          } catch (e) {
-            print("Error loading items for restaurant ${restaurantDoc.id}: $e");
           }
-        }
-      } catch (e) {
-        print("Error loading restaurants: $e");
-      }
 
-      print("Total items loaded: ${allItems.length}");
-
-      // Use a Map to store favorites to prevent duplicates by ID
-      final Map<String, Item> favoriteItemsMap = {};
-
-      // Now filter for favorites only
-      for (String id in favIds) {
-        final item = allItems[id];
-        if (item != null) {
-          // Mark as favorite
-          item.isfavourite = true;
-          // Use the ID as key in the map to ensure uniqueness
-          favoriteItemsMap[id] = item;
-          print("Added to favorites: ${item.name} (ID: $id)");
-        } else {
-          print("Could not find item with ID: $id in any collection");
+          if (!found) {
+            print("Could not find item with ID: $id in any collection");
+          }
+        } catch (e) {
+          print("Error searching for item $id in restaurants: $e");
         }
       }
-
-      // Convert map values to list
-      favourites = favoriteItemsMap.values.toList();
 
       print("Successfully loaded ${favourites.length} favourite items");
       emit(FavouriteLoadedState());

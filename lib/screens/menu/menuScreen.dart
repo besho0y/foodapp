@@ -13,7 +13,7 @@ import 'package:foodapp/shared/constants.dart';
 import 'package:foodapp/widgets/itemcard.dart';
 
 class Menuscreen extends StatefulWidget {
-  Menuscreen({
+  const Menuscreen({
     super.key,
     required this.items,
     required this.name,
@@ -232,13 +232,13 @@ class _MenuscreenState extends State<Menuscreen> {
                     children: [
                       const Icon(Icons.access_time, size: 20),
                       SizedBox(width: 4.w),
-                      Text("${widget.deliverytime}"),
+                      Text(widget.deliverytime),
                       dot(),
-                      Text(" ${widget.deliveryprice}",
-                          style: TextStyle(color: Colors.green)),
+                      Text(" ${widget.deliveryprice} ${S.of(context).egp}",
+                          style: const TextStyle(color: Colors.green)),
                       dot(),
                       const Icon(Icons.delivery_dining, size: 24),
-                      Spacer(),
+                      const Spacer(),
                       TextButton.icon(
                         onPressed: () {
                           navigateTo(
@@ -246,7 +246,7 @@ class _MenuscreenState extends State<Menuscreen> {
                             Reviewsscreen(restaurantId: widget.restaurantId),
                           );
                         },
-                        icon: Icon(Icons.star_rate, color: Colors.amber),
+                        icon: const Icon(Icons.star_rate, color: Colors.amber),
                         label: Text(S.of(context).reviews),
                         style: TextButton.styleFrom(
                           foregroundColor:
@@ -302,11 +302,7 @@ class _MenuscreenState extends State<Menuscreen> {
                     itemCount: filteredItems.length,
                     itemBuilder: (context, index) {
                       return itemcard(
-                        context,
-                        false,
-                        filteredItems[index],
-                        widget.items,
-                      );
+                          context, false, filteredItems[index], widget.items);
                     },
                   ),
                 ),

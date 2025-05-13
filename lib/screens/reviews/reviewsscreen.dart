@@ -77,7 +77,7 @@ class _ReviewsscreenState extends State<Reviewsscreen> {
   Future<void> _submitReview() async {
     if (_reviewController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please enter a review')),
+        const SnackBar(content: Text('Please enter a review')),
       );
       return;
     }
@@ -120,12 +120,12 @@ class _ReviewsscreenState extends State<Reviewsscreen> {
       await _updateRestaurantRating();
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Review submitted successfully')),
+        const SnackBar(content: Text('Review submitted successfully')),
       );
     } catch (e) {
       print("Error submitting review: $e");
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to submit review')),
+        const SnackBar(content: Text('Failed to submit review')),
       );
     } finally {
       setState(() {
@@ -154,7 +154,7 @@ class _ReviewsscreenState extends State<Reviewsscreen> {
             .update({'rating': roundedRating});
 
         // Also refresh the restaurants list
-        Restuarantscubit.get(context).getRestuarants();
+        Restuarantscubit.get(context).initializeData();
       }
     } catch (e) {
       print('Error updating restaurant rating: $e');
@@ -197,7 +197,7 @@ class _ReviewsscreenState extends State<Reviewsscreen> {
       appBar: AppBar(
         title: Text(S.of(context).reviews),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios),
+          icon: const Icon(Icons.arrow_back_ios),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -208,7 +208,7 @@ class _ReviewsscreenState extends State<Reviewsscreen> {
             padding: EdgeInsets.all(16.w),
             decoration: BoxDecoration(
               color: Theme.of(context).cardColor,
-              boxShadow: [
+              boxShadow: const [
                 BoxShadow(
                   color: Colors.black12,
                   blurRadius: 5,
@@ -245,12 +245,12 @@ class _ReviewsscreenState extends State<Reviewsscreen> {
                     ),
                   ],
                 ),
-                Spacer(),
+                const Spacer(),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text("${_reviews.length} ${S.of(context).reviews}",
-                        style: TextStyle(color: Colors.grey)),
+                        style: const TextStyle(color: Colors.grey)),
                   ],
                 ),
               ],
@@ -284,7 +284,7 @@ class _ReviewsscreenState extends State<Reviewsscreen> {
                   maxLines: 3,
                   decoration: InputDecoration(
                     hintText: S.of(context).review_hint,
-                    border: OutlineInputBorder(),
+                    border: const OutlineInputBorder(),
                   ),
                 ),
                 SizedBox(height: 10.h),
@@ -301,7 +301,7 @@ class _ReviewsscreenState extends State<Reviewsscreen> {
                           ? SizedBox(
                               width: 20.w,
                               height: 20.h,
-                              child: CircularProgressIndicator(
+                              child: const CircularProgressIndicator(
                                 color: Colors.white,
                                 strokeWidth: 2,
                               ),
@@ -317,7 +317,7 @@ class _ReviewsscreenState extends State<Reviewsscreen> {
           // Review List
           Expanded(
             child: _isLoading && _reviews.isEmpty
-                ? Center(child: CircularProgressIndicator())
+                ? const Center(child: CircularProgressIndicator())
                 : _reviews.isEmpty
                     ? Center(
                         child: Column(
@@ -328,7 +328,7 @@ class _ReviewsscreenState extends State<Reviewsscreen> {
                             SizedBox(height: 10.h),
                             Text(
                               S.of(context).no_reviews,
-                              style: TextStyle(color: Colors.grey),
+                              style: const TextStyle(color: Colors.grey),
                             ),
                           ],
                         ),
@@ -374,7 +374,7 @@ class ReviewCard extends StatelessWidget {
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
             blurRadius: 8,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -385,7 +385,7 @@ class ReviewCard extends StatelessWidget {
             children: [
               CircleAvatar(
                 backgroundColor: Colors.deepOrange.withOpacity(0.2),
-                child: Icon(Icons.person, color: Colors.deepOrange),
+                child: const Icon(Icons.person, color: Colors.deepOrange),
               ),
               SizedBox(width: 8.w),
               Expanded(
@@ -424,7 +424,7 @@ class ReviewCard extends StatelessWidget {
                     SizedBox(width: 2.w),
                     Text(
                       review.rating,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                       ),
