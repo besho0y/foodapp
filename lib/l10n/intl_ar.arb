@@ -248,6 +248,6 @@
     "qty": "الكمية",
     "delivery_address": "عنوان التوصيل",
     "no_address_provided": "لا يوجد عنوان محدد",
-    "payment": "الدفع"
- 
+    "payment": "الدفع",
+    "menu_categories": "فئات القائمة"
 }

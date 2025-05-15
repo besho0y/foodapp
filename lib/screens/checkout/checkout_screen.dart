@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -26,11 +27,24 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final instapayPhoneNumber = "01226680469"; // Store phone number for Instapay
   bool paymentVerified = false;
 
+  // Add promocode controllers and variables
+  final TextEditingController _promocodeController = TextEditingController();
+  String? _appliedPromocode;
+  double _promoDiscount = 0.0;
+  bool _isPromoLoading = false;
+
   @override
   void initState() {
     super.initState();
     // Load default address if available
     _loadDefaultAddress();
+  }
+
+  @override
+  void dispose() {
+    transferReferenceController.dispose();
+    _promocodeController.dispose();
+    super.dispose();
   }
 
   void _loadDefaultAddress() {
@@ -42,6 +56,80 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           orElse: () => profileCubit.user.addresses.first);
       setState(() {
         selectedAddress = defaultAddress;
+      });
+    }
+  }
+
+  // Add method to validate promocode
+  Future<void> _validatePromocode() async {
+    final String code = _promocodeController.text.trim();
+
+    if (code.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a promocode')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isPromoLoading = true;
+    });
+
+    try {
+      // Check if the code exists in Firestore
+      final promoDoc = await FirebaseFirestore.instance
+          .collection('promocodes')
+          .doc(code)
+          .get();
+
+      // Check if this user has already used this promocode
+      final profileCubit = ProfileCubit.get(context);
+      final bool hasUsedPromo = profileCubit.hasUsedPromocode(code);
+
+      if (!promoDoc.exists) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Invalid promocode')),
+        );
+        setState(() {
+          _isPromoLoading = false;
+          _appliedPromocode = null;
+          _promoDiscount = 0.0;
+        });
+      } else if (hasUsedPromo) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('You have already used this promocode')),
+        );
+        setState(() {
+          _isPromoLoading = false;
+          _appliedPromocode = null;
+          _promoDiscount = 0.0;
+        });
+      } else {
+        // Promocode is valid and hasn't been used by this user
+        final promoData = promoDoc.data() as Map<String, dynamic>;
+        final double discount = (promoData['discount'] ?? 0).toDouble();
+
+        setState(() {
+          _isPromoLoading = false;
+          _appliedPromocode = code;
+          _promoDiscount = discount;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+                'Promocode applied! ${discount.toStringAsFixed(2)} EGP discount'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error validating promocode: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error checking promocode')),
+      );
+      setState(() {
+        _isPromoLoading = false;
       });
     }
   }
@@ -72,26 +160,45 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 child: Stepper(
                   type: StepperType.horizontal,
                   currentStep: _currentStep,
+                  elevation: 0,
                   controlsBuilder: (context, details) {
-                    return Row(
-                      children: [
-                        if (_currentStep > 0)
+                    return Padding(
+                      padding: EdgeInsets.only(top: 20.h),
+                      child: Row(
+                        children: [
+                          if (_currentStep > 0)
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: details.onStepCancel,
+                                style: OutlinedButton.styleFrom(
+                                  padding: EdgeInsets.symmetric(vertical: 12.h),
+                                  side: BorderSide(
+                                      color: Theme.of(context).primaryColor),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8.r),
+                                  ),
+                                ),
+                                child: Text(S.of(context).back),
+                              ),
+                            ),
+                          if (_currentStep > 0) SizedBox(width: 12.w),
                           Expanded(
-                            child: OutlinedButton(
-                              onPressed: details.onStepCancel,
-                              child: Text(S.of(context).back),
+                            child: ElevatedButton(
+                              onPressed: details.onStepContinue,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Theme.of(context).primaryColor,
+                                padding: EdgeInsets.symmetric(vertical: 12.h),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8.r),
+                                ),
+                              ),
+                              child: Text(_currentStep == 1
+                                  ? S.of(context).place_order
+                                  : S.of(context).next),
                             ),
                           ),
-                        if (_currentStep > 0) SizedBox(width: 12.w),
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: details.onStepContinue,
-                            child: Text(_currentStep == 1
-                                ? S.of(context).place_order
-                                : S.of(context).next),
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     );
                   },
                   onStepContinue: () {
@@ -132,14 +239,40 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   },
                   steps: [
                     Step(
-                      title: Text(S.of(context).select_delivery_address),
+                      title: Text(
+                        S.of(context).select_delivery_address,
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          fontWeight: _currentStep >= 0
+                              ? FontWeight.bold
+                              : FontWeight.normal,
+                        ),
+                      ),
                       content: _buildAddressStep(),
                       isActive: _currentStep >= 0,
+                      state: _currentStep > 0
+                          ? StepState.complete
+                          : _currentStep == 0
+                              ? StepState.editing
+                              : StepState.indexed,
                     ),
                     Step(
-                      title: Text(S.of(context).select_payment_method),
+                      title: Text(
+                        S.of(context).select_payment_method,
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          fontWeight: _currentStep >= 1
+                              ? FontWeight.bold
+                              : FontWeight.normal,
+                        ),
+                      ),
                       content: _buildPaymentStep(),
                       isActive: _currentStep >= 1,
+                      state: _currentStep > 1
+                          ? StepState.complete
+                          : _currentStep == 1
+                              ? StepState.editing
+                              : StepState.indexed,
                     ),
                   ],
                 ),
@@ -147,7 +280,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
               // Order Summary Section
               Container(
-                padding: EdgeInsets.all(16.w),
+                padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
                 decoration: BoxDecoration(
                   color: Theme.of(context).cardColor,
                   boxShadow: [
@@ -161,33 +294,34 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      S.of(context).order_summary,
-                      style: TextStyle(
-                        fontSize: 18.sp,
-                        fontWeight: FontWeight.bold,
+                    // Order summary header with styled text
+                    Container(
+                      margin: EdgeInsets.only(bottom: 8.h),
+                      child: Text(
+                        S.of(context).order_summary,
+                        style: TextStyle(
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).primaryColor,
+                        ),
                       ),
                     ),
-                    SizedBox(height: 10.h),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('${S.of(context).items} (${cartItems.length})'),
-                        Text(
-                            '${layoutCubit.calculateSubtotal().toStringAsFixed(2)} ${S.of(context).egp}'),
-                      ],
+
+                    // Items and subtotal
+                    _buildSummaryRow(
+                      label: '${S.of(context).items} (${cartItems.length})',
+                      value:
+                          '${layoutCubit.calculateSubtotal().toStringAsFixed(2)} ${S.of(context).egp}',
                     ),
-                    SizedBox(height: 5.h),
-                    // Calculate total delivery fees from all restaurants
+
+                    // Delivery fee section
                     Builder(
                       builder: (context) {
                         // Calculate total delivery fees
                         double totalDeliveryFee = 0.0;
-
                         // Group by restaurant to avoid duplicates
                         final restaurantGroups =
                             groupItemsByRestaurant(cartItems);
-
                         // Add one delivery fee per restaurant
                         restaurantGroups.forEach((_, items) {
                           try {
@@ -198,26 +332,203 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           }
                         });
 
-                        // Show single row with total delivery fees
-                        return Padding(
-                          padding: EdgeInsets.only(bottom: 5.h),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                restaurantGroups.length > 1
-                                    ? '${S.of(context).delivery_fee} (${restaurantGroups.length})'
-                                    : S.of(context).delivery_fee,
-                              ),
-                              Text(
-                                '${totalDeliveryFee.toStringAsFixed(2)} ${S.of(context).egp}',
-                              ),
-                            ],
-                          ),
+                        return _buildSummaryRow(
+                          label: restaurantGroups.length > 1
+                              ? '${S.of(context).delivery_fee} (${restaurantGroups.length})'
+                              : S.of(context).delivery_fee,
+                          value:
+                              '${totalDeliveryFee.toStringAsFixed(2)} ${S.of(context).egp}',
                         );
                       },
                     ),
-                    Divider(height: 20.h),
+
+                    // Promocode section with improved UI
+                    Container(
+                      margin: EdgeInsets.symmetric(vertical: 10.h),
+                      padding: EdgeInsets.all(10.r),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade50,
+                        borderRadius: BorderRadius.circular(8.r),
+                        border: Border.all(
+                          color: _appliedPromocode != null
+                              ? Colors.green
+                              : Colors.grey.shade300,
+                          width: _appliedPromocode != null ? 2 : 1,
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Promocode header
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.local_offer_outlined,
+                                color: Theme.of(context).primaryColor,
+                                size: 16.sp,
+                              ),
+                              SizedBox(width: 6.w),
+                              Text(
+                                'Promocode',
+                                style: TextStyle(
+                                  fontSize: 14.sp,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 8.h),
+
+                          // Promocode input and button - Fixed to prevent overflow
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                flex: 3,
+                                child: Container(
+                                  height: 40.h,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(8.r),
+                                    border: Border.all(
+                                      color: _appliedPromocode != null
+                                          ? Colors.green
+                                          : Colors.grey.shade300,
+                                    ),
+                                  ),
+                                  child: TextField(
+                                    controller: _promocodeController,
+                                    decoration: InputDecoration(
+                                      hintText: 'Enter promocode',
+                                      contentPadding: EdgeInsets.symmetric(
+                                          horizontal: 10.w),
+                                      border: InputBorder.none,
+                                      enabled: _appliedPromocode == null,
+                                      hintStyle: TextStyle(fontSize: 13.sp),
+                                    ),
+                                    style: TextStyle(fontSize: 13.sp),
+                                  ),
+                                ),
+                              ),
+                              SizedBox(width: 8.w),
+                              _isPromoLoading
+                                  ? Container(
+                                      width: 40.w,
+                                      height: 40.h,
+                                      padding: EdgeInsets.all(6.r),
+                                      child: const CircularProgressIndicator(
+                                          strokeWidth: 2),
+                                    )
+                                  : _appliedPromocode != null
+                                      ? Expanded(
+                                          flex: 1,
+                                          child: SizedBox(
+                                            height: 40.h,
+                                            child: ElevatedButton(
+                                              onPressed: () {
+                                                setState(() {
+                                                  _appliedPromocode = null;
+                                                  _promoDiscount = 0.0;
+                                                  _promocodeController.clear();
+                                                });
+                                              },
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor: Colors.red,
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          8.r),
+                                                ),
+                                                padding: EdgeInsets.zero,
+                                              ),
+                                              child: FittedBox(
+                                                fit: BoxFit.scaleDown,
+                                                child: Text(
+                                                  'Remove',
+                                                  style: TextStyle(
+                                                      fontSize: 12.sp),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        )
+                                      : Expanded(
+                                          flex: 1,
+                                          child: SizedBox(
+                                            height: 40.h,
+                                            child: ElevatedButton(
+                                              onPressed: _validatePromocode,
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor:
+                                                    Theme.of(context)
+                                                        .primaryColor,
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          8.r),
+                                                ),
+                                                padding: EdgeInsets.zero,
+                                              ),
+                                              child: FittedBox(
+                                                fit: BoxFit.scaleDown,
+                                                child: Text(
+                                                  'Apply',
+                                                  style: TextStyle(
+                                                      fontSize: 12.sp),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                            ],
+                          ),
+
+                          // Show applied promocode message
+                          if (_appliedPromocode != null) ...[
+                            SizedBox(height: 8.h),
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                  vertical: 4.h, horizontal: 8.w),
+                              decoration: BoxDecoration(
+                                color: Colors.green.shade50,
+                                borderRadius: BorderRadius.circular(4.r),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.check_circle,
+                                      color: Colors.green, size: 14),
+                                  SizedBox(width: 4.w),
+                                  Expanded(
+                                    child: Text(
+                                      'Code "$_appliedPromocode" applied!',
+                                      style: TextStyle(
+                                        fontSize: 11.sp,
+                                        color: Colors.green.shade800,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+
+                    // Show discount amount if promocode is applied
+                    if (_appliedPromocode != null && _promoDiscount > 0)
+                      _buildSummaryRow(
+                        label: 'Discount',
+                        value:
+                            '-${_promoDiscount.toStringAsFixed(2)} ${S.of(context).egp}',
+                        valueColor: Colors.green,
+                      ),
+
+                    // Divider before total
+                    Divider(height: 16.h, thickness: 1),
+
+                    // Total row with larger text and bold styling
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -226,13 +537,15 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           style: TextStyle(
                             fontSize: 16.sp,
                             fontWeight: FontWeight.bold,
+                            color: Theme.of(context).primaryColor,
                           ),
                         ),
                         Text(
-                          '${layoutCubit.calculateTotalPrice().toStringAsFixed(2)} ${S.of(context).egp}',
+                          '${layoutCubit.calculateTotalPrice(promoDiscount: _promoDiscount).toStringAsFixed(2)} ${S.of(context).egp}',
                           style: TextStyle(
                             fontSize: 16.sp,
                             fontWeight: FontWeight.bold,
+                            color: Theme.of(context).primaryColor,
                           ),
                         ),
                       ],
@@ -280,14 +593,34 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             ? Center(
                 child: Column(
                   children: [
-                    const Icon(Icons.location_off,
-                        size: 60, color: Colors.grey),
+                    Icon(
+                      Icons.location_off,
+                      size: 60.sp,
+                      color: Colors.grey.shade400,
+                    ),
                     SizedBox(height: 16.h),
-                    const Text('No saved addresses found'),
-                    SizedBox(height: 10.h),
-                    ElevatedButton(
-                      onPressed: () => _showAddAddressBottomSheet(context),
-                      child: Text(S.of(context).add_address),
+                    Text(
+                      'No saved addresses found',
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                    SizedBox(height: 16.h),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () => _showAddAddressBottomSheet(context),
+                        icon: const Icon(Icons.add_location_alt),
+                        label: Text(S.of(context).add_address),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Theme.of(context).primaryColor,
+                          padding: EdgeInsets.symmetric(vertical: 12.h),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8.r),
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -296,93 +629,115 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 children: [
                   ...addresses.map((address) {
                     final isSelected = selectedAddress == address;
-                    return InkWell(
-                      onTap: () {
-                        setState(() {
-                          selectedAddress = address;
-                        });
-                      },
-                      child: Container(
-                        margin: EdgeInsets.only(bottom: 10.h),
-                        padding: EdgeInsets.all(12.w),
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: isSelected
-                                ? Theme.of(context).primaryColor
-                                : Colors.grey.shade300,
-                            width: isSelected ? 2 : 1,
-                          ),
-                          borderRadius: BorderRadius.circular(8.r),
+                    return Card(
+                      margin: EdgeInsets.only(bottom: 12.h),
+                      elevation: isSelected ? 2 : 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10.r),
+                        side: BorderSide(
+                          color: isSelected
+                              ? Theme.of(context).primaryColor
+                              : Colors.grey.shade300,
+                          width: isSelected ? 2 : 1,
                         ),
-                        child: Row(
-                          children: [
-                            Radio<Address>(
-                              value: address,
-                              groupValue: selectedAddress,
-                              onChanged: (value) {
-                                setState(() {
-                                  selectedAddress = value;
-                                });
-                              },
-                            ),
-                            SizedBox(width: 8.w),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Text(
-                                        address.title,
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16.sp,
-                                        ),
-                                      ),
-                                      SizedBox(width: 8.w),
-                                      if (address.isDefault)
-                                        Container(
-                                          padding: EdgeInsets.symmetric(
-                                            horizontal: 8.w,
-                                            vertical: 2.h,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: Colors.green,
-                                            borderRadius:
-                                                BorderRadius.circular(10.r),
-                                          ),
+                      ),
+                      child: InkWell(
+                        onTap: () {
+                          setState(() {
+                            selectedAddress = address;
+                          });
+                        },
+                        borderRadius: BorderRadius.circular(10.r),
+                        child: Padding(
+                          padding: EdgeInsets.all(12.r),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Radio<Address>(
+                                value: address,
+                                groupValue: selectedAddress,
+                                activeColor: Theme.of(context).primaryColor,
+                                onChanged: (value) {
+                                  setState(() {
+                                    selectedAddress = value;
+                                  });
+                                },
+                              ),
+                              SizedBox(width: 8.w),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Expanded(
                                           child: Text(
-                                            'Default',
+                                            address.title,
                                             style: TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 10.sp,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 16.sp,
+                                              color: isSelected
+                                                  ? Theme.of(context)
+                                                      .primaryColor
+                                                  : null,
                                             ),
                                           ),
                                         ),
-                                    ],
-                                  ),
-                                  SizedBox(height: 4.h),
-                                  Text(
-                                    address.address,
-                                    style: TextStyle(
-                                      color: Colors.grey[600],
+                                        if (address.isDefault)
+                                          Container(
+                                            padding: EdgeInsets.symmetric(
+                                              horizontal: 8.w,
+                                              vertical: 2.h,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: Colors.green,
+                                              borderRadius:
+                                                  BorderRadius.circular(10.r),
+                                            ),
+                                            child: Text(
+                                              'Default',
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 10.sp,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          ),
+                                      ],
                                     ),
-                                  ),
-                                ],
+                                    SizedBox(height: 8.h),
+                                    Text(
+                                      address.address,
+                                      style: TextStyle(
+                                        color: Colors.grey.shade700,
+                                        fontSize: 14.sp,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     );
                   }).toList(),
+
                   SizedBox(height: 16.h),
+                  // Add new address button
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(
                       onPressed: () => _showAddAddressBottomSheet(context),
-                      icon: const Icon(Icons.add),
+                      icon: const Icon(Icons.add_location_alt),
                       label: Text(S.of(context).add_address),
+                      style: OutlinedButton.styleFrom(
+                        padding: EdgeInsets.symmetric(vertical: 12.h),
+                        side: BorderSide(color: Theme.of(context).primaryColor),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -401,6 +756,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           style: TextStyle(
             fontSize: 16.sp,
             fontWeight: FontWeight.bold,
+            color: Theme.of(context).primaryColor,
           ),
         ),
         SizedBox(height: 16.h),
@@ -412,6 +768,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           icon: Icons.payments_outlined,
           value: 'cash',
         ),
+        SizedBox(height: 12.h),
 
         // Credit card payment method
         _buildPaymentMethodCard(
@@ -420,6 +777,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           icon: Icons.credit_card,
           value: 'card',
         ),
+        SizedBox(height: 12.h),
 
         // InstaPay payment method
         _buildPaymentMethodCard(
@@ -441,59 +799,84 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     required IconData icon,
     required String value,
   }) {
-    return InkWell(
-      onTap: () {
-        setState(() {
-          paymentMethod = value;
-        });
-      },
-      child: Container(
-        padding: EdgeInsets.all(12.w),
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: paymentMethod == value
-                ? Theme.of(context).primaryColor
-                : Colors.grey.shade300,
-            width: paymentMethod == value ? 2 : 1,
-          ),
-          borderRadius: BorderRadius.circular(8.r),
+    bool isSelected = paymentMethod == value;
+
+    return Card(
+      elevation: isSelected ? 2 : 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10.r),
+        side: BorderSide(
+          color: isSelected
+              ? Theme.of(context).primaryColor
+              : Colors.grey.shade300,
+          width: isSelected ? 2 : 1,
         ),
-        child: Row(
-          children: [
-            Radio<String>(
-              value: value,
-              groupValue: paymentMethod,
-              onChanged: (value) {
-                setState(() {
-                  paymentMethod = value ?? 'cash';
-                });
-              },
-            ),
-            SizedBox(width: 8.w),
-            Icon(icon),
-            SizedBox(width: 12.w),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16.sp,
-                    ),
-                  ),
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 12.sp,
-                    ),
-                  ),
-                ],
+      ),
+      child: InkWell(
+        onTap: () {
+          setState(() {
+            paymentMethod = value;
+          });
+        },
+        borderRadius: BorderRadius.circular(10.r),
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 12.h),
+          child: Row(
+            children: [
+              Radio<String>(
+                value: value,
+                groupValue: paymentMethod,
+                activeColor: Theme.of(context).primaryColor,
+                onChanged: (value) {
+                  setState(() {
+                    paymentMethod = value ?? 'cash';
+                  });
+                },
               ),
-            ),
-          ],
+              SizedBox(width: 8.w),
+              Container(
+                padding: EdgeInsets.all(8.r),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? Theme.of(context).primaryColor.withOpacity(0.1)
+                      : Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+                child: Icon(
+                  icon,
+                  color: isSelected
+                      ? Theme.of(context).primaryColor
+                      : Colors.grey.shade700,
+                  size: 24.sp,
+                ),
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16.sp,
+                        color:
+                            isSelected ? Theme.of(context).primaryColor : null,
+                      ),
+                    ),
+                    SizedBox(height: 4.h),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 12.sp,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -502,77 +885,131 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   Widget _buildInstapayInfo() {
     return Container(
       margin: EdgeInsets.only(top: 16.h),
-      padding: EdgeInsets.all(16.w),
+      padding: EdgeInsets.all(16.r),
       decoration: BoxDecoration(
-        color: Colors.grey.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8.r),
+        color: Colors.blue.shade50,
+        borderRadius: BorderRadius.circular(10.r),
+        border: Border.all(color: Colors.blue.shade200),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            S.of(context).instapay_details,
-            style: TextStyle(
-              fontSize: 16.sp,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          SizedBox(height: 16.h),
-          RichText(
-            text: TextSpan(
-              style: TextStyle(
-                color: Colors.black87,
-                fontSize: 14.sp,
+          Row(
+            children: [
+              Icon(
+                Icons.info_outline,
+                color: Colors.blue.shade700,
+                size: 20.sp,
               ),
+              SizedBox(width: 8.w),
+              Expanded(
+                child: Text(
+                  S.of(context).instapay_details,
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue.shade700,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+
+          SizedBox(height: 16.h),
+
+          // Instapay steps with nice formatting
+          Container(
+            padding: EdgeInsets.all(12.r),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8.r),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                TextSpan(text: "${S.of(context).instapay_step1}\n"),
-                TextSpan(text: "${S.of(context).instapay_step2} "),
-                TextSpan(
-                  text: instapayPhoneNumber,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).primaryColor,
-                  ),
+                _buildInstapayStep(
+                    step: '1', text: S.of(context).instapay_step1),
+                _buildInstapayStep(
+                  step: '2',
+                  text: "${S.of(context).instapay_step2} ",
+                  highlight: instapayPhoneNumber,
                 ),
-                TextSpan(text: "\n${S.of(context).instapay_step3} "),
-                TextSpan(
-                  text:
-                      "${(Layoutcubit.get(context).calculateTotalPrice() + 30).toStringAsFixed(2)} ${S.of(context).egp}",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).primaryColor,
-                  ),
+                _buildInstapayStep(
+                  step: '3',
+                  text: "${S.of(context).instapay_step3} ",
+                  highlight:
+                      "${(Layoutcubit.get(context).calculateTotalPrice(promoDiscount: _promoDiscount)).toStringAsFixed(2)} ${S.of(context).egp}",
                 ),
-                TextSpan(text: "\n${S.of(context).instapay_step4}"),
+                _buildInstapayStep(
+                  step: '4',
+                  text: S.of(context).instapay_step4,
+                ),
               ],
             ),
           ),
-          SizedBox(height: 12.h),
-          OutlinedButton.icon(
-            onPressed: () {
-              Clipboard.setData(ClipboardData(text: instapayPhoneNumber));
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(S.of(context).copy_phone_number)),
-              );
-            },
-            icon: const Icon(Icons.copy),
-            label: Text(S.of(context).copy_phone_number),
-            style: OutlinedButton.styleFrom(
-              side: BorderSide(color: Theme.of(context).primaryColor),
+
+          SizedBox(height: 16.h),
+
+          // Copy phone number button
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () {
+                Clipboard.setData(ClipboardData(text: instapayPhoneNumber));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(S.of(context).copy_phone_number),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              },
+              icon: const Icon(Icons.copy),
+              label: Text(S.of(context).copy_phone_number),
+              style: OutlinedButton.styleFrom(
+                padding: EdgeInsets.symmetric(vertical: 12.h),
+                side: BorderSide(color: Colors.blue.shade700),
+                foregroundColor: Colors.blue.shade700,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+              ),
             ),
           ),
+
           SizedBox(height: 16.h),
-          TextField(
-            controller: transferReferenceController,
-            decoration: InputDecoration(
-              labelText: S.of(context).transfer_reference,
-              hintText: S.of(context).transfer_reference_hint,
-              border: const OutlineInputBorder(),
-              prefixIcon: const Icon(Icons.numbers),
+
+          // Reference input
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8.r),
+              border: Border.all(
+                color: paymentVerified ? Colors.green : Colors.grey.shade300,
+                width: paymentVerified ? 2 : 1,
+              ),
             ),
-            keyboardType: TextInputType.text,
+            child: TextField(
+              controller: transferReferenceController,
+              decoration: InputDecoration(
+                labelText: S.of(context).transfer_reference,
+                hintText: S.of(context).transfer_reference_hint,
+                border: InputBorder.none,
+                prefixIcon: const Icon(Icons.numbers),
+                contentPadding:
+                    EdgeInsets.symmetric(horizontal: 12.w, vertical: 16.h),
+                labelStyle: TextStyle(
+                  color: paymentVerified ? Colors.green : null,
+                ),
+              ),
+              keyboardType: TextInputType.text,
+            ),
           ),
+
           SizedBox(height: 16.h),
+
+          // Verify payment button
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
@@ -582,16 +1019,23 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               icon: const Icon(Icons.check_circle),
               label: Text(S.of(context).verify_payment),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).primaryColor,
+                backgroundColor:
+                    paymentVerified ? Colors.green : Colors.blue.shade700,
+                padding: EdgeInsets.symmetric(vertical: 12.h),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
               ),
             ),
           ),
+
+          // Payment verified message
           if (paymentVerified) ...[
             SizedBox(height: 16.h),
             Container(
-              padding: EdgeInsets.all(12.w),
+              padding: EdgeInsets.all(12.r),
               decoration: BoxDecoration(
-                color: Colors.green.shade100,
+                color: Colors.green.shade50,
                 borderRadius: BorderRadius.circular(8.r),
                 border: Border.all(color: Colors.green),
               ),
@@ -602,13 +1046,81 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   Expanded(
                     child: Text(
                       S.of(context).payment_verified,
-                      style: TextStyle(color: Colors.green.shade800),
+                      style: TextStyle(
+                        color: Colors.green.shade800,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
           ],
+        ],
+      ),
+    );
+  }
+
+  // Helper method to build Instapay steps
+  Widget _buildInstapayStep({
+    required String step,
+    required String text,
+    String? highlight,
+  }) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 10.h),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 24.r,
+            height: 24.r,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: Colors.blue.shade700,
+              shape: BoxShape.circle,
+            ),
+            child: Text(
+              step,
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 12.sp,
+              ),
+            ),
+          ),
+          SizedBox(width: 12.w),
+          Expanded(
+            child: highlight == null
+                ? Text(
+                    text,
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      height: 1.4,
+                    ),
+                  )
+                : RichText(
+                    text: TextSpan(
+                      style: TextStyle(
+                        color: Colors.black87,
+                        fontSize: 14.sp,
+                        height: 1.4,
+                      ),
+                      children: [
+                        TextSpan(text: text),
+                        TextSpan(
+                          text: highlight,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blue.shade700,
+                          ),
+                        ),
+                      ],
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+          ),
         ],
       ),
     );
@@ -794,7 +1306,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     // If credit card payment is selected, process with PayMob
     if (paymentMethod == 'card') {
       final totalPrice =
-          layoutCubit.calculateTotalPrice() + 30; // Including delivery fee
+          layoutCubit.calculateTotalPrice(promoDiscount: _promoDiscount);
 
       // Show loading indicator
       showDialog(
@@ -938,9 +1450,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     // Generate a unique order ID
     final orderId = const Uuid().v4();
 
-    // Calculate the total price (items + delivery fee)
+    // Calculate the total price (items + delivery fee) with promocode discount if applied
     final totalPrice =
-        layoutCubit.calculateTotalPrice() + 30; // Including delivery fee
+        layoutCubit.calculateTotalPrice(promoDiscount: _promoDiscount);
 
     // Create order data
     final orderData = {
@@ -955,6 +1467,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           paymentMethod == 'instapay' ? transferReferenceController.text : null,
       'status': 'Pending',
       'date': DateTime.now().toString(),
+      // Include promocode information if a promocode was applied
+      'promocode': _appliedPromocode,
+      'promoDiscount': _promoDiscount > 0 ? _promoDiscount : null,
     };
 
     try {
@@ -972,6 +1487,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       // Add the order through the order cubit
       await orderCubit.addOrder(orderData);
 
+      // If a promocode was applied, add it to the user's used promocodes
+      if (_appliedPromocode != null && _promoDiscount > 0) {
+        await profileCubit.addUsedPromocode(_appliedPromocode!);
+      }
+
       // Update the user's orderIds list in memory
       if (!profileCubit.user.orderIds.contains(orderId)) {
         profileCubit.user.orderIds.add(orderId);
@@ -980,10 +1500,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       // Clear the cart
       layoutCubit.clearCart();
 
-      // Reset payment verification status
+      // Reset payment verification status and promocode
       setState(() {
         paymentVerified = false;
         transferReferenceController.clear();
+        _appliedPromocode = null;
+        _promoDiscount = 0.0;
+        _promocodeController.clear();
       });
 
       // Close loading dialog
@@ -1012,5 +1535,47 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         ),
       );
     }
+  }
+
+  // Helper widget for consistent summary rows with overflow protection
+  Widget _buildSummaryRow({
+    required String label,
+    required String value,
+    Color? valueColor,
+  }) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 3.h),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            flex: 2,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 13.sp,
+                color: Colors.grey.shade700,
+              ),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
+          ),
+          Expanded(
+            flex: 1,
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 13.sp,
+                fontWeight: FontWeight.w500,
+                color: valueColor,
+              ),
+              textAlign: TextAlign.end,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

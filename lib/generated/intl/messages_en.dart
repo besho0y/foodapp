@@ -268,6 +268,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "logout_confirm": MessageLookupByLibrary.simpleMessage(
             "Are you sure you want to logout?"),
         "logout_title": MessageLookupByLibrary.simpleMessage("Logout"),
+        "menu_categories":
+            MessageLookupByLibrary.simpleMessage("Menu Categories"),
         "name_hint":
             MessageLookupByLibrary.simpleMessage("Enter your full name"),
         "name_required":

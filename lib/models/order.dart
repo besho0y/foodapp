@@ -8,6 +8,9 @@ class Order {
   String? paymentMethod;
   String? userId;
   String? userName;
+  String? promocode;
+  double? promoDiscount;
+  String? paymentReference;
 
   Order({
     required this.id,
@@ -19,6 +22,9 @@ class Order {
     this.paymentMethod,
     this.userId,
     this.userName,
+    this.promocode,
+    this.promoDiscount,
+    this.paymentReference,
   });
 
   Map<String, dynamic> toJson() {
@@ -32,6 +38,9 @@ class Order {
       'paymentMethod': paymentMethod,
       'userId': userId,
       'userName': userName,
+      'promocode': promocode,
+      'promoDiscount': promoDiscount,
+      'paymentReference': paymentReference,
     };
   }
 
@@ -48,6 +57,13 @@ class Order {
       paymentMethod: json['paymentMethod'],
       userId: json['userId'],
       userName: json['userName'],
+      promocode: json['promocode'],
+      promoDiscount: json['promoDiscount'] != null
+          ? (json['promoDiscount'] is int
+              ? (json['promoDiscount'] as int).toDouble()
+              : json['promoDiscount'].toDouble())
+          : null,
+      paymentReference: json['paymentReference'],
     );
   }
 
@@ -57,19 +73,37 @@ class Order {
     for (var item in items) {
       double price = 0.0;
       int quantity = 1;
-      
+
       if (item['price'] is int) {
         price = (item['price'] as int).toDouble();
       } else if (item['price'] is double) {
         price = item['price'];
       }
-      
+
       if (item['quantity'] is int) {
         quantity = item['quantity'];
       }
-      
+
       total += price * quantity;
     }
     return total;
+  }
+
+  // Calculate the subtotal (before discount)
+  double calculateSubtotal() {
+    return calculateTotal();
+  }
+
+  // Get the original price before discount
+  double getOriginalPrice() {
+    if (promoDiscount != null && promoDiscount! > 0) {
+      return total + promoDiscount!;
+    }
+    return total;
+  }
+
+  // Check if order has a valid discount
+  bool hasDiscount() {
+    return promocode != null && promoDiscount != null && promoDiscount! > 0;
   }
 }

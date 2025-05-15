@@ -16,6 +16,7 @@ class Restuarants {
   String id;
   List<String> categories;
   List<String>? menuCategories;
+  List<String>? menuCategoriesAr;
 
   Restuarants({
     required this.name,
@@ -31,6 +32,7 @@ class Restuarants {
     required this.id,
     required this.categories,
     this.menuCategories,
+    this.menuCategoriesAr,
   }) {
     // Validate required fields
     if (name.isEmpty) throw ArgumentError('Restaurant name cannot be empty');
@@ -59,7 +61,8 @@ class Restuarants {
         category = json['category']?.toString() ?? 'fast food',
         categoryAr = json['categoryar']?.toString() ?? 'طعام سريع',
         categories = _parseCategories(json['categories']),
-        menuCategories = _parseMenuCategories(json['menuCategories']) {
+        menuCategories = _parseMenuCategories(json['menuCategories']),
+        menuCategoriesAr = _parseMenuCategories(json['menuCategoriesAr']) {
     try {
       // Parse menu items with error handling
       if (json['items'] is List) {
@@ -205,6 +208,7 @@ class Restuarants {
         'ordersnumber': ordersnum,
         'categories': categories,
         'menuCategories': menuCategories,
+        'menuCategoriesAr': menuCategoriesAr,
         'items': menuItems.map((item) => item.toJson()).toList(),
       };
     } catch (e) {

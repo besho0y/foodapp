@@ -2571,6 +2571,16 @@ class S {
   }
 
   // skipped getter for the 'Restaurant Categories' key
+
+  /// `Menu Categories`
+  String get menu_categories {
+    return Intl.message(
+      'Menu Categories',
+      name: 'menu_categories',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {

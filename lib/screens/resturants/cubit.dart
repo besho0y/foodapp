@@ -141,7 +141,7 @@ class Restuarantscubit extends Cubit<ResturantsStates> {
       print("Starting to fetch restaurant categories...");
 
       final categoriesRef =
-          FirebaseFirestore.instance.collection("restuarants_categories");
+          FirebaseFirestore.instance.collection("restaurants_categories");
       print("Attempting to access collection: ${categoriesRef.path}");
 
       final QuerySnapshot categoriesSnapshot;
@@ -486,7 +486,7 @@ class Restuarantscubit extends Cubit<ResturantsStates> {
     try {
       print("Adding test category to Firebase...");
       await FirebaseFirestore.instance
-          .collection("restuarants_categories")
+          .collection("restaurants_categories")
           .add({
         'en': 'Pizza',
         'ar': 'بيتزا',
@@ -494,8 +494,9 @@ class Restuarantscubit extends Cubit<ResturantsStates> {
       });
       print("Test category added successfully");
 
-      // Refresh categories
-      await _fetchCategories();
+      // IMPORTANT: Do not fetch categories again here - it causes an infinite loop
+      // Commented out to prevent infinite recursion:
+      // await _fetchCategories();
     } catch (e) {
       print("Error adding test category: $e");
       emit(RestuarantsErrorState(e.toString()));

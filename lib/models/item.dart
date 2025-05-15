@@ -24,6 +24,11 @@ class Item {
     List<String>? categories,
   }) {
     this.categories = categories ?? [];
+
+    if (!this.categories.contains("All")) {
+      this.categories.add("All");
+    }
+
     if (!this.categories.contains(category) && category != "All") {
       this.categories.add(category);
     }
@@ -33,13 +38,13 @@ class Item {
     return {
       'id': id,
       'name': name,
-      'nameAr': nameAr,
+      'namear': nameAr,
       'description': description,
-      'descriptionAr': descriptionAr,
+      'descriptionar': descriptionAr,
       'price': price,
       "img": img,
       "category": category,
-      "categoryAr": categoryAr,
+      "categoryar": categoryAr,
       "categories": categories,
     };
   }
@@ -49,26 +54,35 @@ class Item {
 
     List<String> categoriesList = [];
     if (json["categories"] != null) {
-      categoriesList = List<String>.from(json["categories"]);
+      if (json["categories"] is List) {
+        categoriesList = List<String>.from(json["categories"]);
+      } else if (json["categories"] is String) {
+        categoriesList = [json["categories"].toString()];
+      }
+    }
+
+    if (!categoriesList.contains("All")) {
+      categoriesList.add("All");
     }
 
     if (!categoriesList.contains(mainCategory) && mainCategory != "All") {
       categoriesList.add(mainCategory);
     }
 
+    print("Loading item: ${json['name']}, Categories: $categoriesList");
+
     return Item(
       id: json['id'] ?? '',
       name: json['name'] ?? 'Unnamed Item',
-      nameAr: json['nameAr'] ?? json['namear'] ?? 'عنصر بدون اسم',
+      nameAr: json['namear'] ?? json['nameAr'] ?? '',
       description: json['description'] ?? 'No description',
-      descriptionAr:
-          json['descriptionAr'] ?? json['descriptionar'] ?? 'لا يوجد وصف',
+      descriptionAr: json['descriptionar'] ?? json['descriptionAr'] ?? '',
       price: json['price'] is num
           ? (json['price'] as num).toDouble()
           : (double.tryParse(json['price']?.toString() ?? '0') ?? 0.0),
       img: json["img"] ?? 'assets/images/items/default.jpg',
       category: mainCategory,
-      categoryAr: json['categoryAr'] ?? json['categoryar'] ?? 'غير مصنف',
+      categoryAr: json['categoryar'] ?? json['categoryAr'] ?? 'غير مصنف',
       categories: categoriesList,
     );
   }

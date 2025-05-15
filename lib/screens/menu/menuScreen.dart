@@ -1,5 +1,6 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -35,93 +36,333 @@ class Menuscreen extends StatefulWidget {
 }
 
 class _MenuscreenState extends State<Menuscreen> {
-  // Extract categories specific to this restaurant's items
+  // Data structures for menu categories
   late List<String> restaurantCategories = ["All"];
+  late List<String> restaurantCategoriesAr = ["الكل"];
+  Map<String, String> categoryToArabic = {"All": "الكل"};
+  Map<String, String> arabicToCategory = {"الكل": "All"};
   String selectedCategory = "All";
+  bool isLoadingCategories = true;
+  bool isRtl = false;
 
   @override
   void initState() {
     super.initState();
+    _fetchMenuCategories();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Check RTL direction when locale might have changed
+    isRtl = Directionality.of(context) == TextDirection.rtl;
+    // Reset selected category based on RTL state
+    if (isRtl && selectedCategory == "All") {
+      selectedCategory = "الكل";
+    } else if (!isRtl && selectedCategory == "الكل") {
+      selectedCategory = "All";
+    }
+  }
+
+  // Helper method to get localized category name
+  String getLocalizedCategoryName(int index) {
+    return isRtl ? restaurantCategoriesAr[index] : restaurantCategories[index];
+  }
+
+  Future<void> _fetchMenuCategories() async {
     // Start with "All" category
     List<String> categoriesList = ["All"];
+    List<String> categoriesListAr = ["الكل"];
+    Map<String, String> catToAr = {"All": "الكل"};
+    Map<String, String> arToCat = {"الكل": "All"};
     Set<String> processedCategories = {"All"};
 
-    // Debug logging
-    print("Restaurant ID: ${widget.restaurantId}");
-    print("Items count: ${widget.items.length}");
+    try {
+      setState(() {
+        isLoadingCategories = true;
+      });
 
-    // First pass: collect categories from existing items
-    for (var item in widget.items) {
-      print("Item: ${item.name}, Categories: ${item.categories}");
+      // Method 1: Try to fetch from menu_categories subcollection first
+      final categorySnapshot = await FirebaseFirestore.instance
+          .collection("restaurants")
+          .doc(widget.restaurantId)
+          .collection("menu_categories")
+          .get();
 
-      // Handle multiple categories
-      if (item.categories.isNotEmpty) {
-        for (var category in item.categories) {
-          if (category.isNotEmpty &&
-              !processedCategories.contains(category) &&
-              !category.toLowerCase().contains("uncategorized")) {
-            categoriesList.add(category);
-            processedCategories.add(category);
-            print("Added category from multiple: $category");
+      print(
+          "Found ${categorySnapshot.docs.length} categories in subcollection");
+
+      if (categorySnapshot.docs.isNotEmpty) {
+        // Categories found in subcollection
+        for (var doc in categorySnapshot.docs) {
+          final data = doc.data();
+          final categoryName = data['name']?.toString();
+          final categoryNameAr = data['nameAr']?.toString();
+
+          if (categoryName != null &&
+              categoryName.toString().isNotEmpty &&
+              !processedCategories.contains(categoryName) &&
+              !categoryName
+                  .toString()
+                  .toLowerCase()
+                  .contains("uncategorized")) {
+            categoriesList.add(categoryName.toString());
+
+            // Handle Arabic name if available
+            if (categoryNameAr != null && categoryNameAr.isNotEmpty) {
+              categoriesListAr.add(categoryNameAr);
+              catToAr[categoryName] = categoryNameAr;
+              arToCat[categoryNameAr] = categoryName;
+            } else {
+              // Fall back to English name if no Arabic name
+              categoriesListAr.add(categoryName);
+              catToAr[categoryName] = categoryName;
+              arToCat[categoryName] = categoryName;
+            }
+
+            processedCategories.add(categoryName.toString());
+            print(
+                "Added category from subcollection: $categoryName / ${categoryNameAr ?? categoryName}");
+          }
+        }
+      } else {
+        // Method 2: Fall back to menuCategories array field if subcollection is empty
+        try {
+          final restaurantDoc = await FirebaseFirestore.instance
+              .collection("restaurants")
+              .doc(widget.restaurantId)
+              .get();
+
+          if (restaurantDoc.exists) {
+            final data = restaurantDoc.data();
+            final menuCategories = data?['menuCategories'];
+            final menuCategoriesAr = data?['menuCategoriesAr'];
+
+            if (menuCategories != null && menuCategories is List) {
+              print("Using menuCategories array field as fallback");
+
+              for (int i = 0; i < menuCategories.length; i++) {
+                final category = menuCategories[i];
+                String categoryAr = "";
+
+                // Try to get matching Arabic category
+                if (menuCategoriesAr != null &&
+                    menuCategoriesAr is List &&
+                    i < menuCategoriesAr.length) {
+                  categoryAr = menuCategoriesAr[i].toString();
+                } else {
+                  categoryAr = category.toString();
+                }
+
+                if (category != null &&
+                    category.toString().isNotEmpty &&
+                    !processedCategories.contains(category) &&
+                    !category
+                        .toString()
+                        .toLowerCase()
+                        .contains("uncategorized")) {
+                  categoriesList.add(category.toString());
+                  categoriesListAr.add(categoryAr);
+                  catToAr[category.toString()] = categoryAr;
+                  arToCat[categoryAr] = category.toString();
+                  processedCategories.add(category.toString());
+                  print(
+                      "Added category from menuCategories array: $category / $categoryAr");
+                }
+              }
+            }
+          }
+        } catch (e) {
+          print("Error getting restaurant array categories: $e");
+        }
+
+        // Method 3: Fallback to extracting from items if both previous methods failed
+        if (categoriesList.length <= 1) {
+          print(
+              "No categories found in subcollection or array field. Using items as fallback.");
+
+          // Process categories from items
+          for (var item in widget.items) {
+            print("Item: ${item.name}, Categories: ${item.categories}");
+
+            // Handle multiple categories
+            if (item.categories.isNotEmpty) {
+              for (var category in item.categories) {
+                if (category.isNotEmpty &&
+                    !processedCategories.contains(category) &&
+                    !category.toLowerCase().contains("uncategorized")) {
+                  categoriesList.add(category);
+                  categoriesListAr.add(category); // No Ar version available
+                  catToAr[category] = category;
+                  arToCat[category] = category;
+                  processedCategories.add(category);
+                  print("Added category from multiple: $category");
+                }
+              }
+            }
+            // Handle single category
+            else if (item.category.isNotEmpty &&
+                item.category != "All" &&
+                !item.category.toLowerCase().contains("uncategorized") &&
+                !processedCategories.contains(item.category)) {
+              categoriesList.add(item.category);
+              categoriesListAr.add(item.category); // No Ar version available
+              catToAr[item.category] = item.category;
+              arToCat[item.category] = item.category;
+              processedCategories.add(item.category);
+              print("Added category from single: ${item.category}");
+            }
           }
         }
       }
-      // Handle single category
-      else if (item.category.isNotEmpty &&
-          item.category != "All" &&
-          !item.category.toLowerCase().contains("uncategorized") &&
-          !processedCategories.contains(item.category)) {
-        categoriesList.add(item.category);
-        processedCategories.add(item.category);
-        print("Added category from single: ${item.category}");
+
+      // Method 4: Also try to get restaurant categories from Restuarantscubit if available
+      // but don't add restaurant-level categories to avoid confusion with menu categories
+      try {
+        final restaurantCubit = Restuarantscubit.get(context);
+        final restaurant = restaurantCubit.restaurants
+            .firstWhere((r) => r.id == widget.restaurantId);
+
+        final restaurantCategories = restaurant.menuCategories;
+        final restaurantCategoriesAr = restaurant.menuCategoriesAr;
+
+        if (restaurantCategories != null) {
+          print(
+              "Got restaurant menu categories from cubit: $restaurantCategories");
+
+          for (int i = 0; i < restaurantCategories.length; i++) {
+            final category = restaurantCategories[i];
+            String categoryAr = "";
+
+            // Try to get matching Arabic category
+            if (restaurantCategoriesAr != null &&
+                i < restaurantCategoriesAr.length) {
+              categoryAr = restaurantCategoriesAr[i];
+            } else {
+              categoryAr = category;
+            }
+
+            if (category.isNotEmpty &&
+                category != "All" &&
+                !category.toLowerCase().contains("uncategorized") &&
+                !processedCategories.contains(category)) {
+              categoriesList.add(category);
+              categoriesListAr.add(categoryAr);
+              catToAr[category] = categoryAr;
+              arToCat[categoryAr] = category;
+              processedCategories.add(category);
+              print(
+                  "Added restaurant-level menu category: $category / $categoryAr");
+            }
+          }
+        }
+      } catch (e) {
+        print("Error getting restaurant cubit categories: $e");
       }
-    }
 
-    // Also try to get restaurant-wide categories from Restuarantscubit if available
-    try {
-      final restaurantCubit = Restuarantscubit.get(context);
-      final restaurantCategories = restaurantCubit.restaurants
-          .firstWhere((r) => r.id == widget.restaurantId)
-          .categories;
+      print("Final categories list: $categoriesList");
+      print("Final categories list Arabic: $categoriesListAr");
 
-      print("Got restaurant categories: $restaurantCategories");
+      setState(() {
+        restaurantCategories = categoriesList;
+        restaurantCategoriesAr = categoriesListAr;
+        categoryToArabic = catToAr;
+        arabicToCategory = arToCat;
+        isLoadingCategories = false;
+        isRtl = Directionality.of(context) == TextDirection.rtl;
+        // Set the initial selected category to "All" or "الكل" based on language
+        selectedCategory = isRtl ? "الكل" : "All";
+      });
+    } catch (e) {
+      print("Error fetching menu categories: $e");
 
-      // Add any restaurant-level categories that aren't already in our list
-      for (var category in restaurantCategories) {
-        if (category.isNotEmpty &&
-            category != "All" &&
-            !category.toLowerCase().contains("uncategorized") &&
-            !processedCategories.contains(category)) {
-          categoriesList.add(category);
-          processedCategories.add(category);
-          print("Added restaurant-level category: $category");
+      // Fallback to directly extracting from items if all else fails
+      List<String> fallbackList = ["All"];
+      List<String> fallbackListAr = ["الكل"];
+      Map<String, String> fallbackCatToAr = {"All": "الكل"};
+      Map<String, String> fallbackArToCat = {"الكل": "All"};
+      Set<String> processedFallback = {"All"};
+
+      for (var item in widget.items) {
+        if (item.categories.isNotEmpty) {
+          for (var category in item.categories) {
+            if (category.isNotEmpty && !processedFallback.contains(category)) {
+              fallbackList.add(category);
+              fallbackListAr.add(category);
+              fallbackCatToAr[category] = category;
+              fallbackArToCat[category] = category;
+              processedFallback.add(category);
+            }
+          }
+        } else if (item.category.isNotEmpty &&
+            !processedFallback.contains(item.category)) {
+          fallbackList.add(item.category);
+          fallbackListAr.add(item.category);
+          fallbackCatToAr[item.category] = item.category;
+          fallbackArToCat[item.category] = item.category;
+          processedFallback.add(item.category);
         }
       }
-    } catch (e) {
-      print("Error getting restaurant categories: $e");
-    }
 
-    print("Final categories list: $categoriesList");
-    // Set the final categories list
-    restaurantCategories = categoriesList;
+      setState(() {
+        restaurantCategories = fallbackList;
+        restaurantCategoriesAr = fallbackListAr;
+        categoryToArabic = fallbackCatToAr;
+        arabicToCategory = fallbackArToCat;
+        isLoadingCategories = false;
+        isRtl = Directionality.of(context) == TextDirection.rtl;
+        // Set the initial selected category to "All" or "الكل" based on language
+        selectedCategory = isRtl ? "الكل" : "All";
+      });
+    }
   }
 
   List<Item> get filteredItems {
-    if (selectedCategory == "All") {
+    if ((selectedCategory == "All" && !isRtl) ||
+        (selectedCategory == "الكل" && isRtl)) {
       return widget.items; // Show all items
     }
 
+    final String englishCategory = isRtl
+        ? arabicToCategory[selectedCategory] ?? selectedCategory
+        : selectedCategory;
+
+    // For debugging
+    print("Filtering by category: $englishCategory");
+    print("Total items before filtering: ${widget.items.length}");
+
     // Only show items that match the selected category
-    return widget.items.where((item) {
+    final filtered = widget.items.where((item) {
+      // For debugging
+      print(
+          "Item ${item.name} - Categories: ${item.categories} - Category: ${item.category}");
+
       // Check multiple categories array first (case insensitive)
       if (item.categories.isNotEmpty) {
-        return item.categories
-            .any((cat) => cat.toLowerCase() == selectedCategory.toLowerCase());
+        final matchInArray = item.categories.any(
+          (cat) =>
+              cat.toLowerCase().trim() == englishCategory.toLowerCase().trim(),
+        );
+        if (matchInArray) {
+          print(
+              "Item ${item.name} matches category '$englishCategory' in array");
+          return true;
+        }
       }
 
       // Check single category field (for backward compatibility) (case insensitive)
-      return item.category.toLowerCase() == selectedCategory.toLowerCase();
+      final matchInField = item.category.toLowerCase().trim() ==
+          englishCategory.toLowerCase().trim();
+      if (matchInField) {
+        print("Item ${item.name} matches category '$englishCategory' in field");
+        return true;
+      }
+
+      return false;
     }).toList();
+
+    print("Found ${filtered.length} items for category: $englishCategory");
+    return filtered;
   }
 
   // Helper method to get the right image widget
@@ -164,6 +405,16 @@ class _MenuscreenState extends State<Menuscreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Check for RTL at build time in case the locale changed
+    isRtl = Directionality.of(context) == TextDirection.rtl;
+
+    // Ensure the selected category is correct for the current language
+    if (isRtl && selectedCategory == "All") {
+      selectedCategory = "الكل";
+    } else if (!isRtl && selectedCategory == "الكل") {
+      selectedCategory = "All";
+    }
+
     return BlocConsumer<Favouritecubit, FavouriteState>(
       listener: (context, state) {},
       builder: (context, state) {
@@ -172,7 +423,7 @@ class _MenuscreenState extends State<Menuscreen> {
           child: Scaffold(
             body: Column(
               children: [
-                // 🟧 Image and Restaurant Title
+                // 🟧 Image and Restaurant Title - More flexible layout
                 Stack(
                   children: [
                     SizedBox(
@@ -200,7 +451,8 @@ class _MenuscreenState extends State<Menuscreen> {
                       left: 16.w,
                       child: Container(
                         color: Colors.black.withOpacity(0.6),
-                        padding: EdgeInsets.all(8.w),
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 12.w, vertical: 8.h),
                         child: Text(
                           widget.name ?? "",
                           style: TextStyle(
@@ -214,7 +466,7 @@ class _MenuscreenState extends State<Menuscreen> {
                   ],
                 ),
 
-                // 🟧 Delivery Info Bar
+                // 🟧 Delivery Info Bar - Improved layout with flexible width
                 Container(
                   width: double.infinity,
                   padding: EdgeInsets.symmetric(
@@ -230,15 +482,31 @@ class _MenuscreenState extends State<Menuscreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
-                      const Icon(Icons.access_time, size: 20),
-                      SizedBox(width: 4.w),
-                      Text(widget.deliverytime),
+                      // Delivery time with icon
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.access_time, size: 16.sp),
+                          SizedBox(width: 4.w),
+                          Text(
+                            widget.deliverytime,
+                            style: TextStyle(fontSize: 12.sp),
+                          ),
+                        ],
+                      ),
                       dot(),
-                      Text(" ${widget.deliveryprice} ${S.of(context).egp}",
-                          style: const TextStyle(color: Colors.green)),
+                      // Delivery fee
+                      Text(
+                        " ${widget.deliveryprice} ${S.of(context).egp}",
+                        style: TextStyle(
+                          color: Colors.green,
+                          fontSize: 12.sp,
+                        ),
+                      ),
                       dot(),
-                      const Icon(Icons.delivery_dining, size: 24),
+                      Icon(Icons.delivery_dining, size: 18.sp),
                       const Spacer(),
+                      // Reviews button
                       TextButton.icon(
                         onPressed: () {
                           navigateTo(
@@ -246,65 +514,119 @@ class _MenuscreenState extends State<Menuscreen> {
                             Reviewsscreen(restaurantId: widget.restaurantId),
                           );
                         },
-                        icon: const Icon(Icons.star_rate, color: Colors.amber),
-                        label: Text(S.of(context).reviews),
+                        icon: const Icon(Icons.star_rate,
+                            color: Colors.amber, size: 18),
+                        label: Text(
+                          S.of(context).reviews,
+                          style: TextStyle(fontSize: 12.sp),
+                        ),
                         style: TextButton.styleFrom(
                           foregroundColor:
                               Theme.of(context).brightness == Brightness.dark
                                   ? Colors.white
                                   : Colors.black87,
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 8.w,
+                            vertical: 0,
+                          ),
                         ),
                       ),
                     ],
                   ),
                 ),
 
-                // 🟧 Category Tabs - Using restaurant-specific categories
-                SizedBox(
-                  height: 50.h,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    padding: EdgeInsets.symmetric(horizontal: 10.w),
-                    itemCount: restaurantCategories.length,
-                    itemBuilder: (context, index) {
-                      final category = restaurantCategories[index];
-                      final isSelected = category == selectedCategory;
-                      return Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 8.w),
-                        child: GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              selectedCategory = category;
-                            });
+                // 🟧 Category Tabs - Optimized for horizontal scrolling without overflow
+                Container(
+                  height: 60.h,
+                  margin: EdgeInsets.symmetric(vertical: 4.h),
+                  child: isLoadingCategories
+                      ? const Center(child: CircularProgressIndicator())
+                      : ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          padding: EdgeInsets.symmetric(horizontal: 10.w),
+                          itemCount: isRtl
+                              ? restaurantCategoriesAr.length
+                              : restaurantCategories.length,
+                          itemBuilder: (context, index) {
+                            final category = getLocalizedCategoryName(index);
+                            final isSelected = category == selectedCategory;
+
+                            return Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 4.w),
+                              child: GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    selectedCategory = category;
+                                  });
+                                },
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 200),
+                                  margin: EdgeInsets.symmetric(
+                                      vertical: 8.h, horizontal: 4.w),
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: 16.w, vertical: 8.h),
+                                  decoration: BoxDecoration(
+                                    color: isSelected
+                                        ? Theme.of(context).primaryColor
+                                        : Theme.of(context).cardColor,
+                                    borderRadius: BorderRadius.circular(25.r),
+                                    boxShadow: isSelected
+                                        ? [
+                                            BoxShadow(
+                                              color:
+                                                  Colors.black.withOpacity(0.1),
+                                              spreadRadius: 1,
+                                              blurRadius: 3,
+                                              offset: const Offset(0, 2),
+                                            )
+                                          ]
+                                        : null,
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      category,
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontSize: 14.sp,
+                                        fontWeight: isSelected
+                                            ? FontWeight.bold
+                                            : FontWeight.normal,
+                                        color: isSelected
+                                            ? Colors.white
+                                            : Theme.of(context)
+                                                .textTheme
+                                                .bodyLarge
+                                                ?.color,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
                           },
-                          child: Chip(
-                            label: Text(category),
-                            backgroundColor: isSelected
-                                ? Colors.green
-                                : Theme.of(
-                                    context,
-                                  ).chipTheme.backgroundColor,
-                            labelStyle: TextStyle(
-                              color: isSelected ? Colors.white : null,
-                            ),
-                            elevation: 0,
-                          ),
                         ),
-                      );
-                    },
-                  ),
                 ),
 
-                // 🟧 Items
+                // 🟧 Items - No change needed here as itemcard is already fixed
                 Expanded(
-                  child: ListView.builder(
-                    padding: EdgeInsets.symmetric(horizontal: 10.w),
-                    itemCount: filteredItems.length,
-                    itemBuilder: (context, index) {
-                      return itemcard(
-                          context, false, filteredItems[index], widget.items);
-                    },
-                  ),
+                  child: filteredItems.isEmpty
+                      ? Center(
+                          child: Text(
+                            S.of(context).no_data,
+                            style: TextStyle(
+                              fontSize: 16.sp,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        )
+                      : ListView.builder(
+                          padding: EdgeInsets.symmetric(horizontal: 10.w),
+                          itemCount: filteredItems.length,
+                          itemBuilder: (context, index) {
+                            return itemcard(context, false,
+                                filteredItems[index], widget.items);
+                          },
+                        ),
                 ),
               ],
             ),
@@ -315,7 +637,7 @@ class _MenuscreenState extends State<Menuscreen> {
   }
 
   Widget dot() => Padding(
-        padding: EdgeInsets.symmetric(horizontal: 6.w),
-        child: Text("•", style: TextStyle(fontSize: 18.sp)),
+        padding: EdgeInsets.symmetric(horizontal: 4.w),
+        child: Text("•", style: TextStyle(fontSize: 14.sp)),
       );
 }

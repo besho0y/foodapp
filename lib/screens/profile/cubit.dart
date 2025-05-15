@@ -18,6 +18,9 @@ class ProfileCubit extends Cubit<ProfileState> {
       uid: "temp_uid");
 
   void getuserdata() async {
+    // Don't emit multiple loading states if we're already loading
+    if (state is ProfileLoading) return;
+
     emit(ProfileLoading());
 
     // Make sure current user exists
@@ -98,7 +101,10 @@ class ProfileCubit extends Cubit<ProfileState> {
           // Continue with default values from Firestore
         }
 
-        emit(ProfileLoaded(user));
+        // Use microtask to make sure this happens after the current execution
+        Future.microtask(() {
+          emit(ProfileLoaded(user));
+        });
       } else {
         print("User document doesn't exist or data is null");
         emit(ProfileError());
@@ -115,7 +121,7 @@ class ProfileCubit extends Cubit<ProfileState> {
       await auth.FirebaseAuth.instance.signOut();
       await LocalStorageService.clearAll(); // Clear local storage on logout
       emit(ProfileLogoutSuccess());
-      navigateAndFinish(context, Loginscreen());
+      navigateAndFinish(context, const Loginscreen());
     } catch (error) {
       print("Error during logout: $error");
       emit(ProfileError());
@@ -144,7 +150,7 @@ class ProfileCubit extends Cubit<ProfileState> {
       await LocalStorageService.clearAll();
 
       emit(ProfileAccountDeleted());
-      navigateAndFinish(context, Loginscreen());
+      navigateAndFinish(context, const Loginscreen());
     } catch (error) {
       print("Error deleting account: $error");
 
@@ -199,8 +205,8 @@ class ProfileCubit extends Cubit<ProfileState> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: Text("Authentication Required"),
-        content: Text(
+        title: const Text("Authentication Required"),
+        content: const Text(
           "For security reasons, you need to log in again before deleting your account.",
         ),
         actions: [
@@ -210,7 +216,7 @@ class ProfileCubit extends Cubit<ProfileState> {
               // Log user out and redirect to login screen
               logout(context);
             },
-            child: Text("OK"),
+            child: const Text("OK"),
           ),
         ],
       ),
@@ -416,5 +422,40 @@ class ProfileCubit extends Cubit<ProfileState> {
       print("Error updating profile: $error");
       emit(ProfileError());
     }
+  }
+
+  // Add a used promocode to the user's profile
+  Future<void> addUsedPromocode(String promocode) async {
+    try {
+      final currentUser = auth.FirebaseAuth.instance.currentUser;
+      if (currentUser == null) {
+        emit(ProfileError());
+        return;
+      }
+
+      // Add to used promocodes list
+      if (!user.usedPromocodes.contains(promocode)) {
+        user.usedPromocodes.add(promocode);
+
+        // Update in Firestore
+        await FirebaseFirestore.instance
+            .collection("users")
+            .doc(currentUser.uid)
+            .update({
+          'usedPromocodes': user.usedPromocodes,
+        });
+
+        print("Added promocode $promocode to user's used promocodes");
+        emit(ProfileLoaded(user));
+      }
+    } catch (error) {
+      print("Error adding used promocode: $error");
+      emit(ProfileError());
+    }
+  }
+
+  // Check if user has used a specific promocode
+  bool hasUsedPromocode(String promocode) {
+    return user.usedPromocodes.contains(promocode);
   }
 }

@@ -261,6 +261,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "logout_confirm": MessageLookupByLibrary.simpleMessage(
             "هل أنت متأكد أنك تريد تسجيل الخروج؟"),
         "logout_title": MessageLookupByLibrary.simpleMessage("تسجيل الخروج"),
+        "menu_categories": MessageLookupByLibrary.simpleMessage("فئات القائمة"),
         "name_hint": MessageLookupByLibrary.simpleMessage("أدخل اسمك الكامل"),
         "name_required": MessageLookupByLibrary.simpleMessage("الاسم مطلوب"),
         "next": MessageLookupByLibrary.simpleMessage("التالي"),

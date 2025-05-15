@@ -1,6 +1,17 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Check if the user is an admin (hardcoded admin ID)
+    function isAdmin() {
+      return request.auth != null && request.auth.uid == "yzPSwbiWTgXywHPVyBXhjfZGjR42";
+    }
+    
+    // Allow users to read and write their own data
+    match /users/{userId} {
+      allow read: if request.auth != null && (request.auth.uid == userId || isAdmin());
+      allow write: if request.auth != null && (request.auth.uid == userId || isAdmin());
+    }
+    
     // Allow read access to all users for restaurants collection and its subcollections
     match /restaurants/{restaurantId} {
       allow read: if true;
@@ -14,7 +25,13 @@ service cloud.firestore {
       }
     }
     
-    // Write operations require authentication
+    // Allow read access to all users for restaurant categories
+    match /restaurants_categories/{categoryId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    
+    // Write operations for restaurants require authentication
     match /restaurants/{restaurantId} {
       allow write: if request.auth != null;
       
@@ -25,6 +42,23 @@ service cloud.firestore {
       match /reviews/{reviewId} {
         allow write: if request.auth != null;
       }
+    }
+    
+    // Orders collection
+    match /orders/{orderId} {
+      allow read: if request.auth != null && (resource.data.userId == request.auth.uid || isAdmin());
+      allow write: if request.auth != null;
+    }
+    
+    // Promocodes collection
+    match /promocodes/{code} {
+      allow read: if request.auth != null;
+      allow write: if isAdmin();
+    }
+    
+    // Default rule - deny access to other collections
+    match /{document=**} {
+      allow read, write: if isAdmin();
     }
   }
 } 

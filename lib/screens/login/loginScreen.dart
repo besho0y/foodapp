@@ -101,7 +101,7 @@ class _LoginscreenState extends State<Loginscreen> {
                               controller: cubit.emailcontroller,
                               style: const TextStyle(color: textColor),
                               decoration: InputDecoration(
-                                labelText: "Email",
+                                labelText: S.of(context).Email,
                                 hintText: S.of(context).enter_email,
                                 labelStyle:
                                     const TextStyle(color: secondaryTextColor),
@@ -130,7 +130,7 @@ class _LoginscreenState extends State<Loginscreen> {
                               obscureText: !_isPasswordVisible,
                               style: const TextStyle(color: textColor),
                               decoration: InputDecoration(
-                                labelText: "Password",
+                                labelText: S.of(context).password,
                                 hintText: S.of(context).enter_password,
                                 labelStyle:
                                     const TextStyle(color: secondaryTextColor),

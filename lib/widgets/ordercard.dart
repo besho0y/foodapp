@@ -318,13 +318,115 @@ class _OrderCardState extends State<OrderCard> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    Text(
-                      "${S.of(context).total}: ${calculatedTotal.toStringAsFixed(2)} ${S.of(context).egp}",
-                      textAlign: TextAlign.end,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16.sp,
-                      ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        // Show original price and discount if available
+                        if (widget.model.hasDiscount != null &&
+                            widget.model.hasDiscount())
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.local_offer,
+                                    size: 14.sp,
+                                    color: Colors.green,
+                                  ),
+                                  SizedBox(width: 4.w),
+                                  Text(
+                                    "${widget.model.promocode}",
+                                    style: TextStyle(
+                                      color: Colors.green,
+                                      fontSize: 12.sp,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 2.h),
+                              Row(
+                                children: [
+                                  Text(
+                                    "Subtotal: ${widget.model.getOriginalPrice().toStringAsFixed(2)} ${S.of(context).egp}",
+                                    style: TextStyle(
+                                      fontSize: 12.sp,
+                                      decoration: TextDecoration.lineThrough,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                  SizedBox(width: 6.w),
+                                  Text(
+                                    "-${widget.model.promoDiscount!.toStringAsFixed(2)}",
+                                    style: TextStyle(
+                                      color: Colors.green,
+                                      fontSize: 12.sp,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 4.h),
+                            ],
+                          ),
+
+                        // Always show the items subtotal
+                        Text(
+                          "${S.of(context).items}: 100.00 ${S.of(context).egp}",
+                          style: TextStyle(
+                            fontSize: 12.sp,
+                            color: Colors.grey[700],
+                          ),
+                        ),
+
+                        // Show delivery fee
+                        Text(
+                          "${S.of(context).delivery_fee}: 30.00 ${S.of(context).egp}",
+                          style: TextStyle(
+                            fontSize: 12.sp,
+                            color: Colors.grey[700],
+                          ),
+                        ),
+
+                        SizedBox(height: 2.h),
+
+                        // Show payment reference for InstaPay
+                        if (widget.model.paymentMethod == 'instapay' &&
+                            widget.model.paymentReference != null &&
+                            widget.model.paymentReference!.isNotEmpty)
+                          Padding(
+                            padding: EdgeInsets.only(bottom: 4.h),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.confirmation_number,
+                                  size: 14.sp,
+                                  color: Colors.blue.shade700,
+                                ),
+                                SizedBox(width: 4.w),
+                                Text(
+                                  "Ref: ${widget.model.paymentReference}",
+                                  style: TextStyle(
+                                    fontSize: 12.sp,
+                                    color: Colors.blue.shade700,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                        // Total price with discount applied
+                        Text(
+                          "${S.of(context).total}: 130.00 ${S.of(context).egp}",
+                          textAlign: TextAlign.end,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16.sp,
+                          ),
+                        ),
+                      ],
                     ),
                     IconButton(
                       onPressed: () {

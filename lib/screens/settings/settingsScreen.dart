@@ -36,11 +36,11 @@ class Settingsscreen extends StatelessWidget {
               ),
               ElevatedButton(
                 onPressed: () => Navigator.pop(context, true),
-                child: Text(S.of(context).logout),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
                   foregroundColor: Colors.white,
                 ),
+                child: Text(S.of(context).logout),
               ),
             ],
           ),
@@ -52,6 +52,12 @@ class Settingsscreen extends StatelessWidget {
         final currentUser = FirebaseAuth.instance.currentUser;
         print('Current user before sign out: ${currentUser?.email}');
 
+        // Clear cart items from local storage
+        await LocalStorageService.clearCartItems();
+
+        // Clear cart items from cubit
+        Layoutcubit.get(context).clearCart();
+
         await FirebaseAuth.instance.signOut();
 
         final userAfterSignOut = FirebaseAuth.instance.currentUser;
@@ -61,7 +67,7 @@ class Settingsscreen extends StatelessWidget {
           print('Navigating to home screen after logout');
 
           // Get the Layout from the widget tree
-          final layoutWidget = Layout();
+          const layoutWidget = Layout();
 
           // Navigate to Layout with reset navigation
           Navigator.of(context).pushAndRemoveUntil(
@@ -71,7 +77,7 @@ class Settingsscreen extends StatelessWidget {
 
           // Access the Layoutcubit to ensure we're on the first tab (index 0)
           if (context.mounted) {
-            Future.delayed(Duration(milliseconds: 100), () {
+            Future.delayed(const Duration(milliseconds: 100), () {
               final layoutCubit = Layoutcubit.get(context);
               layoutCubit.changenavbar(0); // Change to the first tab
             });
@@ -95,7 +101,7 @@ class Settingsscreen extends StatelessWidget {
 
   Future<void> _openWhatsAppWithContext(BuildContext context) async {
     const phoneNumber = '+201274939902';
-    final whatsappUrl = 'https://wa.me/$phoneNumber';
+    const whatsappUrl = 'https://wa.me/$phoneNumber';
 
     try {
       if (await canLaunchUrl(Uri.parse(whatsappUrl))) {
@@ -137,24 +143,6 @@ class Settingsscreen extends StatelessWidget {
     return false;
   }
 
-  void _handleLogout(BuildContext context) async {
-    try {
-      await FirebaseAuth.instance.signOut();
-      // Clear cart items from local storage
-      await LocalStorageService.clearCartItems();
-      // Clear cart items from cubit
-      Layoutcubit.get(context).clearCart();
-
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => Loginscreen()),
-        (route) => false,
-      );
-    } catch (e) {
-      print("Error during logout: $e");
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     // Check if user is logged in
@@ -170,14 +158,14 @@ class Settingsscreen extends StatelessWidget {
           // Show Profile option only if logged in
           if (isLoggedIn)
             GestureDetector(
-              onTap: () => navigateTo(context, Profilescreen()),
+              onTap: () => navigateTo(context, const Profilescreen()),
               child: Card(
                 child: Padding(
                   padding:
                       EdgeInsets.symmetric(vertical: 10.h, horizontal: 5.w),
                   child: Row(
                     children: [
-                      Icon(Icons.person),
+                      const Icon(Icons.person),
                       SizedBox(width: 5.w),
                       Text(
                         S.of(context).profile,
@@ -189,13 +177,13 @@ class Settingsscreen extends StatelessWidget {
               ),
             ),
           GestureDetector(
-            onTap: () => navigateTo(context, Settingdetails()),
+            onTap: () => navigateTo(context, const Settingdetails()),
             child: Card(
               child: Padding(
                 padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 5.w),
                 child: Row(
                   children: [
-                    Icon(Icons.settings),
+                    const Icon(Icons.settings),
                     SizedBox(width: 5.w),
                     Text(
                       S.of(context).settings,
@@ -215,7 +203,7 @@ class Settingsscreen extends StatelessWidget {
                 padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 5.w),
                 child: Row(
                   children: [
-                    Icon(Icons.call),
+                    const Icon(Icons.call),
                     SizedBox(width: 5.w),
                     Text(
                       S.of(context).contact_us,
@@ -234,14 +222,14 @@ class Settingsscreen extends StatelessWidget {
               builder: (context, snapshot) {
                 if (snapshot.hasData && snapshot.data == true) {
                   return GestureDetector(
-                    onTap: () => navigateTo(context, AdminPanelScreen()),
+                    onTap: () => navigateTo(context, const AdminPanelScreen()),
                     child: Card(
                       child: Padding(
                         padding: EdgeInsets.symmetric(
                             vertical: 10.h, horizontal: 5.w),
                         child: Row(
                           children: [
-                            Icon(Icons.admin_panel_settings),
+                            const Icon(Icons.admin_panel_settings),
                             SizedBox(width: 5.w),
                             Text(
                               S.of(context).admin_panel,
@@ -253,7 +241,7 @@ class Settingsscreen extends StatelessWidget {
                     ),
                   );
                 }
-                return SizedBox.shrink();
+                return const SizedBox.shrink();
               },
             ),
 
@@ -261,7 +249,7 @@ class Settingsscreen extends StatelessWidget {
           GestureDetector(
             onTap: isLoggedIn
                 ? () => _showLogoutConfirmation(context)
-                : () => navigateTo(context, Loginscreen()),
+                : () => navigateTo(context, const Loginscreen()),
             child: Card(
               child: Padding(
                 padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 5.w),

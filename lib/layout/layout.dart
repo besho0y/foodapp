@@ -24,6 +24,7 @@ class Layout extends StatefulWidget {
 class _LayoutState extends State<Layout> {
   var scaffoldKey = GlobalKey<ScaffoldState>();
   bool _hasInitialized = false;
+  bool _isDisposed = false;
 
   @override
   void initState() {
@@ -32,9 +33,15 @@ class _LayoutState extends State<Layout> {
     _initializeUserData();
   }
 
+  @override
+  void dispose() {
+    _isDisposed = true;
+    super.dispose();
+  }
+
   // Separate method to initialize user data only once
   void _initializeUserData() {
-    if (FirebaseAuth.instance.currentUser != null) {
+    if (FirebaseAuth.instance.currentUser != null && !_isDisposed) {
       ProfileCubit.get(context).getuserdata();
     }
   }
@@ -48,8 +55,8 @@ class _LayoutState extends State<Layout> {
       builder: (context, state) {
         return BlocConsumer<ProfileCubit, ProfileState>(
           listener: (context, profileState) {
-            // Check if user data loaded successfully
-            if (profileState is ProfileLoaded && !_hasInitialized) {
+            // Check if user data loaded successfully and component is still mounted
+            if (profileState is ProfileLoaded && !_hasInitialized && mounted) {
               // Only set admin status once to prevent refresh loop
               cubit.checkAndSetAdminStatus(profileState.user.uid);
               _hasInitialized = true;

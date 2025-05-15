@@ -492,13 +492,60 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
                                 ),
                               ),
                               const Spacer(),
-                              Text(
-                                "${S.of(context).total}: ${calculatedTotal.toStringAsFixed(2)} EGP",
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: smallScreen ? 13.sp : 14.sp,
-                                  color: Colors.black87,
-                                ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  // Show original price if discount available
+                                  if (model.hasDiscount != null &&
+                                      model.hasDiscount())
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          "${model.getOriginalPrice().toStringAsFixed(2)} EGP",
+                                          style: TextStyle(
+                                            fontSize:
+                                                smallScreen ? 11.sp : 12.sp,
+                                            decoration:
+                                                TextDecoration.lineThrough,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                        SizedBox(width: 4.w),
+                                        Text(
+                                          "-${model.promoDiscount!.toStringAsFixed(2)}",
+                                          style: TextStyle(
+                                            fontSize:
+                                                smallScreen ? 11.sp : 12.sp,
+                                            color: Colors.green,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+
+                                  // Payment reference for InstaPay
+                                  if (model.paymentMethod == 'instapay' &&
+                                      model.paymentReference != null &&
+                                      model.paymentReference!.isNotEmpty)
+                                    Text(
+                                      "Ref: ${model.paymentReference!.length > 8 ? model.paymentReference!.substring(0, 8) + '...' : model.paymentReference}",
+                                      style: TextStyle(
+                                        fontSize: smallScreen ? 10.sp : 11.sp,
+                                        color: Colors.blue.shade700,
+                                        fontStyle: FontStyle.italic,
+                                      ),
+                                    ),
+
+                                  // Final total after discount
+                                  Text(
+                                    "${S.of(context).total}: ${model.total.toStringAsFixed(2)} EGP",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: smallScreen ? 13.sp : 14.sp,
+                                    ),
+                                  ),
+                                ],
                               ),
                               Icon(
                                 isExpanded
@@ -535,7 +582,7 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
                                         Expanded(
                                           flex: 4,
                                           child: Text(
-                                            "${S.of(context).item}",
+                                            S.of(context).item,
                                             style: TextStyle(
                                               fontWeight: FontWeight.bold,
                                               fontSize:
@@ -548,7 +595,7 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
                                           flex: 1,
                                           child: Center(
                                             child: Text(
-                                              "${S.of(context).qty}",
+                                              S.of(context).qty,
                                               style: TextStyle(
                                                 fontWeight: FontWeight.bold,
                                                 fontSize:
@@ -561,7 +608,7 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
                                         Expanded(
                                           flex: 2,
                                           child: Text(
-                                            "${S.of(context).item_price}",
+                                            S.of(context).item_price,
                                             style: TextStyle(
                                               fontWeight: FontWeight.bold,
                                               fontSize:
@@ -740,6 +787,17 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
                                         crossAxisAlignment:
                                             CrossAxisAlignment.end,
                                         children: [
+                                          // Items subtotal
+                                          Text(
+                                            "${S.of(context).items}: 100.00 ${S.of(context).egp}",
+                                            style: TextStyle(
+                                              fontSize:
+                                                  smallScreen ? 10.sp : 11.sp,
+                                              color: Colors.grey[700],
+                                            ),
+                                          ),
+                                          SizedBox(height: 2.h),
+                                          // Delivery fee
                                           Text(
                                             "${S.of(context).delivery_fee}: 30.00 ${S.of(context).egp}",
                                             style: TextStyle(
@@ -760,7 +818,7 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
                                                   color: Colors.green[300]!),
                                             ),
                                             child: Text(
-                                              "${S.of(context).total}: ${calculatedTotal.toStringAsFixed(2)} ${S.of(context).egp}",
+                                              "${S.of(context).total}: 130.00 ${S.of(context).egp}",
                                               style: TextStyle(
                                                 fontWeight: FontWeight.bold,
                                                 fontSize:
@@ -824,7 +882,7 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
               Icon(Icons.location_on, size: 14.sp, color: Colors.red),
               SizedBox(width: 3.w),
               Text(
-                "${S.of(context).delivery_address}",
+                S.of(context).delivery_address,
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: smallScreen ? 11.sp : 12.sp,
@@ -854,7 +912,7 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
             ),
           ] else
             Text(
-              "${S.of(context).no_address_provided}",
+              S.of(context).no_address_provided,
               style: TextStyle(
                 fontStyle: FontStyle.italic,
                 fontSize: smallScreen ? 10.sp : 11.sp,
@@ -888,7 +946,7 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
               ),
               SizedBox(width: 3.w),
               Text(
-                "${S.of(context).payment}",
+                S.of(context).payment,
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: smallScreen ? 11.sp : 12.sp,

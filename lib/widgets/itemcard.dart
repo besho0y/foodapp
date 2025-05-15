@@ -24,8 +24,11 @@ Widget itemcard(context, bool fromFavourites, Item model, dynamic items) {
     }
   }
 
+  // Debug prints
+  print("Item ${model.name} - nameAr: '${model.nameAr}' - RTL: $isRTL");
+
   return Padding(
-    padding: EdgeInsets.only(bottom: 5.h),
+    padding: EdgeInsets.only(bottom: 10.h),
     child: GestureDetector(
       onTap: () {
         navigateTo(
@@ -50,53 +53,78 @@ Widget itemcard(context, bool fromFavourites, Item model, dynamic items) {
         children: [
           Container(
             width: double.infinity,
-            height: 130.h,
+            height: 145.h,
             color: Colors.transparent,
           ),
           Positioned(
             top: 5.h,
-            right: isRTL ? null : -5.w,
-            left: isRTL ? -5.w : null,
+            right: isRTL ? null : 0,
+            left: isRTL ? 0 : null,
             child: SizedBox(
               width: 320.w,
-              height: 110.h,
+              height: 120.h,
               child: Card(
+                margin: EdgeInsets.zero,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10.r),
+                ),
                 child: Padding(
                   padding: EdgeInsets.all(8.h),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    textDirection:
+                        isRTL ? TextDirection.rtl : TextDirection.ltr,
                     children: [
                       SizedBox(width: 45.w),
-                      Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (restaurant != null) ...[
+                      Expanded(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment:  CrossAxisAlignment.start,
+                          children: [
+                            if (restaurant != null) ...[
+                              Text(
+                                isRTL ? restaurant.nameAr : restaurant.name,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
+                                      color: Theme.of(context).primaryColor,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign:
+                                    isRTL ? TextAlign.right : TextAlign.left,
+                              ),
+                              SizedBox(height: 2.h),
+                            ],
                             Text(
-                              isRTL ? restaurant.nameAr : restaurant.name,
+                              isRTL ? model.nameAr : model.name,
                               style: Theme.of(context)
                                   .textTheme
-                                  .bodySmall
+                                  .bodyMedium
                                   ?.copyWith(
-                                    color: Theme.of(context).primaryColor,
                                     fontWeight: FontWeight.bold,
                                   ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              textAlign:
+                                  isRTL ? TextAlign.right : TextAlign.left,
                             ),
-                            SizedBox(height: 2.h),
-                          ],
-                          Text(
-                            isRTL ? model.nameAr : model.name,
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
-                          SizedBox(height: 5.h),
-                          Text(
-                            isRTL ? model.descriptionAr : model.description,
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                          SizedBox(
-                            width: 220.w,
-                            child: Row(
+                            SizedBox(height: 3.h),
+                            Text(
+                              isRTL ? model.descriptionAr : model.description,
+                              style: Theme.of(context).textTheme.bodySmall,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              textAlign:
+                                  isRTL ? TextAlign.right : TextAlign.left,
+                            ),
+                            const Spacer(),
+                            Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              textDirection:
+                                  isRTL ? TextDirection.rtl : TextDirection.ltr,
                               children: [
                                 Text(
                                   "${model.price} ${S.of(context).egp}",
@@ -113,13 +141,18 @@ Widget itemcard(context, bool fromFavourites, Item model, dynamic items) {
                                         : Icons.favorite_border,
                                     color:
                                         model.isfavourite ? Colors.red : null,
+                                    size: 20.sp,
                                   ),
                                   padding: EdgeInsets.zero,
+                                  constraints: BoxConstraints(
+                                    minWidth: 24.w,
+                                    minHeight: 24.h,
+                                  ),
                                 ),
                               ],
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ],
                   ),
@@ -129,8 +162,8 @@ Widget itemcard(context, bool fromFavourites, Item model, dynamic items) {
           ),
           Positioned(
             top: 20.h,
-            left: isRTL ? null : -13.w,
-            right: isRTL ? -13.w : null,
+            left: isRTL ? null : 0,
+            right: isRTL ? 0 : null,
             child: Container(
               width: 100,
               height: 100,
@@ -139,6 +172,7 @@ Widget itemcard(context, bool fromFavourites, Item model, dynamic items) {
                   fit: BoxFit.cover,
                   image: _getImageProvider(model.img),
                 ),
+                borderRadius: BorderRadius.circular(8.r),
               ),
             ),
           ),
@@ -157,7 +191,7 @@ ImageProvider _getImageProvider(String imageUrl) {
       return AssetImage(imageUrl);
     } else {
       // Default fallback image
-      return const AssetImage('assets/image/category/default.jpg');
+      return const AssetImage('assets/images/items/default.jpg');
     }
   } catch (e) {
     print("Error creating image provider: $e");

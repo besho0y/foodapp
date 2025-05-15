@@ -79,15 +79,79 @@ class AdminPanelCubit extends Cubit<AdminPanelStates> {
           // Add items list to restaurant data
           restaurantData['items'] = itemsList;
 
-          // Ensure menuCategories is properly loaded from Firestore
-          if (data.containsKey('menuCategories')) {
-            restaurantData['menuCategories'] = data['menuCategories'];
+          // Fetch menu categories from subcollection
+          List<String> menuCategories = [];
+          List<String> menuCategoriesAr = [];
+
+          try {
+            final categoriesSnapshot = await FirebaseFirestore.instance
+                .collection("restaurants")
+                .doc(doc.id)
+                .collection("menu_categories")
+                .orderBy("createdAt",
+                    descending: false) // Order by creation date
+                .get();
+
             print(
-                "Loaded menuCategories for restaurant ${doc.id}: ${data['menuCategories']}");
-          } else {
+                "Found ${categoriesSnapshot.docs.length} menu_categories in subcollection for restaurant ${doc.id}");
+
+            if (categoriesSnapshot.docs.isNotEmpty) {
+              // Extract the menu categories from subcollection
+              for (var categoryDoc in categoriesSnapshot.docs) {
+                final categoryData = categoryDoc.data();
+                final categoryName = categoryData['name']?.toString();
+                final categoryNameAr = categoryData['nameAr']?.toString();
+
+                if (categoryName != null && categoryName.isNotEmpty) {
+                  menuCategories.add(categoryName);
+
+                  if (categoryNameAr != null && categoryNameAr.isNotEmpty) {
+                    menuCategoriesAr.add(categoryNameAr);
+                  } else {
+                    // If no Arabic name, use English one to keep arrays in sync
+                    menuCategoriesAr.add(categoryName);
+                  }
+                }
+              }
+
+              // Store the menu categories in the restaurant data
+              restaurantData['menuCategories'] = menuCategories;
+              restaurantData['menuCategoriesAr'] = menuCategoriesAr;
+
+              print(
+                  "Loaded menu categories from subcollection for restaurant ${doc.id}: $menuCategories");
+              print(
+                  "Loaded menu categories (Ar) from subcollection for restaurant ${doc.id}: $menuCategoriesAr");
+            }
+            // Fall back to array field if subcollection is empty
+            else if (data.containsKey('menuCategories')) {
+              restaurantData['menuCategories'] = data['menuCategories'];
+              print(
+                  "Using existing menuCategories array for restaurant ${doc.id}: ${data['menuCategories']}");
+
+              if (data.containsKey('menuCategoriesAr')) {
+                restaurantData['menuCategoriesAr'] = data['menuCategoriesAr'];
+              }
+            } else {
+              print(
+                  "No menu categories found for restaurant ${doc.id}, initializing empty list");
+              restaurantData['menuCategories'] = [];
+              restaurantData['menuCategoriesAr'] = [];
+            }
+          } catch (e) {
             print(
-                "No menuCategories field found for restaurant ${doc.id}, initializing empty list");
-            restaurantData['menuCategories'] = [];
+                "Error fetching menu categories for restaurant ${doc.id}: $e");
+            // Fall back to array field if subcollection fetch fails
+            if (data.containsKey('menuCategories')) {
+              restaurantData['menuCategories'] = data['menuCategories'];
+
+              if (data.containsKey('menuCategoriesAr')) {
+                restaurantData['menuCategoriesAr'] = data['menuCategoriesAr'];
+              }
+            } else {
+              restaurantData['menuCategories'] = [];
+              restaurantData['menuCategoriesAr'] = [];
+            }
           }
 
           // Add the restaurant to our list
@@ -226,9 +290,12 @@ class AdminPanelCubit extends Cubit<AdminPanelStates> {
 
       final String itemId = const Uuid().v4();
 
-      // Make sure the main category is in the categories list
-      if (!categories.contains(category) && category != "All") {
-        categories.add(category);
+      // Create a categories array that includes the main category and "All"
+      final List<String> itemCategories = ["All"];
+
+      // Add the main category if it's not "All" and not already included
+      if (category != "All" && !itemCategories.contains(category)) {
+        itemCategories.add(category);
       }
 
       await FirebaseFirestore.instance
@@ -238,13 +305,13 @@ class AdminPanelCubit extends Cubit<AdminPanelStates> {
           .doc(itemId)
           .set({
         'name': name,
-        'nameAr': nameAr,
+        'namear': nameAr,
         'description': description,
-        'descriptionAr': descriptionAr,
+        'descriptionar': descriptionAr,
         'price': price,
         'img': imageUrl,
         'category': category,
-        'categories': categories,
+        'categories': itemCategories,
       });
 
       await getRestaurants();
@@ -261,6 +328,24 @@ class AdminPanelCubit extends Cubit<AdminPanelStates> {
   }) async {
     emit(DeletingItemState());
     try {
+      print(
+          "Attempting to delete item with ID: $itemId from restaurant: $restaurantId");
+
+      // First check if the document exists
+      final docSnapshot = await FirebaseFirestore.instance
+          .collection("restaurants")
+          .doc(restaurantId)
+          .collection("items")
+          .doc(itemId)
+          .get();
+
+      if (!docSnapshot.exists) {
+        print(
+            "Item document with ID $itemId does not exist in restaurant $restaurantId");
+        throw Exception("Item not found in the database");
+      }
+
+      // Delete the document
       await FirebaseFirestore.instance
           .collection("restaurants")
           .doc(restaurantId)
@@ -268,9 +353,15 @@ class AdminPanelCubit extends Cubit<AdminPanelStates> {
           .doc(itemId)
           .delete();
 
+      print(
+          "Item with ID: $itemId successfully deleted from restaurant: $restaurantId");
+
+      // Refresh restaurants list
       await getRestaurants();
       emit(SuccessDeletingItemState());
     } catch (e) {
+      print(
+          "Error deleting item with ID: $itemId from restaurant: $restaurantId - Error: $e");
       emit(ErrorDeletingItemState(e.toString()));
     }
   }
@@ -396,39 +487,90 @@ class AdminPanelCubit extends Cubit<AdminPanelStates> {
   Future<void> addMenuCategory({
     required String restaurantId,
     required String categoryName,
+    String? categoryNameAr,
   }) async {
     emit(AddingMenuCategoryState());
     try {
-      // First, let's get the restaurant to check if this menu category already exists
-      final restaurantDoc = await FirebaseFirestore.instance
+      // First check if this menu category already exists in the subcollection
+      final categorySnapshot = await FirebaseFirestore.instance
           .collection("restaurants")
           .doc(restaurantId)
+          .collection("menu_categories")
+          .where("name", isEqualTo: categoryName)
           .get();
 
-      if (restaurantDoc.exists) {
-        // We'll create or update a "menuCategories" field in the restaurant document
-        final data = restaurantDoc.data();
-        List<String> menuCategories =
-            List<String>.from(data?['menuCategories'] ?? []);
+      if (categorySnapshot.docs.isEmpty) {
+        // Add category to the menu_categories subcollection
+        await FirebaseFirestore.instance
+            .collection("restaurants")
+            .doc(restaurantId)
+            .collection("menu_categories")
+            .add({
+          'name': categoryName,
+          'namear': categoryNameAr ?? categoryName,
+          'createdAt': FieldValue.serverTimestamp(),
+        });
 
-        // Add new category if it doesn't exist
-        if (!menuCategories.contains(categoryName)) {
-          menuCategories.add(categoryName);
+        print(
+            "Added menu category '$categoryName' to restaurant $restaurantId subcollection");
 
-          // Update restaurant document
-          await FirebaseFirestore.instance
-              .collection("restaurants")
-              .doc(restaurantId)
-              .update({
-            'menuCategories': menuCategories,
-          });
+        // For backward compatibility, also update the menuCategories array
+        // But first fetch current values
+        final restaurantDoc = await FirebaseFirestore.instance
+            .collection("restaurants")
+            .doc(restaurantId)
+            .get();
 
-          print(
-              "Added menu category '$categoryName' to restaurant $restaurantId");
-        } else {
-          print(
-              "Menu category '$categoryName' already exists for restaurant $restaurantId");
+        if (restaurantDoc.exists) {
+          // Update the menuCategories list in the main restaurant document (for backward compatibility)
+          final data = restaurantDoc.data();
+          List<String> menuCategories =
+              List<String>.from(data?['menuCategories'] ?? []);
+          List<String> menuCategoriesAr =
+              List<String>.from(data?['menuCategoriesAr'] ?? []);
+
+          // Add new category if it doesn't exist in the array
+          if (!menuCategories.contains(categoryName)) {
+            menuCategories.add(categoryName);
+
+            // Add Arabic category name, or use English one if not provided
+            if (categoryNameAr != null && categoryNameAr.isNotEmpty) {
+              // Make sure the Arabic categories list is in sync with the English one
+              if (menuCategoriesAr.length < menuCategories.length - 1) {
+                // Fill in any missing entries with English values
+                while (menuCategoriesAr.length < menuCategories.length - 1) {
+                  menuCategoriesAr.add(menuCategories[menuCategoriesAr.length]);
+                }
+              }
+              menuCategoriesAr.add(categoryNameAr);
+            } else if (menuCategoriesAr.isNotEmpty) {
+              // If no Arabic name provided but we have some Arabic categories already,
+              // add the English name to keep arrays in sync
+              menuCategoriesAr.add(categoryName);
+            }
+
+            // Update restaurant document
+            final updateData = {
+              'menuCategories': menuCategories,
+            };
+
+            // Only add Arabic categories if we have them
+            if (menuCategoriesAr.isNotEmpty) {
+              updateData['menuCategoriesAr'] = menuCategoriesAr;
+            }
+
+            await FirebaseFirestore.instance
+                .collection("restaurants")
+                .doc(restaurantId)
+                .update(updateData);
+
+            print(
+                "Also updated menuCategories array for backward compatibility");
+          }
         }
+      } else {
+        print(
+            "Menu category '$categoryName' already exists for restaurant $restaurantId");
       }
 
       await getRestaurants();
@@ -453,7 +595,27 @@ class AdminPanelCubit extends Cubit<AdminPanelStates> {
         return;
       }
 
-      // First, get the restaurant document
+      // First delete from subcollection
+      final categorySnapshot = await FirebaseFirestore.instance
+          .collection("restaurants")
+          .doc(restaurantId)
+          .collection("menu_categories")
+          .where("name", isEqualTo: categoryName)
+          .get();
+
+      // Delete all matching subcollection documents
+      for (var doc in categorySnapshot.docs) {
+        await FirebaseFirestore.instance
+            .collection("restaurants")
+            .doc(restaurantId)
+            .collection("menu_categories")
+            .doc(doc.id)
+            .delete();
+
+        print("Deleted category document ${doc.id} from subcollection");
+      }
+
+      // For backward compatibility, also update the menuCategories array
       final restaurantDoc = await FirebaseFirestore.instance
           .collection("restaurants")
           .doc(restaurantId)
@@ -464,18 +626,34 @@ class AdminPanelCubit extends Cubit<AdminPanelStates> {
         final data = restaurantDoc.data();
         List<String> menuCategories =
             List<String>.from(data?['menuCategories'] ?? []);
+        List<String> menuCategoriesAr =
+            List<String>.from(data?['menuCategoriesAr'] ?? []);
 
         // Remove category if it exists
         if (menuCategories.contains(categoryName)) {
+          int index = menuCategories.indexOf(categoryName);
           menuCategories.remove(categoryName);
 
+          // Also remove the corresponding Arabic category if it exists
+          if (index < menuCategoriesAr.length) {
+            menuCategoriesAr.removeAt(index);
+          }
+
           // Update restaurant document
+          final updateData = {
+            'menuCategories': menuCategories,
+          };
+
+          if (menuCategoriesAr.isNotEmpty) {
+            updateData['menuCategoriesAr'] = menuCategoriesAr;
+          }
+
           await FirebaseFirestore.instance
               .collection("restaurants")
               .doc(restaurantId)
-              .update({
-            'menuCategories': menuCategories,
-          });
+              .update(updateData);
+
+          print("Updated menuCategories array for backward compatibility");
         }
 
         // Now update all items with this category
@@ -520,7 +698,17 @@ class AdminPanelCubit extends Cubit<AdminPanelStates> {
         orElse: () => throw Exception('Restaurant not found'),
       );
 
-      // First get the unique categories from this restaurant's menu items
+      // This method will be called from the UI, so we need to return what's already loaded
+      // in the restaurants list. The actual loading from subcollection happens in getRestaurants()
+
+      // First try the menuCategories field which should be populated from subcollection
+      if (restaurant.menuCategories != null &&
+          restaurant.menuCategories!.isNotEmpty) {
+        // Always include "All" as the first category
+        return ["All", ...restaurant.menuCategories!.where((c) => c != "All")];
+      }
+
+      // Fallback to getting categories from items if menuCategories is null or empty
       final uniqueCategories = <String>{};
       for (var item in restaurant.menuItems) {
         if (item.category.isNotEmpty && item.category != "Uncategorized") {
@@ -534,13 +722,6 @@ class AdminPanelCubit extends Cubit<AdminPanelStates> {
               uniqueCategories.add(category);
             }
           }
-        }
-      }
-
-      // Make sure to include categories from the restaurant itself
-      for (var category in restaurant.categories) {
-        if (category != "All") {
-          uniqueCategories.add(category);
         }
       }
 

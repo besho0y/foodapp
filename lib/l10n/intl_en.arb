@@ -251,5 +251,6 @@
     "delivery_address": "Delivery Address",
     "no_address_provided": "No address provided",
     "payment": "Payment",
-    "Restaurant Categories": "Restaurant Categories"
+    "Restaurant Categories": "Restaurant Categories",
+    "menu_categories": "Menu Categories"
 }

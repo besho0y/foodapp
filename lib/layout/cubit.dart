@@ -10,6 +10,7 @@ import 'package:foodapp/screens/favourits/favouritsScreen.dart';
 import 'package:foodapp/screens/login/loginScreen.dart';
 import 'package:foodapp/screens/oredrs/ordersScreeen.dart';
 import 'package:foodapp/screens/profile/cubit.dart';
+import 'package:foodapp/screens/profile/states.dart';
 import 'package:foodapp/screens/resturants/resturantScreen.dart';
 import 'package:foodapp/screens/settings/settingsScreen.dart';
 import 'package:foodapp/shared/local_storage.dart';
@@ -105,7 +106,17 @@ class Layoutcubit extends Cubit<Layoutstates> {
 
   // Check if current user is admin and update UI accordingly
   void checkAndSetAdminStatus(String userId) {
-    isAdminUser = (userId == adminUserId);
+    // Check both the hardcoded admin ID and the isAdmin field
+    const adminId = "yzPSwbiWTgXywHPVyBXhjfZGjR42";
+    isAdminUser = (userId == adminId);
+
+    // If the cubit is already initialized and user data is loaded
+    if (navigatorKey.currentContext != null) {
+      final profileCubit = ProfileCubit.get(navigatorKey.currentContext!);
+      if (profileCubit.state is ProfileLoaded) {
+        isAdminUser = isAdminUser || profileCubit.user.isAdmin;
+      }
+    }
 
     if (isAdminUser) {
       // Admin user should only see Home and Admin Panel
@@ -140,7 +151,10 @@ class Layoutcubit extends Cubit<Layoutstates> {
       ];
     }
 
-    emit(LayoutChangeNavBar());
+    // Use a microtask to ensure this happens after any current build cycle
+    Future.microtask(() {
+      emit(LayoutChangeNavBar());
+    });
   }
 
   // Check if user is logged in and show login dialog if not
@@ -376,7 +390,7 @@ class Layoutcubit extends Cubit<Layoutstates> {
   }
 
   // Calculate total price including delivery fees
-  double calculateTotalPrice() {
+  double calculateTotalPrice({double? promoDiscount}) {
     print('\n=== DEBUGGING Cart Total Calculation ===');
 
     // Calculate subtotal (items only)
@@ -449,11 +463,22 @@ class Layoutcubit extends Cubit<Layoutstates> {
     // Calculate final total
     double total = subtotal + totalDeliveryFees;
 
+    // Apply promocode discount if provided
+    if (promoDiscount != null && promoDiscount > 0) {
+      print('\nApplying promocode discount: $promoDiscount EGP');
+      total = total - promoDiscount;
+      // Ensure total is never negative
+      if (total < 0) total = 0;
+    }
+
     // Print breakdown of total
     print('\nFinal Breakdown:');
     print('- Subtotal (all items): $subtotal EGP');
     print(
         '- Delivery Fees (${itemsByRestaurant.length} restaurants): $totalDeliveryFees EGP');
+    if (promoDiscount != null && promoDiscount > 0) {
+      print('- Promocode Discount: -$promoDiscount EGP');
+    }
     print('- Total: $total EGP');
     print('=== End of Cart Calculation ===\n');
 
