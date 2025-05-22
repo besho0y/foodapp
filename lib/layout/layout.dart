@@ -141,15 +141,6 @@ class _LayoutState extends State<Layout> {
                                         ),
                                       ],
                                     ),
-                                    const Spacer(),
-                                    CircleAvatar(
-                                      radius: 25.r,
-                                      backgroundColor: Colors.grey[300],
-                                      child: const Icon(
-                                        Icons.person_outline,
-                                        color: Colors.black,
-                                      ),
-                                    ),
                                   ],
                                 ),
                                 SizedBox(height: 10.h),

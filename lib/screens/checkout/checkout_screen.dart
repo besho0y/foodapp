@@ -9,7 +9,6 @@ import 'package:foodapp/models/user.dart';
 import 'package:foodapp/screens/oredrs/cubit.dart';
 import 'package:foodapp/screens/profile/cubit.dart';
 import 'package:foodapp/screens/profile/states.dart';
-import 'package:foodapp/shared/paymob_service.dart';
 import 'package:uuid/uuid.dart';
 
 class CheckoutScreen extends StatefulWidget {
@@ -24,7 +23,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   Address? selectedAddress;
   String paymentMethod = 'cash'; // Default payment method
   final transferReferenceController = TextEditingController();
-  final instapayPhoneNumber = "01226680469"; // Store phone number for Instapay
+  final instapayPhoneNumber = "01111350143"; // Store phone number for Instapay
   bool paymentVerified = false;
 
   // Add promocode controllers and variables
@@ -147,419 +146,499 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: BlocConsumer<ProfileCubit, ProfileState>(
-        listener: (context, state) {},
-        builder: (context, state) {
-          if (state is ProfileLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      // Add resizeToAvoidBottomInset to handle keyboard properly
+      resizeToAvoidBottomInset: true,
+      body: SafeArea(
+        child: BlocConsumer<ProfileCubit, ProfileState>(
+          listener: (context, state) {},
+          builder: (context, state) {
+            if (state is ProfileLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-          return Column(
-            children: [
-              Expanded(
-                child: Stepper(
-                  type: StepperType.horizontal,
-                  currentStep: _currentStep,
-                  elevation: 0,
-                  controlsBuilder: (context, details) {
-                    return Padding(
-                      padding: EdgeInsets.only(top: 20.h),
-                      child: Row(
-                        children: [
-                          if (_currentStep > 0)
-                            Expanded(
-                              child: OutlinedButton(
-                                onPressed: details.onStepCancel,
-                                style: OutlinedButton.styleFrom(
-                                  padding: EdgeInsets.symmetric(vertical: 12.h),
-                                  side: BorderSide(
-                                      color: Theme.of(context).primaryColor),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8.r),
-                                  ),
-                                ),
-                                child: Text(S.of(context).back),
-                              ),
-                            ),
-                          if (_currentStep > 0) SizedBox(width: 12.w),
-                          Expanded(
-                            child: ElevatedButton(
-                              onPressed: details.onStepContinue,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Theme.of(context).primaryColor,
-                                padding: EdgeInsets.symmetric(vertical: 12.h),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8.r),
-                                ),
-                              ),
-                              child: Text(_currentStep == 1
-                                  ? S.of(context).place_order
-                                  : S.of(context).next),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                  onStepContinue: () {
-                    if (_currentStep == 0) {
-                      if (selectedAddress == null) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                              content:
-                                  Text(S.of(context).select_address_error)),
-                        );
-                        return;
-                      }
-                      setState(() {
-                        _currentStep = 1;
-                      });
-                    } else if (_currentStep == 1) {
-                      if (paymentMethod == 'instapay') {
-                        if (transferReferenceController.text.isEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                                content:
-                                    Text(S.of(context).enter_reference_number)),
-                          );
-                          return;
-                        }
-                      }
-
-                      // Process the order
-                      _processOrder(context);
-                    }
-                  },
-                  onStepCancel: () {
-                    if (_currentStep > 0) {
-                      setState(() {
-                        _currentStep--;
-                      });
-                    }
-                  },
-                  steps: [
-                    Step(
-                      title: Text(
-                        S.of(context).select_delivery_address,
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          fontWeight: _currentStep >= 0
-                              ? FontWeight.bold
-                              : FontWeight.normal,
-                        ),
-                      ),
-                      content: _buildAddressStep(),
-                      isActive: _currentStep >= 0,
-                      state: _currentStep > 0
-                          ? StepState.complete
-                          : _currentStep == 0
-                              ? StepState.editing
-                              : StepState.indexed,
-                    ),
-                    Step(
-                      title: Text(
-                        S.of(context).select_payment_method,
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          fontWeight: _currentStep >= 1
-                              ? FontWeight.bold
-                              : FontWeight.normal,
-                        ),
-                      ),
-                      content: _buildPaymentStep(),
-                      isActive: _currentStep >= 1,
-                      state: _currentStep > 1
-                          ? StepState.complete
-                          : _currentStep == 1
-                              ? StepState.editing
-                              : StepState.indexed,
-                    ),
-                  ],
-                ),
-              ),
-
-              // Order Summary Section
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).cardColor,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, -5),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Order summary header with styled text
-                    Container(
-                      margin: EdgeInsets.only(bottom: 8.h),
-                      child: Text(
-                        S.of(context).order_summary,
-                        style: TextStyle(
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).primaryColor,
-                        ),
-                      ),
-                    ),
-
-                    // Items and subtotal
-                    _buildSummaryRow(
-                      label: '${S.of(context).items} (${cartItems.length})',
-                      value:
-                          '${layoutCubit.calculateSubtotal().toStringAsFixed(2)} ${S.of(context).egp}',
-                    ),
-
-                    // Delivery fee section
-                    Builder(
-                      builder: (context) {
-                        // Calculate total delivery fees
-                        double totalDeliveryFee = 0.0;
-                        // Group by restaurant to avoid duplicates
-                        final restaurantGroups =
-                            groupItemsByRestaurant(cartItems);
-                        // Add one delivery fee per restaurant
-                        restaurantGroups.forEach((_, items) {
-                          try {
-                            double fee = double.parse(items.first.deliveryFee);
-                            totalDeliveryFee += fee;
-                          } catch (e) {
-                            print('Error parsing fee: $e');
-                          }
-                        });
-
-                        return _buildSummaryRow(
-                          label: restaurantGroups.length > 1
-                              ? '${S.of(context).delivery_fee} (${restaurantGroups.length})'
-                              : S.of(context).delivery_fee,
-                          value:
-                              '${totalDeliveryFee.toStringAsFixed(2)} ${S.of(context).egp}',
-                        );
-                      },
-                    ),
-
-                    // Promocode section with improved UI
-                    Container(
-                      margin: EdgeInsets.symmetric(vertical: 10.h),
-                      padding: EdgeInsets.all(10.r),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade50,
-                        borderRadius: BorderRadius.circular(8.r),
-                        border: Border.all(
-                          color: _appliedPromocode != null
-                              ? Colors.green
-                              : Colors.grey.shade300,
-                          width: _appliedPromocode != null ? 2 : 1,
-                        ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Promocode header
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.local_offer_outlined,
-                                color: Theme.of(context).primaryColor,
-                                size: 16.sp,
-                              ),
-                              SizedBox(width: 6.w),
-                              Text(
-                                'Promocode',
-                                style: TextStyle(
-                                  fontSize: 14.sp,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                          SizedBox(height: 8.h),
-
-                          // Promocode input and button - Fixed to prevent overflow
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                flex: 3,
-                                child: Container(
-                                  height: 40.h,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(8.r),
-                                    border: Border.all(
-                                      color: _appliedPromocode != null
-                                          ? Colors.green
-                                          : Colors.grey.shade300,
-                                    ),
-                                  ),
-                                  child: TextField(
-                                    controller: _promocodeController,
-                                    decoration: InputDecoration(
-                                      hintText: 'Enter promocode',
-                                      contentPadding: EdgeInsets.symmetric(
-                                          horizontal: 10.w),
-                                      border: InputBorder.none,
-                                      enabled: _appliedPromocode == null,
-                                      hintStyle: TextStyle(fontSize: 13.sp),
-                                    ),
-                                    style: TextStyle(fontSize: 13.sp),
-                                  ),
-                                ),
-                              ),
-                              SizedBox(width: 8.w),
-                              _isPromoLoading
-                                  ? Container(
-                                      width: 40.w,
-                                      height: 40.h,
-                                      padding: EdgeInsets.all(6.r),
-                                      child: const CircularProgressIndicator(
-                                          strokeWidth: 2),
-                                    )
-                                  : _appliedPromocode != null
-                                      ? Expanded(
-                                          flex: 1,
-                                          child: SizedBox(
-                                            height: 40.h,
-                                            child: ElevatedButton(
-                                              onPressed: () {
-                                                setState(() {
-                                                  _appliedPromocode = null;
-                                                  _promoDiscount = 0.0;
-                                                  _promocodeController.clear();
-                                                });
-                                              },
-                                              style: ElevatedButton.styleFrom(
-                                                backgroundColor: Colors.red,
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          8.r),
-                                                ),
-                                                padding: EdgeInsets.zero,
-                                              ),
-                                              child: FittedBox(
-                                                fit: BoxFit.scaleDown,
-                                                child: Text(
-                                                  'Remove',
-                                                  style: TextStyle(
-                                                      fontSize: 12.sp),
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        )
-                                      : Expanded(
-                                          flex: 1,
-                                          child: SizedBox(
-                                            height: 40.h,
-                                            child: ElevatedButton(
-                                              onPressed: _validatePromocode,
-                                              style: ElevatedButton.styleFrom(
-                                                backgroundColor:
-                                                    Theme.of(context)
-                                                        .primaryColor,
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          8.r),
-                                                ),
-                                                padding: EdgeInsets.zero,
-                                              ),
-                                              child: FittedBox(
-                                                fit: BoxFit.scaleDown,
-                                                child: Text(
-                                                  'Apply',
-                                                  style: TextStyle(
-                                                      fontSize: 12.sp),
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                            ],
-                          ),
-
-                          // Show applied promocode message
-                          if (_appliedPromocode != null) ...[
-                            SizedBox(height: 8.h),
+            return Column(
+              children: [
+                // Custom stepper header (only the header part)
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 8.h),
+                  child: Row(
+                    children: [
+                      // Step 1
+                      Expanded(
+                        child: Column(
+                          children: [
+                            // Number indicator
                             Container(
-                              padding: EdgeInsets.symmetric(
-                                  vertical: 4.h, horizontal: 8.w),
+                              width: 30.r,
+                              height: 30.r,
                               decoration: BoxDecoration(
-                                color: Colors.green.shade50,
-                                borderRadius: BorderRadius.circular(4.r),
+                                color: _currentStep >= 0
+                                    ? Theme.of(context).primaryColor
+                                    : Colors.grey.shade300,
+                                shape: BoxShape.circle,
                               ),
-                              child: Row(
-                                children: [
-                                  const Icon(Icons.check_circle,
-                                      color: Colors.green, size: 14),
-                                  SizedBox(width: 4.w),
-                                  Expanded(
-                                    child: Text(
-                                      'Code "$_appliedPromocode" applied!',
-                                      style: TextStyle(
-                                        fontSize: 11.sp,
-                                        color: Colors.green.shade800,
+                              child: Center(
+                                child: _currentStep > 0
+                                    ? Icon(
+                                        Icons.check,
+                                        color: Colors.white,
+                                        size: 18.sp,
+                                      )
+                                    : Text(
+                                        "1",
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 14.sp,
+                                        ),
                                       ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                ],
+                              ),
+                            ),
+                            SizedBox(height: 5.h),
+                            // Step title
+                            Text(
+                              S.of(context).select_delivery_address,
+                              style: TextStyle(
+                                fontSize: 11.sp,
+                                fontWeight: _currentStep >= 0
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                                color: _currentStep >= 0
+                                    ? Theme.of(context).primaryColor
+                                    : Colors.grey,
+                              ),
+                              textAlign: TextAlign.center,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                      // Divider line
+                      Container(
+                        width: 30.w,
+                        height: 2.h,
+                        color: _currentStep > 0
+                            ? Theme.of(context).primaryColor
+                            : Colors.grey.shade300,
+                        margin: EdgeInsets.symmetric(horizontal: 5.w),
+                      ),
+                      // Step 2
+                      Expanded(
+                        child: Column(
+                          children: [
+                            // Number indicator
+                            Container(
+                              width: 30.r,
+                              height: 30.r,
+                              decoration: BoxDecoration(
+                                color: _currentStep >= 1
+                                    ? Theme.of(context).primaryColor
+                                    : Colors.grey.shade300,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Center(
+                                child: _currentStep > 1
+                                    ? Icon(
+                                        Icons.check,
+                                        color: Colors.white,
+                                        size: 18.sp,
+                                      )
+                                    : Text(
+                                        "2",
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 14.sp,
+                                        ),
+                                      ),
+                              ),
+                            ),
+                            SizedBox(height: 5.h),
+                            // Step title
+                            Text(
+                              S.of(context).select_payment_method,
+                              style: TextStyle(
+                                fontSize: 11.sp,
+                                fontWeight: _currentStep >= 1
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                                color: _currentStep >= 1
+                                    ? Theme.of(context).primaryColor
+                                    : Colors.grey,
+                              ),
+                              textAlign: TextAlign.center,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Divider
+                Divider(height: 1, thickness: 1, color: Colors.grey.shade200),
+
+                // Content area (in an Expanded to take available space)
+                Expanded(
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    child: Padding(
+                      padding: EdgeInsets.all(16.r),
+                      child: _currentStep == 0
+                          ? _buildAddressStep()
+                          : _buildPaymentStep(),
+                    ),
+                  ),
+                ),
+
+                // Divider before buttons
+                Divider(height: 1, thickness: 1, color: Colors.grey.shade200),
+
+                // Buttons
+                Padding(
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+                  child: Row(
+                    children: [
+                      if (_currentStep > 0)
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () {
+                              setState(() {
+                                _currentStep--;
+                              });
+                            },
+                            style: OutlinedButton.styleFrom(
+                              padding: EdgeInsets.symmetric(vertical: 12.h),
+                              side: BorderSide(
+                                  color: Theme.of(context).primaryColor),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8.r),
+                              ),
+                            ),
+                            child: Text(S.of(context).back,
+                                style: const TextStyle(color: Colors.white)),
+                          ),
+                        ),
+                      if (_currentStep > 0) SizedBox(width: 12.w),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            if (_currentStep == 0) {
+                              if (selectedAddress == null) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                      content: Text(
+                                          S.of(context).select_address_error)),
+                                );
+                                return;
+                              }
+                              setState(() {
+                                _currentStep = 1;
+                              });
+                            } else if (_currentStep == 1) {
+                              if (paymentMethod == 'instapay') {
+                                if (transferReferenceController.text.isEmpty) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                        content: Text(
+                                      S.of(context).enter_reference_number,
+                                      style:
+                                          const TextStyle(color: Colors.black),
+                                    )),
+                                  );
+                                  return;
+                                }
+                              }
+
+                              // Process the order
+                              _processOrder(context);
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Theme.of(context).primaryColor,
+                            padding: EdgeInsets.symmetric(vertical: 12.h),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8.r),
+                            ),
+                          ),
+                          child: Text(_currentStep == 1
+                              ? S.of(context).place_order
+                              : S.of(context).next),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Order Summary Section
+                Container(
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).cardColor,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, -5),
+                      ),
+                    ],
+                  ),
+                  // Wrap in SingleChildScrollView to handle keyboard overlap
+                  child: SingleChildScrollView(
+                    physics: const ClampingScrollPhysics(),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Order summary header with styled text
+                        Container(
+                          margin: EdgeInsets.only(bottom: 8.h),
+                          child: Text(
+                            S.of(context).order_summary,
+                            style: TextStyle(
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).primaryColor,
+                            ),
+                          ),
+                        ),
+
+                        // Items and subtotal
+                        _buildSummaryRow(
+                          label: '${S.of(context).items} (${cartItems.length})',
+                          value:
+                              '${layoutCubit.calculateSubtotal().toStringAsFixed(2)} ${S.of(context).egp}',
+                        ),
+
+                        // Delivery fee section
+                        Builder(
+                          builder: (context) {
+                            // Calculate total delivery fees
+                            double totalDeliveryFee = 0.0;
+                            // Group by restaurant to avoid duplicates
+                            final restaurantGroups =
+                                groupItemsByRestaurant(cartItems);
+                            // Add one delivery fee per restaurant
+                            restaurantGroups.forEach((_, items) {
+                              try {
+                                double fee =
+                                    double.parse(items.first.deliveryFee);
+                                totalDeliveryFee += fee;
+                              } catch (e) {
+                                print('Error parsing fee: $e');
+                              }
+                            });
+
+                            return _buildSummaryRow(
+                              label: restaurantGroups.length > 1
+                                  ? '${S.of(context).delivery_fee} (${restaurantGroups.length})'
+                                  : S.of(context).delivery_fee,
+                              value:
+                                  '${totalDeliveryFee.toStringAsFixed(2)} ${S.of(context).egp}',
+                            );
+                          },
+                        ),
+
+                        // Show discount amount if promocode is applied
+                        if (_appliedPromocode != null && _promoDiscount > 0)
+                          _buildSummaryRow(
+                            label: 'Discount',
+                            value:
+                                '-${_promoDiscount.toStringAsFixed(2)} ${S.of(context).egp}',
+                            valueColor: Colors.green,
+                          ),
+
+                        // Divider before total
+                        Divider(height: 16.h, thickness: 1),
+
+                        // Total row with larger text and bold styling
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              S.of(context).total,
+                              style: TextStyle(
+                                fontSize: 16.sp,
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).primaryColor,
+                              ),
+                            ),
+                            Text(
+                              '${layoutCubit.calculateTotalPrice(promoDiscount: _promoDiscount).toStringAsFixed(2)} ${S.of(context).egp}',
+                              style: TextStyle(
+                                fontSize: 16.sp,
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).primaryColor,
                               ),
                             ),
                           ],
-                        ],
-                      ),
-                    ),
-
-                    // Show discount amount if promocode is applied
-                    if (_appliedPromocode != null && _promoDiscount > 0)
-                      _buildSummaryRow(
-                        label: 'Discount',
-                        value:
-                            '-${_promoDiscount.toStringAsFixed(2)} ${S.of(context).egp}',
-                        valueColor: Colors.green,
-                      ),
-
-                    // Divider before total
-                    Divider(height: 16.h, thickness: 1),
-
-                    // Total row with larger text and bold styling
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          S.of(context).total,
-                          style: TextStyle(
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).primaryColor,
-                          ),
-                        ),
-                        Text(
-                          '${layoutCubit.calculateTotalPrice(promoDiscount: _promoDiscount).toStringAsFixed(2)} ${S.of(context).egp}',
-                          style: TextStyle(
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).primaryColor,
-                          ),
                         ),
                       ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ],
-          );
-        },
+              ],
+            );
+          },
+        ),
       ),
     );
   }
 
+  Future<void> _completeOrderPlacement(BuildContext context) async {
+    final layoutCubit = Layoutcubit.get(context);
+    final orderCubit = OrderCubit.get(context);
+    final profileCubit = ProfileCubit.get(context);
+
+    // Verify that an address is selected
+    if (selectedAddress == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(S.of(context).select_address_error),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Generate a unique order ID
+    final orderId = const Uuid().v4();
+
+    // Calculate the total price (items + delivery fee) with promocode discount if applied
+    final totalPrice =
+        layoutCubit.calculateTotalPrice(promoDiscount: _promoDiscount);
+
+    // Create order data
+    final orderData = {
+      'id': orderId,
+      'userId': profileCubit.user.uid,
+      'userName': profileCubit.user.name,
+      'items': layoutCubit.cartitems.map((item) => item.toJson()).toList(),
+      'total': totalPrice,
+      'address': selectedAddress!.toJson(),
+      'paymentMethod': paymentMethod,
+      'paymentReference':
+          paymentMethod == 'instapay' ? transferReferenceController.text : null,
+      'status': 'Pending',
+      'date': DateTime.now().toString(),
+      // Include promocode information if a promocode was applied
+      'promocode': _appliedPromocode,
+      'promoDiscount': _promoDiscount > 0 ? _promoDiscount : null,
+    };
+
+    try {
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return const Center(
+            child: CircularProgressIndicator(),
+          );
+        },
+      );
+
+      // Add the order through the order cubit
+      await orderCubit.addOrder(orderData);
+
+      // If a promocode was applied, add it to the user's used promocodes
+      if (_appliedPromocode != null && _promoDiscount > 0) {
+        await profileCubit.addUsedPromocode(_appliedPromocode!);
+      }
+
+      // Update the user's orderIds list in memory
+      if (!profileCubit.user.orderIds.contains(orderId)) {
+        profileCubit.user.orderIds.add(orderId);
+      }
+
+      // Clear the cart
+      layoutCubit.clearCart();
+
+      // Reset payment verification status and promocode
+      setState(() {
+        paymentVerified = false;
+        transferReferenceController.clear();
+        _appliedPromocode = null;
+        _promoDiscount = 0.0;
+        _promocodeController.clear();
+      });
+
+      // Close loading dialog
+      Navigator.of(context).pop();
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(S.of(context).order_placed),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      // Navigate to the orders tab of the bottom navbar
+      layoutCubit.changenavbar(2); // Index 2 is the Orders tab
+      Navigator.pop(context);
+    } catch (error) {
+      // Close loading dialog
+      Navigator.of(context).pop();
+
+      // Show error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${S.of(context).order_error}: $error'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  // Helper widget for consistent summary rows with overflow protection
+  Widget _buildSummaryRow({
+    required String label,
+    required String value,
+    Color? valueColor,
+  }) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 3.h),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            flex: 2,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 13.sp,
+                color: Colors.grey.shade700,
+              ),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
+          ),
+          Expanded(
+            flex: 1,
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 13.sp,
+                fontWeight: FontWeight.w500,
+                color: valueColor,
+              ),
+              textAlign: TextAlign.end,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Added missing method - Group items by restaurant
   Map<String, List<CartItem>> groupItemsByRestaurant(List<CartItem> items) {
     // Group items by restaurant ID to avoid duplicate fees
     Map<String, List<CartItem>> restaurantGroups = {};
@@ -571,16 +650,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       restaurantGroups[item.restaurantId]!.add(item);
     }
 
-    // Print debug info
-    print("\nGrouping cart items by restaurant in checkout:");
-    restaurantGroups.forEach((restaurantId, restaurantItems) {
-      print(
-          "- ${restaurantItems.first.restaurantName}: ${restaurantItems.length} items");
-    });
-
     return restaurantGroups;
   }
 
+  // Added missing method - Build address step UI
   Widget _buildAddressStep() {
     final profileCubit = ProfileCubit.get(context);
     final addresses = profileCubit.user.addresses;
@@ -588,6 +661,181 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Promocode section
+        Container(
+          margin: EdgeInsets.only(bottom: 16.h),
+          padding: EdgeInsets.all(10.r),
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(8.r),
+            border: Border.all(
+              color: _appliedPromocode != null
+                  ? Colors.green
+                  : Colors.grey.shade300,
+              width: _appliedPromocode != null ? 2 : 1,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Promocode header
+              Row(
+                children: [
+                  Icon(
+                    Icons.local_offer_outlined,
+                    color: Theme.of(context).primaryColor,
+                    size: 16.sp,
+                  ),
+                  SizedBox(width: 6.w),
+                  Text(
+                    'Promocode',
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 8.h),
+
+              // Promocode input and button - Fixed to prevent overflow
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: Container(
+                      height: 40.h,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8.r),
+                        border: Border.all(
+                          color: _appliedPromocode != null
+                              ? Colors.green
+                              : Colors.grey.shade300,
+                        ),
+                      ),
+                      child: TextField(
+                        controller: _promocodeController,
+                        textInputAction: TextInputAction.done,
+                        keyboardType: TextInputType.text,
+                        decoration: InputDecoration(
+                          hintText: 'Enter promocode',
+                          contentPadding:
+                              EdgeInsets.symmetric(horizontal: 10.w),
+                          border: InputBorder.none,
+                          enabled: _appliedPromocode == null,
+                          hintStyle: TextStyle(fontSize: 13.sp),
+                        ),
+                        style: TextStyle(fontSize: 13.sp),
+                        onSubmitted: (_) {
+                          if (_appliedPromocode == null) {
+                            _validatePromocode();
+                          }
+                          // Dismiss keyboard
+                          FocusScope.of(context).unfocus();
+                        },
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 8.w),
+                  _isPromoLoading
+                      ? Container(
+                          width: 40.w,
+                          height: 40.h,
+                          padding: EdgeInsets.all(6.r),
+                          child:
+                              const CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : _appliedPromocode != null
+                          ? Expanded(
+                              flex: 1,
+                              child: SizedBox(
+                                height: 40.h,
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      _appliedPromocode = null;
+                                      _promoDiscount = 0.0;
+                                      _promocodeController.clear();
+                                    });
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.red,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8.r),
+                                    ),
+                                    padding: EdgeInsets.zero,
+                                  ),
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Text(
+                                      'Remove',
+                                      style: TextStyle(fontSize: 12.sp),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            )
+                          : Expanded(
+                              flex: 1,
+                              child: SizedBox(
+                                height: 40.h,
+                                child: ElevatedButton(
+                                  onPressed: _validatePromocode,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor:
+                                        Theme.of(context).primaryColor,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8.r),
+                                    ),
+                                    padding: EdgeInsets.zero,
+                                  ),
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Text(
+                                      'Apply',
+                                      style: TextStyle(fontSize: 12.sp),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                ],
+              ),
+
+              // Show applied promocode message
+              if (_appliedPromocode != null) ...[
+                SizedBox(height: 8.h),
+                Container(
+                  padding: EdgeInsets.symmetric(vertical: 4.h, horizontal: 8.w),
+                  decoration: BoxDecoration(
+                    color: Colors.green.shade50,
+                    borderRadius: BorderRadius.circular(4.r),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.check_circle,
+                          color: Colors.green, size: 14),
+                      SizedBox(width: 4.w),
+                      Expanded(
+                        child: Text(
+                          'Code "$_appliedPromocode" applied!',
+                          style: TextStyle(
+                            fontSize: 11.sp,
+                            color: Colors.green.shade800,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+
         // Address Selection
         addresses.isEmpty
             ? Center(
@@ -722,15 +970,18 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       ),
                     );
                   }).toList(),
-
                   SizedBox(height: 16.h),
                   // Add new address button
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(
                       onPressed: () => _showAddAddressBottomSheet(context),
-                      icon: const Icon(Icons.add_location_alt),
-                      label: Text(S.of(context).add_address),
+                      icon: const Icon(
+                        Icons.add_location_alt,
+                        color: Colors.white,
+                      ),
+                      label: Text(S.of(context).add_address,
+                          style: const TextStyle(color: Colors.white)),
                       style: OutlinedButton.styleFrom(
                         padding: EdgeInsets.symmetric(vertical: 12.h),
                         side: BorderSide(color: Theme.of(context).primaryColor),
@@ -747,6 +998,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
+  // Added missing method - Build payment step UI
   Widget _buildPaymentStep() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -793,6 +1045,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
+  // Added missing method - Build payment method card
   Widget _buildPaymentMethodCard({
     required String title,
     required String subtitle,
@@ -882,6 +1135,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
+  // Added missing method - Build Instapay information section
   Widget _buildInstapayInfo() {
     return Container(
       margin: EdgeInsets.only(top: 16.h),
@@ -1061,7 +1315,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-  // Helper method to build Instapay steps
+  // Added missing method - Build Instapay step
   Widget _buildInstapayStep({
     required String step,
     required String text,
@@ -1098,6 +1352,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       fontSize: 14.sp,
                       height: 1.4,
                     ),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
                   )
                 : RichText(
                     text: TextSpan(
@@ -1117,7 +1373,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         ),
                       ],
                     ),
-                    maxLines: 2,
+                    maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                   ),
           ),
@@ -1126,6 +1382,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
+  // Added missing method - Show Add Address Bottom Sheet
   void _showAddAddressBottomSheet(BuildContext context) {
     final titleController = TextEditingController();
     final addressController = TextEditingController();
@@ -1223,6 +1480,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
+  // Added missing method - Verify Payment
   void _verifyPayment(BuildContext context) {
     if (transferReferenceController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1267,19 +1525,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     });
   }
 
+  // Added missing method - Process Order
   void _processOrder(BuildContext context) async {
     final layoutCubit = Layoutcubit.get(context);
     final orderCubit = OrderCubit.get(context);
     final profileCubit = ProfileCubit.get(context);
-
-    // Check if user has a phone number
-    if (profileCubit.user.phone.isEmpty) {
-      // Show phone number collection dialog
-      final phoneAdded = await _showAddPhoneNumberDialog(context);
-      if (!phoneAdded) {
-        return; // User cancelled adding phone number
-      }
-    }
 
     // Verify that an address is selected
     if (selectedAddress == null) {
@@ -1303,279 +1553,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       return;
     }
 
-    // If credit card payment is selected, process with PayMob
-    if (paymentMethod == 'card') {
-      final totalPrice =
-          layoutCubit.calculateTotalPrice(promoDiscount: _promoDiscount);
-
-      // Show loading indicator
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (BuildContext context) {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
-        },
-      );
-
-      try {
-        // Process payment with PayMob
-        final paymentResult = await PayMobService.processCardPayment(
-          context: context,
-          amount: totalPrice,
-          currency: "EGP", // Default to Egyptian Pound
-        );
-
-        // Close loading indicator
-        Navigator.of(context, rootNavigator: true).pop();
-
-        if (paymentResult['success'] == true) {
-          // Payment succeeded
-          setState(() {
-            paymentVerified = true;
-          });
-
-          // Complete the order placement
-          await _completeOrderPlacement(context);
-        } else {
-          // Payment failed
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                  paymentResult['message'] ?? S.of(context).payment_failed),
-              backgroundColor: Colors.red,
-            ),
-          );
-          return;
-        }
-      } catch (e) {
-        // Close loading indicator
-        Navigator.of(context, rootNavigator: true).pop();
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${S.of(context).payment_failed}: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-        return;
-      }
-      return; // Return after handling card payment
-    }
-
-    // Only proceed with order placement for non-card payments
+    // Complete the order placement
     await _completeOrderPlacement(context);
-  }
-
-  // Dialog to collect phone number from users who don't have one (typically Google sign-in users)
-  Future<bool> _showAddPhoneNumberDialog(BuildContext context) async {
-    final phoneController = TextEditingController();
-    final formKey = GlobalKey<FormState>();
-
-    // Primary color for styling (matching login/signup screens)
-    const primaryColor = Color(0xFFFF5722);
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-
-    return await showDialog<bool>(
-          context: context,
-          barrierDismissible: false,
-          builder: (context) => AlertDialog(
-            title: Text(
-              S.of(context).phone_required,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                color: primaryColor,
-              ),
-            ),
-            content: Form(
-              key: formKey,
-              child: TextFormField(
-                controller: phoneController,
-                keyboardType: TextInputType.phone,
-                decoration: InputDecoration(
-                  labelText: S.of(context).Phone,
-                  hintText: S.of(context).phone_hint,
-                  prefixIcon: const Icon(Icons.phone),
-                  border: const OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return S.of(context).phone_required;
-                  }
-                  if (value.length != 11) {
-                    return S.of(context).phone_length_error;
-                  }
-                  return null;
-                },
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop(false);
-                },
-                child: Text(S.of(context).cancel),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  if (formKey.currentState!.validate()) {
-                    Navigator.of(context).pop(true);
-                  }
-                },
-                child: Text(S.of(context).save),
-              ),
-            ],
-          ),
-        ) ??
-        false;
-  }
-
-  Future<void> _completeOrderPlacement(BuildContext context) async {
-    final layoutCubit = Layoutcubit.get(context);
-    final orderCubit = OrderCubit.get(context);
-    final profileCubit = ProfileCubit.get(context);
-
-    // Verify that an address is selected
-    if (selectedAddress == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(S.of(context).select_address_error),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    // Generate a unique order ID
-    final orderId = const Uuid().v4();
-
-    // Calculate the total price (items + delivery fee) with promocode discount if applied
-    final totalPrice =
-        layoutCubit.calculateTotalPrice(promoDiscount: _promoDiscount);
-
-    // Create order data
-    final orderData = {
-      'id': orderId,
-      'userId': profileCubit.user.uid,
-      'userName': profileCubit.user.name,
-      'items': layoutCubit.cartitems.map((item) => item.toJson()).toList(),
-      'total': totalPrice,
-      'address': selectedAddress!.toJson(),
-      'paymentMethod': paymentMethod,
-      'paymentReference':
-          paymentMethod == 'instapay' ? transferReferenceController.text : null,
-      'status': 'Pending',
-      'date': DateTime.now().toString(),
-      // Include promocode information if a promocode was applied
-      'promocode': _appliedPromocode,
-      'promoDiscount': _promoDiscount > 0 ? _promoDiscount : null,
-    };
-
-    try {
-      // Show loading indicator
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (BuildContext context) {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
-        },
-      );
-
-      // Add the order through the order cubit
-      await orderCubit.addOrder(orderData);
-
-      // If a promocode was applied, add it to the user's used promocodes
-      if (_appliedPromocode != null && _promoDiscount > 0) {
-        await profileCubit.addUsedPromocode(_appliedPromocode!);
-      }
-
-      // Update the user's orderIds list in memory
-      if (!profileCubit.user.orderIds.contains(orderId)) {
-        profileCubit.user.orderIds.add(orderId);
-      }
-
-      // Clear the cart
-      layoutCubit.clearCart();
-
-      // Reset payment verification status and promocode
-      setState(() {
-        paymentVerified = false;
-        transferReferenceController.clear();
-        _appliedPromocode = null;
-        _promoDiscount = 0.0;
-        _promocodeController.clear();
-      });
-
-      // Close loading dialog
-      Navigator.of(context).pop();
-
-      // Show success message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(S.of(context).order_placed),
-          backgroundColor: Colors.green,
-        ),
-      );
-
-      // Navigate to the orders tab of the bottom navbar
-      layoutCubit.changenavbar(2); // Index 2 is the Orders tab
-      Navigator.pop(context);
-    } catch (error) {
-      // Close loading dialog
-      Navigator.of(context).pop();
-
-      // Show error message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('${S.of(context).order_error}: $error'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
-
-  // Helper widget for consistent summary rows with overflow protection
-  Widget _buildSummaryRow({
-    required String label,
-    required String value,
-    Color? valueColor,
-  }) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 3.h),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Expanded(
-            flex: 2,
-            child: Text(
-              label,
-              style: TextStyle(
-                fontSize: 13.sp,
-                color: Colors.grey.shade700,
-              ),
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
-            ),
-          ),
-          Expanded(
-            flex: 1,
-            child: Text(
-              value,
-              style: TextStyle(
-                fontSize: 13.sp,
-                fontWeight: FontWeight.w500,
-                color: valueColor,
-              ),
-              textAlign: TextAlign.end,
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }

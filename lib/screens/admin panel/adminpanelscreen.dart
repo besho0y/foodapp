@@ -11,7 +11,6 @@ import 'package:foodapp/generated/l10n.dart';
 import 'package:foodapp/layout/cubit.dart';
 import 'package:foodapp/models/item.dart';
 import 'package:foodapp/models/order.dart' as app_models;
-import 'package:foodapp/models/promocode.dart';
 import 'package:foodapp/models/resturant.dart';
 import 'package:foodapp/screens/admin%20panel/cubit.dart';
 import 'package:foodapp/screens/admin%20panel/states.dart';
@@ -45,7 +44,6 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
       TextEditingController();
   final TextEditingController _deliveryFeeController = TextEditingController();
   final TextEditingController _deliveryTimeController = TextEditingController();
-  final TextEditingController _categoriesController = TextEditingController();
 
   // Item form controllers
   final TextEditingController _itemNameController = TextEditingController();
@@ -95,7 +93,6 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
     _restaurantCategoryArController.dispose();
     _deliveryFeeController.dispose();
     _deliveryTimeController.dispose();
-    _categoriesController.dispose();
     _itemNameController.dispose();
     _itemNameArController.dispose();
     _itemDescriptionController.dispose();
@@ -261,7 +258,6 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                 tooltip: 'Toggle Theme',
               ),
             ],
-            title: Text(S.of(context).admin_panel),
           ),
           body: Column(
             children: [
@@ -439,19 +435,6 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                     controller: _deliveryTimeController,
                     type: TextInputType.text,
                     label: S.of(context).delivery_time,
-                    validate: (value) {
-                      if (value == null || value.isEmpty) {
-                        return S.of(context).please_fill_all_fields;
-                      }
-                      return null;
-                    },
-                  ),
-                  SizedBox(height: 12.h),
-                  defaultTextField(
-                    controller: _categoriesController,
-                    type: TextInputType.text,
-                    label:
-                        '${S.of(context).categories} (${S.of(context).comma_separated})',
                     validate: (value) {
                       if (value == null || value.isEmpty) {
                         return S.of(context).please_fill_all_fields;
@@ -1542,375 +1525,325 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
     final TextEditingController codeController = TextEditingController();
     final TextEditingController discountController = TextEditingController();
 
-    // State variables
-    List<Promocode> promocodes = [];
-    bool isLoading = false;
-
-    return StatefulBuilder(
-      builder: (context, setState) {
-        // Fetch promocodes function
-        void fetchPromocodes() async {
-          setState(() => isLoading = true);
-
-          try {
-            print("Fetching promocodes from Firestore...");
-            final snapshot =
-                await FirebaseFirestore.instance.collection('promocodes').get();
-
-            print("Found ${snapshot.docs.length} promocodes");
-
-            final List<Promocode> loadedPromocodes = snapshot.docs.map((doc) {
-              Map<String, dynamic> data = doc.data();
-              // Make sure code is included
-              data['code'] = doc.id;
-              print(
-                "Loaded promocode: ${doc.id} with discount: ${data['discount']}",
-              );
-              return Promocode.fromJson(data);
-            }).toList();
-
-            setState(() {
-              promocodes.clear();
-              promocodes.addAll(loadedPromocodes);
-              isLoading = false;
-            });
-          } catch (e) {
-            print('Error fetching promocodes: $e');
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text("Error loading promocodes")),
-            );
-            setState(() => isLoading = false);
-          }
+    // Fetch promocodes if not already loaded
+    if (cubit.promocodes.isEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          cubit.fetchPromocodes();
         }
+      });
+    }
 
-        // Load promocodes on initial build
-        if (promocodes.isEmpty && !isLoading) {
-          // Use a post-frame callback to avoid build errors
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            fetchPromocodes();
-          });
-        }
-
-        return SingleChildScrollView(
-          padding: EdgeInsets.all(16.r),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Generate Promos section
-              Container(
-                padding: EdgeInsets.all(16.r),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.blue),
-                  borderRadius: BorderRadius.circular(12.r),
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(16.r),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Generate Promos section
+          Container(
+            padding: EdgeInsets.all(16.r),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.blue),
+              borderRadius: BorderRadius.circular(12.r),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Generate Promo Codes",
+                  style: TextStyle(
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                SizedBox(height: 16.h),
+
+                // Code input
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        controller: codeController,
+                        keyboardType: TextInputType.text,
+                        decoration: const InputDecoration(
+                          labelText: "Promo Code",
+                          border: OutlineInputBorder(),
+                        ),
+                        validator: (value) => (value?.isEmpty ?? true)
+                            ? "Enter promo code"
+                            : null,
+                      ),
+                    ),
+                    SizedBox(width: 10.w),
+                    ElevatedButton(
+                      onPressed: () {
+                        // Generate random 10-digit alphanumeric code
+                        const String chars =
+                            'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+                        final Random random = Random();
+                        String randomCode = '';
+
+                        // Generate a truly random 10-digit code
+                        for (int i = 0; i < 10; i++) {
+                          randomCode += chars[random.nextInt(chars.length)];
+                        }
+
+                        codeController.text = randomCode;
+                      },
+                      child: const Text("Generate"),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 20.h),
+
+                // Discount amount input
+                TextFormField(
+                  controller: discountController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: "Discount Amount",
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) =>
+                      (value?.isEmpty ?? true) ? "Enter amount" : null,
+                ),
+                SizedBox(height: 20.h),
+
+                // Add promo button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      padding: EdgeInsets.symmetric(vertical: 15.h),
+                    ),
+                    onPressed: () async {
+                      // Validate inputs
+                      final code = codeController.text.trim();
+                      final discountText = discountController.text.trim();
+
+                      if (code.isEmpty || discountText.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(S.of(context).please_fill_all_fields),
+                          ),
+                        );
+                        return;
+                      }
+
+                      double discount;
+                      try {
+                        discount = double.parse(discountText);
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("Please enter a valid number"),
+                          ),
+                        );
+                        return;
+                      }
+
+                      // Show loading
+                      showDialog(
+                        context: context,
+                        barrierDismissible: false,
+                        builder: (context) => const Center(
+                          child: CircularProgressIndicator(),
+                        ),
+                      );
+
+                      try {
+                        // Add promocode using cubit
+                        await cubit.addPromocode(
+                            code: code, discount: discount);
+
+                        // Clear fields
+                        codeController.clear();
+                        discountController.clear();
+
+                        // Close loading dialog
+                        if (mounted && Navigator.canPop(context)) {
+                          Navigator.pop(context);
+                        }
+
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("Promocode added successfully"),
+                              backgroundColor: Colors.green,
+                            ),
+                          );
+                        }
+                      } catch (e) {
+                        // Close loading dialog
+                        if (mounted && Navigator.canPop(context)) {
+                          Navigator.pop(context);
+                        }
+
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(S.of(context).error),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      }
+                    },
+                    child: const Text("Add Promo"),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          SizedBox(height: 24.h),
+
+          // Current promocodes section
+          Container(
+            padding: EdgeInsets.all(16.r),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.blue),
+              borderRadius: BorderRadius.circular(12.r),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      "Generate Promo Codes",
+                      "Current Promo Codes",
                       style: TextStyle(
                         fontSize: 18.sp,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    SizedBox(height: 16.h),
-
-                    // Code input
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextFormField(
-                            controller: codeController,
-                            keyboardType: TextInputType.text,
-                            decoration: const InputDecoration(
-                              labelText: "Promo Code",
-                              border: OutlineInputBorder(),
-                            ),
-                            validator: (value) => (value?.isEmpty ?? true)
-                                ? "Enter promo code"
-                                : null,
-                          ),
-                        ),
-                        SizedBox(width: 10.w),
-                        ElevatedButton(
-                          onPressed: () {
-                            // Generate random 10-digit alphanumeric code
-                            const String chars =
-                                'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-                            final Random random = Random();
-                            String randomCode = '';
-
-                            // Generate a truly random 10-digit code
-                            for (int i = 0; i < 10; i++) {
-                              randomCode += chars[random.nextInt(chars.length)];
-                            }
-
-                            setState(() {
-                              codeController.text = randomCode;
-                            });
-                          },
-                          child: const Text("Generate"),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 20.h),
-
-                    // Discount amount input
-                    TextFormField(
-                      controller: discountController,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: "Discount Amount",
-                        border: OutlineInputBorder(),
-                      ),
-                      validator: (value) =>
-                          (value?.isEmpty ?? true) ? "Enter amount" : null,
-                    ),
-                    SizedBox(height: 20.h),
-
-                    // Add promo button
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          padding: EdgeInsets.symmetric(vertical: 15.h),
-                        ),
-                        onPressed: () async {
-                          // Validate inputs
-                          final code = codeController.text.trim();
-                          final discountText = discountController.text.trim();
-
-                          if (code.isEmpty || discountText.isEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content:
-                                    Text(S.of(context).please_fill_all_fields),
-                              ),
-                            );
-                            return;
-                          }
-
-                          double discount;
-                          try {
-                            discount = double.parse(discountText);
-                          } catch (e) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text("Please enter a valid number"),
-                              ),
-                            );
-                            return;
-                          }
-
-                          // Show loading
-                          showDialog(
-                            context: context,
-                            barrierDismissible: false,
-                            builder: (context) => const Center(
-                              child: CircularProgressIndicator(),
-                            ),
-                          );
-
-                          try {
-                            // Add promocode to Firestore
-                            print(
-                              "Adding promocode: $code with discount: $discount",
-                            );
-
-                            await FirebaseFirestore.instance
-                                .collection('promocodes')
-                                .doc(code)
-                                .set({
-                              'discount': discount,
-                              'usageCount': 0,
-                              'createdAt': FieldValue.serverTimestamp(),
-                            });
-
-                            print("Promocode added successfully to Firestore");
-
-                            // Clear fields
-                            codeController.clear();
-                            discountController.clear();
-
-                            // Refresh list
-                            fetchPromocodes();
-
-                            // Close loading dialog
-                            Navigator.pop(context);
-
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text("Promocode added successfully"),
-                                backgroundColor: Colors.green,
-                              ),
-                            );
-                          } catch (e) {
-                            // Close loading dialog
-                            Navigator.pop(context);
-
-                            print("Error adding promocode: $e");
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(S.of(context).error),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
-                          }
-                        },
-                        child: const Text("Add Promo"),
-                      ),
+                    IconButton(
+                      icon: const Icon(Icons.refresh),
+                      onPressed: () => cubit.fetchPromocodes(),
+                      tooltip: "Refresh Promocodes",
                     ),
                   ],
                 ),
-              ),
 
-              SizedBox(height: 24.h),
+                SizedBox(height: 10.h),
 
-              // Current promocodes section
-              Container(
-                padding: EdgeInsets.all(16.r),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.blue),
-                  borderRadius: BorderRadius.circular(12.r),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          "Current Promo Codes",
-                          style: TextStyle(
-                            fontSize: 18.sp,
-                            fontWeight: FontWeight.bold,
-                          ),
+                // Promo list based on cubit state
+                Builder(
+                  builder: (context) {
+                    final state = cubit.state;
+                    if (state is LoadingPromocodesState) {
+                      return const Center(child: CircularProgressIndicator());
+                    } else if (state is ErrorLoadingPromocodesState) {
+                      return Center(
+                        child:
+                            Text("Error loading promocodes: ${(state).error}"),
+                      );
+                    } else if (cubit.promocodes.isEmpty) {
+                      return Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(20.r),
+                          child: const Text("No promocodes available"),
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.refresh),
-                          onPressed: fetchPromocodes,
-                          tooltip: "Refresh Promocodes",
-                        ),
-                      ],
-                    ),
-
-                    SizedBox(height: 10.h),
-
-                    // Promo list
-                    isLoading
-                        ? const Center(child: CircularProgressIndicator())
-                        : promocodes.isEmpty
-                            ? Center(
-                                child: Padding(
-                                  padding: EdgeInsets.all(20.r),
-                                  child: const Text("No promocodes available"),
+                      );
+                    } else {
+                      return ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: cubit.promocodes.length,
+                        itemBuilder: (context, index) {
+                          final promo = cubit.promocodes[index];
+                          return Container(
+                            margin: EdgeInsets.only(bottom: 8.h),
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.grey.shade300),
+                              borderRadius: BorderRadius.circular(12.r),
+                            ),
+                            child: ListTile(
+                              title: Text(
+                                promo.code,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
                                 ),
-                              )
-                            : ListView.builder(
-                                shrinkWrap: true,
-                                physics: const NeverScrollableScrollPhysics(),
-                                itemCount: promocodes.length,
-                                itemBuilder: (context, index) {
-                                  final promo = promocodes[index];
-                                  return Container(
-                                    margin: EdgeInsets.only(bottom: 8.h),
-                                    decoration: BoxDecoration(
-                                      border: Border.all(
-                                          color: Colors.grey.shade300),
-                                      borderRadius: BorderRadius.circular(12.r),
-                                    ),
-                                    child: ListTile(
-                                      title: Text(
-                                        promo.code,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
+                              ),
+                              subtitle: Text(
+                                '${promo.discount} EGP discount',
+                              ),
+                              trailing: IconButton(
+                                icon: const Icon(
+                                  Icons.delete,
+                                  color: Colors.red,
+                                ),
+                                onPressed: () async {
+                                  // Confirm delete
+                                  final confirm = await showDialog<bool>(
+                                    context: context,
+                                    builder: (context) => AlertDialog(
+                                      title: const Text("Delete Promocode"),
+                                      content: const Text(
+                                          "Are you sure you want to delete this promocode?"),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () => Navigator.pop(
+                                            context,
+                                            false,
+                                          ),
+                                          child: Text(S.of(context).cancel),
                                         ),
-                                      ),
-                                      subtitle: Text(
-                                        '${promo.discount} EGP discount',
-                                      ),
-                                      trailing: IconButton(
-                                        icon: const Icon(
-                                          Icons.delete,
-                                          color: Colors.red,
+                                        TextButton(
+                                          onPressed: () => Navigator.pop(
+                                            context,
+                                            true,
+                                          ),
+                                          style: TextButton.styleFrom(
+                                            foregroundColor: Colors.red,
+                                          ),
+                                          child: Text(S.of(context).delete),
                                         ),
-                                        onPressed: () async {
-                                          // Confirm delete
-                                          final confirm =
-                                              await showDialog<bool>(
-                                            context: context,
-                                            builder: (context) => AlertDialog(
-                                              title: const Text(
-                                                  "Delete Promocode"),
-                                              content: const Text(
-                                                  "Are you sure you want to delete this promocode?"),
-                                              actions: [
-                                                TextButton(
-                                                  onPressed: () =>
-                                                      Navigator.pop(
-                                                    context,
-                                                    false,
-                                                  ),
-                                                  child: Text(
-                                                      S.of(context).cancel),
-                                                ),
-                                                TextButton(
-                                                  onPressed: () =>
-                                                      Navigator.pop(
-                                                    context,
-                                                    true,
-                                                  ),
-                                                  style: TextButton.styleFrom(
-                                                    foregroundColor: Colors.red,
-                                                  ),
-                                                  child: Text(
-                                                      S.of(context).delete),
-                                                ),
-                                              ],
-                                            ),
-                                          );
-
-                                          if (confirm == true) {
-                                            try {
-                                              await FirebaseFirestore.instance
-                                                  .collection('promocodes')
-                                                  .doc(promo.code)
-                                                  .delete();
-
-                                              fetchPromocodes();
-
-                                              ScaffoldMessenger.of(
-                                                context,
-                                              ).showSnackBar(
-                                                const SnackBar(
-                                                  content:
-                                                      Text("Promocode deleted"),
-                                                  backgroundColor: Colors.green,
-                                                ),
-                                              );
-                                            } catch (e) {
-                                              ScaffoldMessenger.of(
-                                                context,
-                                              ).showSnackBar(
-                                                SnackBar(
-                                                    content: Text(
-                                                        S.of(context).error)),
-                                              );
-                                            }
-                                          }
-                                        },
-                                      ),
+                                      ],
                                     ),
                                   );
+
+                                  if (confirm == true && mounted) {
+                                    try {
+                                      await cubit.deletePromocode(promo.code);
+
+                                      if (mounted) {
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          const SnackBar(
+                                            content: Text("Promocode deleted"),
+                                            backgroundColor: Colors.green,
+                                          ),
+                                        );
+                                      }
+                                    } catch (e) {
+                                      if (mounted) {
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          SnackBar(
+                                              content:
+                                                  Text(S.of(context).error)),
+                                        );
+                                      }
+                                    }
+                                  }
                                 },
                               ),
-                  ],
+                            ),
+                          );
+                        },
+                      );
+                    }
+                  },
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        );
-      },
+        ],
+      ),
     );
   }
 
@@ -1934,23 +1867,6 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
   void _submitRestaurantForm(AdminPanelCubit cubit) async {
     if (_restaurantFormKey.currentState!.validate()) {
       try {
-        // Parse and validate categories
-        final categoriesList = _categoriesController.text
-            .split(',')
-            .map((e) => e.trim())
-            .where((e) => e.isNotEmpty)
-            .toList();
-
-        if (categoriesList.isEmpty) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text("Please enter at least one category"),
-              backgroundColor: Colors.red,
-            ),
-          );
-          return;
-        }
-
         // Show loading indicator
         showDialog(
           context: context,
@@ -1968,7 +1884,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
           deliveryFee: _deliveryFeeController.text.trim(),
           deliveryTime: _deliveryTimeController.text.trim(),
           imageFile: _restaurantImageFile,
-          categories: categoriesList,
+          categories: [], // Empty list since categories field was removed
         );
 
         // Close loading dialog
@@ -2181,7 +2097,6 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
     _restaurantCategoryArController.clear();
     _deliveryFeeController.clear();
     _deliveryTimeController.clear();
-    _categoriesController.clear();
     setState(() {
       _restaurantImageFile = null;
     });

@@ -1,3 +1,5 @@
+import 'package:foodapp/models/promocode.dart';
+
 abstract class AdminPanelStates {}
 
 class AdminPanelInitialState extends AdminPanelStates {}
@@ -97,4 +99,35 @@ class SuccessDeletingMenuCategoryState extends AdminPanelStates {}
 class ErrorDeletingMenuCategoryState extends AdminPanelStates {
   final String error;
   ErrorDeletingMenuCategoryState(this.error);
+}
+
+// Promocode states
+class LoadingPromocodesState extends AdminPanelStates {}
+
+class SuccessLoadingPromocodesState extends AdminPanelStates {
+  final List<Promocode> promocodes;
+  SuccessLoadingPromocodesState(this.promocodes);
+}
+
+class ErrorLoadingPromocodesState extends AdminPanelStates {
+  final String error;
+  ErrorLoadingPromocodesState(this.error);
+}
+
+class AddingPromocodeState extends AdminPanelStates {}
+
+class SuccessAddingPromocodeState extends AdminPanelStates {}
+
+class ErrorAddingPromocodeState extends AdminPanelStates {
+  final String error;
+  ErrorAddingPromocodeState(this.error);
+}
+
+class DeletingPromocodeState extends AdminPanelStates {}
+
+class SuccessDeletingPromocodeState extends AdminPanelStates {}
+
+class ErrorDeletingPromocodeState extends AdminPanelStates {
+  final String error;
+  ErrorDeletingPromocodeState(this.error);
 }

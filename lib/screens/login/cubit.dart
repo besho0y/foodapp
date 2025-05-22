@@ -103,7 +103,7 @@ class Logincubit extends Cubit<LoginStates> {
       print("Google Sign-In configuration error: $e");
       if (context != null) {
         showToast(
-          "Google Sign-In is not properly configured: ${e.toString().substring(0, math.min(100, e.toString().length))}",
+          "Google Sign-In is not properly configured",
           context: context,
           duration: const Duration(seconds: 3),
           backgroundColor: Colors.amber,
@@ -304,7 +304,7 @@ class Logincubit extends Cubit<LoginStates> {
       emit(LoginErrorlState());
       if (context != null) {
         showToast(
-          "Apple Sign-In Error: ${error.toString().substring(0, math.min(100, error.toString().length))}",
+          "Apple Sign-In Error",
           context: context,
           duration: const Duration(seconds: 3),
           backgroundColor: Colors.red,

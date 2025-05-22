@@ -239,14 +239,43 @@ class Restuarantscubit extends Cubit<ResturantsStates> {
 
   void search(String value) {
     emit(RestuarantsLoadingState());
+    print("Searching restaurants for: '$value'");
+
     if (value.trim().isEmpty) {
-      _filteredRestaurants = null; // Use _allRestuarants
+      _filteredRestaurants = null; // Use all restaurants
+      print("Empty search query - showing all restaurants");
     } else {
-      final lowerValue = value.toLowerCase();
-      _filteredRestaurants = _allRestuarants
-          .where((restaurant) =>
-              restaurant.name.toLowerCase().contains(lowerValue))
-          .toList();
+      final searchTerm = value.toLowerCase().trim();
+      _filteredRestaurants = _allRestuarants.where((restaurant) {
+        // Search in restaurant name (English)
+        final nameMatches = restaurant.name.toLowerCase().contains(searchTerm);
+
+        // Search in restaurant name (Arabic)
+        final nameArMatches =
+            restaurant.nameAr.toLowerCase().contains(searchTerm);
+
+        // Search in category (English)
+        final categoryMatches =
+            restaurant.category.toLowerCase().contains(searchTerm);
+
+        // Search in category (Arabic)
+        final categoryArMatches =
+            restaurant.categoryAr.toLowerCase().contains(searchTerm);
+
+        // Print debug info
+        print("Restaurant: ${restaurant.name}/${restaurant.nameAr}");
+        print("  Name match: $nameMatches, Name AR match: $nameArMatches");
+        print(
+            "  Category match: $categoryMatches, Category AR match: $categoryArMatches");
+
+        // Return true if any field matches
+        return nameMatches ||
+            nameArMatches ||
+            categoryMatches ||
+            categoryArMatches;
+      }).toList();
+
+      print("Found ${_filteredRestaurants?.length} matching restaurants");
     }
     emit(RestuarantsGetDataSuccessState());
   }
@@ -503,12 +532,30 @@ class Restuarantscubit extends Cubit<ResturantsStates> {
     }
   }
 
-  // Public method to refresh restaurants
+  // Refresh only restaurants data without resetting state
   Future<void> refreshRestaurants() async {
+    print("Refreshing restaurants data...");
     emit(RestuarantsLoadingState());
+
     try {
+      // Remember if we had filtered results
+      final wasFiltered = _filteredRestaurants != null;
+
+      // Clear only restaurant data
       _allRestuarants.clear();
+
+      // Reload restaurants from Firestore
       await _fetchRestaurants();
+
+      // If we had filtered results, apply the current filter criteria again
+      if (wasFiltered && _filteredRestaurants != null) {
+        // Here we'd reapply the current search/filter
+        // Since we don't have access to the original filter criteria,
+        // we'll just reset to showing all restaurants
+        _filteredRestaurants = null;
+      }
+
+      print("Successfully refreshed ${_allRestuarants.length} restaurants");
       emit(RestuarantsGetDataSuccessState());
     } catch (e) {
       print("Error refreshing restaurants: $e");

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:foodapp/models/promocode.dart';
 import 'package:foodapp/models/resturant.dart';
 import 'package:foodapp/screens/admin%20panel/states.dart';
 import 'package:image_picker/image_picker.dart';
@@ -730,6 +731,74 @@ class AdminPanelCubit extends Cubit<AdminPanelStates> {
     } catch (e) {
       print("Error getting categories for restaurant: $e");
       return ["All"]; // Return at least the "All" category
+    }
+  }
+
+  // Promocode methods
+  List<Promocode> _promocodes = [];
+
+  List<Promocode> get promocodes => _promocodes;
+
+  // Fetch all promocodes from Firestore
+  Future<void> fetchPromocodes() async {
+    emit(LoadingPromocodesState());
+
+    try {
+      final snapshot =
+          await FirebaseFirestore.instance.collection('promocodes').get();
+
+      final List<Promocode> loadedPromocodes = snapshot.docs.map((doc) {
+        Map<String, dynamic> data = doc.data();
+        // Make sure code is included (it's the document ID)
+        data['code'] = doc.id;
+        return Promocode.fromJson(data);
+      }).toList();
+
+      _promocodes = loadedPromocodes;
+      emit(SuccessLoadingPromocodesState(_promocodes));
+    } catch (e) {
+      print('Error fetching promocodes: $e');
+      emit(ErrorLoadingPromocodesState(e.toString()));
+    }
+  }
+
+  // Add a new promocode
+  Future<void> addPromocode(
+      {required String code, required double discount}) async {
+    emit(AddingPromocodeState());
+
+    try {
+      await FirebaseFirestore.instance.collection('promocodes').doc(code).set({
+        'discount': discount,
+        'usageCount': 0,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      // Refresh promocodes list
+      await fetchPromocodes();
+      emit(SuccessAddingPromocodeState());
+    } catch (e) {
+      print('Error adding promocode: $e');
+      emit(ErrorAddingPromocodeState(e.toString()));
+    }
+  }
+
+  // Delete a promocode
+  Future<void> deletePromocode(String code) async {
+    emit(DeletingPromocodeState());
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('promocodes')
+          .doc(code)
+          .delete();
+
+      // Refresh promocodes list
+      await fetchPromocodes();
+      emit(SuccessDeletingPromocodeState());
+    } catch (e) {
+      print('Error deleting promocode: $e');
+      emit(ErrorDeletingPromocodeState(e.toString()));
     }
   }
 }
