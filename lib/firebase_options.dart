@@ -42,12 +42,12 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions web = FirebaseOptions(
     apiKey: 'AIzaSyBEpc9Uo-bZi3eer8Ip74l2Je0pjbznk6I',
-    appId: '1:167788515229:web:4000aeed561a58fb90e974',
+    appId: '1:167788515229:web:59e2944ab065a8f290e974',
     messagingSenderId: '167788515229',
     projectId: 'foodapp-94323',
     authDomain: 'foodapp-94323.firebaseapp.com',
     storageBucket: 'foodapp-94323.firebasestorage.app',
-    measurementId: 'G-WBNNS4586R',
+    measurementId: 'G-6ZMRC7XM81',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
@@ -64,6 +64,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '167788515229',
     projectId: 'foodapp-94323',
     storageBucket: 'foodapp-94323.firebasestorage.app',
+    androidClientId: '167788515229-6s8fcelioth4l868l2ho93djb0tekeoj.apps.googleusercontent.com',
+    iosClientId: '167788515229-9g1qj525itr1najit2mj6t78ommj53eq.apps.googleusercontent.com',
     iosBundleId: 'com.example.foodapp',
   );
 
@@ -73,17 +75,19 @@ class DefaultFirebaseOptions {
     messagingSenderId: '167788515229',
     projectId: 'foodapp-94323',
     storageBucket: 'foodapp-94323.firebasestorage.app',
+    androidClientId: '167788515229-6s8fcelioth4l868l2ho93djb0tekeoj.apps.googleusercontent.com',
+    iosClientId: '167788515229-9g1qj525itr1najit2mj6t78ommj53eq.apps.googleusercontent.com',
     iosBundleId: 'com.example.foodapp',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
     apiKey: 'AIzaSyBEpc9Uo-bZi3eer8Ip74l2Je0pjbznk6I',
-    appId: '1:167788515229:web:f9af7d99b31c1dea90e974',
+    appId: '1:167788515229:web:86138af932e3cf0290e974',
     messagingSenderId: '167788515229',
     projectId: 'foodapp-94323',
     authDomain: 'foodapp-94323.firebaseapp.com',
     storageBucket: 'foodapp-94323.firebasestorage.app',
-    measurementId: 'G-P1PC8VZSS8',
+    measurementId: 'G-3YTPZ21EP4',
   );
 
 }

@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:foodapp/models/promocode.dart';
 import 'package:foodapp/models/resturant.dart';
@@ -178,7 +179,160 @@ class AdminPanelCubit extends Cubit<AdminPanelStates> {
     }
   }
 
-  // Add new restaurant
+  // Upload image to Firebase Storage with enhanced logging and crash prevention
+  Future<String> uploadImage(File imageFile, String folder) async {
+    emit(ImageUploadingState());
+    try {
+      print("=== STARTING IMAGE UPLOAD ===");
+      print("📁 File path: ${imageFile.path}");
+      print("📂 Target folder: $folder");
+
+      // Validate file exists and is accessible
+      if (!imageFile.existsSync()) {
+        throw Exception("File does not exist at path: ${imageFile.path}");
+      }
+
+      final fileSize = await imageFile.length();
+      print(
+          "📏 File size: $fileSize bytes (${(fileSize / 1024).toStringAsFixed(2)} KB)");
+
+      if (fileSize == 0) {
+        throw Exception("File is empty (0 bytes)");
+      }
+
+      if (fileSize > 10 * 1024 * 1024) {
+        // 10MB limit
+        throw Exception(
+            "File too large: ${(fileSize / 1024 / 1024).toStringAsFixed(2)} MB. Max: 10MB");
+      }
+
+      // Create unique filename with timestamp and random element
+      final String timestamp = DateTime.now().millisecondsSinceEpoch.toString();
+      final String fileName = '${folder}_$timestamp.jpg';
+      final String fullPath = '$folder/$fileName';
+
+      print("🚀 Uploading to: gs://your-bucket/$fullPath");
+
+      // Create Firebase Storage reference
+      final Reference ref = FirebaseStorage.instance.ref().child(fullPath);
+      print("📌 Storage reference created successfully");
+
+      // Upload with comprehensive metadata
+      final SettableMetadata metadata = SettableMetadata(
+        contentType: 'image/jpeg',
+        cacheControl: 'max-age=3600',
+        customMetadata: {
+          'uploaded_by': 'admin_panel',
+          'upload_time': DateTime.now().toIso8601String(),
+          'original_name': imageFile.path.split('/').last,
+          'folder': folder,
+        },
+      );
+
+      print("⬆️ Starting Firebase upload...");
+      final UploadTask uploadTask = ref.putFile(imageFile, metadata);
+
+      // Monitor upload progress with detailed logging
+      uploadTask.snapshotEvents.listen((TaskSnapshot snapshot) {
+        double progress = snapshot.bytesTransferred / snapshot.totalBytes;
+        print(
+            '📊 Upload progress: ${(progress * 100).toStringAsFixed(1)}% (${snapshot.bytesTransferred}/${snapshot.totalBytes} bytes)');
+
+        // Log state changes
+        switch (snapshot.state) {
+          case TaskState.running:
+            print("🔄 Upload state: RUNNING");
+            break;
+          case TaskState.paused:
+            print("⏸️ Upload state: PAUSED");
+            break;
+          case TaskState.success:
+            print("✅ Upload state: SUCCESS");
+            break;
+          case TaskState.canceled:
+            print("❌ Upload state: CANCELED");
+            break;
+          case TaskState.error:
+            print("🚨 Upload state: ERROR");
+            break;
+        }
+      });
+
+      // Wait for upload completion
+      final TaskSnapshot taskSnapshot = await uploadTask;
+      print("✅ Upload task completed successfully");
+      print("📊 Final uploaded bytes: ${taskSnapshot.totalBytes}");
+
+      // Get download URL
+      print("🔗 Requesting download URL...");
+      final String downloadUrl = await taskSnapshot.ref.getDownloadURL();
+      print("✅ Download URL obtained: $downloadUrl");
+
+      // Verify URL format
+      if (!downloadUrl.startsWith('https://')) {
+        throw Exception("Invalid download URL format: $downloadUrl");
+      }
+
+      emit(SuccessImageUploadingState(downloadUrl));
+      print("=== UPLOAD COMPLETED SUCCESSFULLY ===");
+      return downloadUrl;
+    } on FirebaseException catch (e) {
+      print("🚨 Firebase Storage Error:");
+      print("   Code: ${e.code}");
+      print("   Message: ${e.message}");
+      print("   Plugin: ${e.plugin}");
+
+      String userFriendlyMessage;
+      switch (e.code) {
+        case 'storage/unauthorized':
+          userFriendlyMessage =
+              "❌ STORAGE RULES ERROR: Upload not authorized. Please check Firebase Storage rules.";
+          print("🔧 SOLUTION: Update Firebase Storage rules to allow uploads");
+          break;
+        case 'storage/canceled':
+          userFriendlyMessage = "Upload was canceled";
+          break;
+        case 'storage/unknown':
+          userFriendlyMessage = "Unknown storage error occurred";
+          break;
+        case 'storage/object-not-found':
+          userFriendlyMessage = "File not found in storage";
+          break;
+        case 'storage/bucket-not-found':
+          userFriendlyMessage = "Storage bucket not found";
+          break;
+        case 'storage/project-not-found':
+          userFriendlyMessage = "Firebase project not found";
+          break;
+        case 'storage/quota-exceeded':
+          userFriendlyMessage = "Storage quota exceeded";
+          break;
+        case 'storage/unauthenticated':
+          userFriendlyMessage = "User not authenticated";
+          break;
+        case 'storage/retry-limit-exceeded':
+          userFriendlyMessage = "Upload retry limit exceeded";
+          break;
+        default:
+          userFriendlyMessage = "Firebase Storage Error: ${e.code}";
+      }
+
+      print("❌ User message: $userFriendlyMessage");
+      emit(ErrorImageUploadingState(userFriendlyMessage));
+      return '';
+    } catch (e) {
+      print("💥 General Upload Error:");
+      print("   Type: ${e.runtimeType}");
+      print("   Message: $e");
+      print("   Stack trace available for debugging");
+
+      String errorMessage = "Upload failed: $e";
+      emit(ErrorImageUploadingState(errorMessage));
+      return '';
+    }
+  }
+
+  // Add new restaurant with proper image handling and crash prevention
   Future<void> addRestaurant({
     required String name,
     required String nameAr,
@@ -191,48 +345,113 @@ class AdminPanelCubit extends Cubit<AdminPanelStates> {
   }) async {
     emit(AddingRestaurantState());
     try {
-      // Default image path from assets
-      String imageUrl = 'assets/images/restuarants/store.jpg';
+      print("=== ADDING RESTAURANT: $name ===");
 
-      // Only attempt to upload an image if one was provided
+      // Upload image first if provided
+      String imageUrl =
+          'assets/images/restuarants/store.jpg'; // Default fallback
+      bool imageUploadSuccess = false;
+
       if (imageFile != null) {
+        print("📸 Image file provided, attempting upload...");
         try {
-          String uploadedImageUrl = await uploadImage(imageFile, 'restaurants');
-          if (uploadedImageUrl.isNotEmpty) {
-            imageUrl = uploadedImageUrl; // Use uploaded image if successful
+          // Validate image file before upload
+          if (!imageFile.existsSync()) {
+            print("⚠️ Image file does not exist, using default image");
+          } else {
+            final fileSize = await imageFile.length();
+            print(
+                "📏 Image file size: ${(fileSize / 1024).toStringAsFixed(2)} KB");
+
+            if (fileSize > 0) {
+              print("🚀 Starting image upload to 'restaurants' folder...");
+              String uploadedImageUrl =
+                  await uploadImage(imageFile, 'restaurants');
+
+              if (uploadedImageUrl.isNotEmpty &&
+                  uploadedImageUrl.startsWith('https://')) {
+                imageUrl = uploadedImageUrl;
+                imageUploadSuccess = true;
+                print("✅ Restaurant image uploaded successfully!");
+                print("🔗 Image URL: $imageUrl");
+              } else {
+                print(
+                    "⚠️ Upload returned empty/invalid URL, using default image");
+              }
+            } else {
+              print("⚠️ Image file is empty, using default image");
+            }
           }
         } catch (e) {
-          print("Error uploading image: $e");
-          // Continue with default image URL
+          print("❌ Error uploading restaurant image: $e");
+          print(
+              "🔄 Continuing with default image to prevent restaurant creation failure");
+          // Don't throw here - continue with default image
         }
       } else {
-        print("Using default image from assets: $imageUrl");
+        print("📷 No image file provided, using default image");
       }
 
+      // Generate unique restaurant ID
       final String restaurantId = const Uuid().v4();
+      print("🆔 Creating restaurant with ID: $restaurantId");
 
-      print("Adding restaurant with image URL: $imageUrl");
-
-      await FirebaseFirestore.instance
-          .collection("restaurants")
-          .doc(restaurantId)
-          .set({
+      // Prepare restaurant data
+      final Map<String, dynamic> restaurantData = {
         'resname': name,
         'namear': nameAr,
         'category': category,
         'categoryar': categoryAr,
         'delivery fee': deliveryFee,
         'delivery time': deliveryTime,
-        'img': imageUrl,
+        'img':
+            imageUrl, // This is crucial - save the image URL (uploaded or default)
         'rating': 0.0,
         'ordersnumber': 0,
         'categories': categories,
-      });
+        'menuCategories': ['All', 'Uncategorized'], // Default menu categories
+        'menuCategoriesAr': [
+          'الكل',
+          'غير مصنف'
+        ], // Default Arabic menu categories
+        'createdAt': FieldValue.serverTimestamp(),
+      };
 
+      print("💾 Saving restaurant data to Firestore...");
+      print("📊 Restaurant data preview:");
+      print("   Name: $name");
+      print("   Category: $category");
+      print("   Image URL: $imageUrl");
+      print("   Upload Success: $imageUploadSuccess");
+
+      // Save restaurant data to Firestore
+      await FirebaseFirestore.instance
+          .collection("restaurants")
+          .doc(restaurantId)
+          .set(restaurantData);
+
+      print("✅ Restaurant data saved to Firestore successfully!");
+
+      // Refresh restaurants list
+      print("🔄 Refreshing restaurants list...");
       await getRestaurants();
+
+      print("=== RESTAURANT ADDED SUCCESSFULLY ===");
       emit(SuccessAddingRestaurantState());
     } catch (e) {
-      print("Error adding restaurant: $e");
+      print("💥 ERROR ADDING RESTAURANT:");
+      print("   Type: ${e.runtimeType}");
+      print("   Message: $e");
+
+      // Check if it's a Firestore error
+      if (e is FirebaseException) {
+        print("🔥 Firebase Error Details:");
+        print("   Code: ${e.code}");
+        print("   Message: ${e.message}");
+        print("   Plugin: ${e.plugin}");
+      }
+
+      print("=== RESTAURANT ADDITION FAILED ===");
       emit(ErrorAddingRestaurantState(e.toString()));
     }
   }
@@ -270,7 +489,7 @@ class AdminPanelCubit extends Cubit<AdminPanelStates> {
     }
   }
 
-  // Add item to restaurant
+  // Add item to restaurant with proper image handling
   Future<void> addItem({
     required String restaurantId,
     required String name,
@@ -284,12 +503,31 @@ class AdminPanelCubit extends Cubit<AdminPanelStates> {
   }) async {
     emit(AddingItemState());
     try {
-      String imageUrl = '';
+      print("Adding item: $name to restaurant: $restaurantId");
+
+      // Upload image first if provided
+      String imageUrl = 'assets/images/items/default.jpg'; // Default fallback
+
       if (imageFile != null) {
-        imageUrl = await uploadImage(imageFile, 'items');
+        print("Uploading item image...");
+        try {
+          String uploadedImageUrl = await uploadImage(imageFile, 'items');
+          if (uploadedImageUrl.isNotEmpty) {
+            imageUrl = uploadedImageUrl;
+            print("Item image uploaded successfully: $imageUrl");
+          } else {
+            print("Item image upload returned empty URL, using default");
+          }
+        } catch (e) {
+          print("Error uploading item image: $e");
+          // Continue with default image URL
+        }
+      } else {
+        print("No image file provided for item, using default image");
       }
 
       final String itemId = const Uuid().v4();
+      print("Creating item with ID: $itemId");
 
       // Create a categories array that includes the main category and "All"
       final List<String> itemCategories = ["All"];
@@ -299,6 +537,14 @@ class AdminPanelCubit extends Cubit<AdminPanelStates> {
         itemCategories.add(category);
       }
 
+      // Add any additional categories
+      for (String cat in categories) {
+        if (!itemCategories.contains(cat)) {
+          itemCategories.add(cat);
+        }
+      }
+
+      // Save item data with image URL
       await FirebaseFirestore.instance
           .collection("restaurants")
           .doc(restaurantId)
@@ -310,14 +556,18 @@ class AdminPanelCubit extends Cubit<AdminPanelStates> {
         'description': description,
         'descriptionar': descriptionAr,
         'price': price,
-        'img': imageUrl,
+        'img': imageUrl, // This is crucial - save the uploaded image URL
         'category': category,
         'categories': itemCategories,
+        'createdAt': FieldValue.serverTimestamp(),
       });
 
-      await getRestaurants();
+      print("Item data saved to Firestore with image URL: $imageUrl");
+
+      await getRestaurants(); // Refresh restaurants list
       emit(SuccessAddingItemState());
     } catch (e) {
+      print("Error adding item: $e");
       emit(ErrorAddingItemState(e.toString()));
     }
   }
@@ -441,32 +691,6 @@ class AdminPanelCubit extends Cubit<AdminPanelStates> {
     }
   }
 
-  // Upload image to Firebase Storage
-  Future<String> uploadImage(File imageFile, String folder) async {
-    emit(ImageUploadingState());
-    try {
-      // Ensure the file exists and is valid
-      if (!imageFile.existsSync()) {
-        throw Exception("File does not exist");
-      }
-
-      final String fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
-      final Reference ref =
-          FirebaseStorage.instance.ref().child('$folder/$fileName');
-
-      final UploadTask uploadTask = ref.putFile(imageFile);
-      final TaskSnapshot taskSnapshot = await uploadTask;
-
-      final String downloadUrl = await taskSnapshot.ref.getDownloadURL();
-      emit(SuccessImageUploadingState(downloadUrl));
-      return downloadUrl;
-    } catch (e) {
-      print("Error in uploadImage: $e");
-      emit(ErrorImageUploadingState(e.toString()));
-      return '';
-    }
-  }
-
   // Pick image from gallery
   Future<File?> pickImage() async {
     try {
@@ -488,7 +712,8 @@ class AdminPanelCubit extends Cubit<AdminPanelStates> {
   Future<void> addMenuCategory({
     required String restaurantId,
     required String categoryName,
-    String? categoryNameAr,
+    required String categoryNameAr,
+    required String img, // require image path or url
   }) async {
     emit(AddingMenuCategoryState());
     try {
@@ -508,67 +733,13 @@ class AdminPanelCubit extends Cubit<AdminPanelStates> {
             .collection("menu_categories")
             .add({
           'name': categoryName,
-          'namear': categoryNameAr ?? categoryName,
+          'nameAr': categoryNameAr,
+          'img': img,
           'createdAt': FieldValue.serverTimestamp(),
         });
 
         print(
             "Added menu category '$categoryName' to restaurant $restaurantId subcollection");
-
-        // For backward compatibility, also update the menuCategories array
-        // But first fetch current values
-        final restaurantDoc = await FirebaseFirestore.instance
-            .collection("restaurants")
-            .doc(restaurantId)
-            .get();
-
-        if (restaurantDoc.exists) {
-          // Update the menuCategories list in the main restaurant document (for backward compatibility)
-          final data = restaurantDoc.data();
-          List<String> menuCategories =
-              List<String>.from(data?['menuCategories'] ?? []);
-          List<String> menuCategoriesAr =
-              List<String>.from(data?['menuCategoriesAr'] ?? []);
-
-          // Add new category if it doesn't exist in the array
-          if (!menuCategories.contains(categoryName)) {
-            menuCategories.add(categoryName);
-
-            // Add Arabic category name, or use English one if not provided
-            if (categoryNameAr != null && categoryNameAr.isNotEmpty) {
-              // Make sure the Arabic categories list is in sync with the English one
-              if (menuCategoriesAr.length < menuCategories.length - 1) {
-                // Fill in any missing entries with English values
-                while (menuCategoriesAr.length < menuCategories.length - 1) {
-                  menuCategoriesAr.add(menuCategories[menuCategoriesAr.length]);
-                }
-              }
-              menuCategoriesAr.add(categoryNameAr);
-            } else if (menuCategoriesAr.isNotEmpty) {
-              // If no Arabic name provided but we have some Arabic categories already,
-              // add the English name to keep arrays in sync
-              menuCategoriesAr.add(categoryName);
-            }
-
-            // Update restaurant document
-            final updateData = {
-              'menuCategories': menuCategories,
-            };
-
-            // Only add Arabic categories if we have them
-            if (menuCategoriesAr.isNotEmpty) {
-              updateData['menuCategoriesAr'] = menuCategoriesAr;
-            }
-
-            await FirebaseFirestore.instance
-                .collection("restaurants")
-                .doc(restaurantId)
-                .update(updateData);
-
-            print(
-                "Also updated menuCategories array for backward compatibility");
-          }
-        }
       } else {
         print(
             "Menu category '$categoryName' already exists for restaurant $restaurantId");
@@ -580,6 +751,15 @@ class AdminPanelCubit extends Cubit<AdminPanelStates> {
       print("Error adding menu category: $e");
       emit(ErrorAddingMenuCategoryState(e.toString()));
     }
+  }
+
+  // Helper to get display name for a category map
+  String getDisplayCategoryName(
+      Map<String, dynamic> category, BuildContext context) {
+    bool isRtl = Directionality.of(context) == TextDirection.rtl;
+    return isRtl
+        ? (category['nameAr'] ?? category['name'])
+        : (category['name'] ?? category['nameAr']);
   }
 
   // Delete a menu category and update all affected items
@@ -799,6 +979,60 @@ class AdminPanelCubit extends Cubit<AdminPanelStates> {
     } catch (e) {
       print('Error deleting promocode: $e');
       emit(ErrorDeletingPromocodeState(e.toString()));
+    }
+  }
+
+  // Add restaurant category with image upload
+  Future<void> addRestaurantCategory({
+    required String englishName,
+    required String arabicName,
+    File? imageFile,
+  }) async {
+    emit(AddingCategoryState());
+    try {
+      print("Adding restaurant category: $englishName");
+
+      // Upload image first if provided
+      String imageUrl = 'assets/images/categories/all.png'; // Default fallback
+
+      if (imageFile != null) {
+        print("Uploading restaurant category image...");
+        try {
+          String uploadedImageUrl =
+              await uploadImage(imageFile, 'restaurant_categories');
+          if (uploadedImageUrl.isNotEmpty) {
+            imageUrl = uploadedImageUrl;
+            print("Restaurant category image uploaded successfully: $imageUrl");
+          } else {
+            print(
+                "Restaurant category image upload returned empty URL, using default");
+          }
+        } catch (e) {
+          print("Error uploading restaurant category image: $e");
+          // Continue with default image URL
+        }
+      } else {
+        print(
+            "No image file provided for restaurant category, using default image");
+      }
+
+      // Save restaurant category data with image URL
+      await FirebaseFirestore.instance
+          .collection('restaurants_categories')
+          .add({
+        'en': englishName,
+        'ar': arabicName,
+        'img': imageUrl, // This is crucial - save the uploaded image URL
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      print(
+          "Restaurant category data saved to Firestore with image URL: $imageUrl");
+
+      emit(SuccessAddingCategoryState());
+    } catch (e) {
+      print("Error adding restaurant category: $e");
+      emit(ErrorAddingCategoryState(e.toString()));
     }
   }
 }

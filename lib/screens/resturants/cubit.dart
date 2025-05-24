@@ -282,7 +282,6 @@ class Restuarantscubit extends Cubit<ResturantsStates> {
 
   // Reset restaurant data and state
   void resetRestaurants() {
-    print("Resetting restaurant data and state...");
     _allRestuarants.clear();
     _filteredRestaurants = null;
     _isInitialized = false;

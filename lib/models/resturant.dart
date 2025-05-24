@@ -34,15 +34,6 @@ class Restuarants {
     this.menuCategories,
     this.menuCategoriesAr,
   }) {
-    // Validate required fields
-    if (name.isEmpty) throw ArgumentError('Restaurant name cannot be empty');
-    if (nameAr.isEmpty)
-      throw ArgumentError('Arabic restaurant name cannot be empty');
-    if (category.isEmpty) throw ArgumentError('Category cannot be empty');
-    if (categoryAr.isEmpty)
-      throw ArgumentError('Arabic category cannot be empty');
-    if (id.isEmpty) throw ArgumentError('Restaurant ID cannot be empty');
-
     // Ensure categories is not null
     categories = categories.isEmpty ? ['Uncategorized'] : categories;
   }
@@ -220,5 +211,25 @@ class Restuarants {
   @override
   String toString() {
     return 'Restaurant: $name ($nameAr), ID: $id, Category: $category';
+  }
+
+  // Static empty restaurant for null-safety fallback
+  static Restuarants empty() {
+    return Restuarants(
+      name: '',
+      nameAr: '',
+      menuItems: [],
+      img: '',
+      rating: 0.0,
+      category: '',
+      categoryAr: '',
+      deliveryFee: '0',
+      ordersnum: 0,
+      deliveryTime: '',
+      id: '',
+      categories: [],
+      menuCategories: [],
+      menuCategoriesAr: [],
+    );
   }
 }

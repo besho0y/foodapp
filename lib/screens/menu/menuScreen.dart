@@ -37,10 +37,9 @@ class Menuscreen extends StatefulWidget {
 
 class _MenuscreenState extends State<Menuscreen> {
   // Data structures for menu categories
-  late List<String> restaurantCategories = ["All"];
-  late List<String> restaurantCategoriesAr = ["الكل"];
-  Map<String, String> categoryToArabic = {"All": "الكل"};
-  Map<String, String> arabicToCategory = {"الكل": "All"};
+  late List<Map<String, String>> menuCategories = [
+    {"name": "All", "nameAr": "الكل"}
+  ];
   String selectedCategory = "All";
   bool isLoadingCategories = true;
   bool isRtl = false;
@@ -66,15 +65,17 @@ class _MenuscreenState extends State<Menuscreen> {
 
   // Helper method to get localized category name
   String getLocalizedCategoryName(int index) {
-    return isRtl ? restaurantCategoriesAr[index] : restaurantCategories[index];
+    final cat = menuCategories[index];
+    return isRtl
+        ? (cat["nameAr"] ?? cat["name"] ?? "")
+        : (cat["name"] ?? cat["nameAr"] ?? "");
   }
 
   Future<void> _fetchMenuCategories() async {
     // Start with "All" category
-    List<String> categoriesList = ["All"];
-    List<String> categoriesListAr = ["الكل"];
-    Map<String, String> catToAr = {"All": "الكل"};
-    Map<String, String> arToCat = {"الكل": "All"};
+    List<Map<String, String>> categoriesList = [
+      {"name": "All", "nameAr": "الكل"}
+    ];
     Set<String> processedCategories = {"All"};
 
     try {
@@ -106,20 +107,10 @@ class _MenuscreenState extends State<Menuscreen> {
                   .toString()
                   .toLowerCase()
                   .contains("uncategorized")) {
-            categoriesList.add(categoryName.toString());
-
-            // Handle Arabic name if available
-            if (categoryNameAr != null && categoryNameAr.isNotEmpty) {
-              categoriesListAr.add(categoryNameAr);
-              catToAr[categoryName] = categoryNameAr;
-              arToCat[categoryNameAr] = categoryName;
-            } else {
-              // Fall back to English name if no Arabic name
-              categoriesListAr.add(categoryName);
-              catToAr[categoryName] = categoryName;
-              arToCat[categoryName] = categoryName;
-            }
-
+            categoriesList.add({
+              "name": categoryName,
+              "nameAr": categoryNameAr ?? categoryName
+            });
             processedCategories.add(categoryName.toString());
             print(
                 "Added category from subcollection: $categoryName / ${categoryNameAr ?? categoryName}");
@@ -161,10 +152,8 @@ class _MenuscreenState extends State<Menuscreen> {
                         .toString()
                         .toLowerCase()
                         .contains("uncategorized")) {
-                  categoriesList.add(category.toString());
-                  categoriesListAr.add(categoryAr);
-                  catToAr[category.toString()] = categoryAr;
-                  arToCat[categoryAr] = category.toString();
+                  categoriesList
+                      .add({"name": category.toString(), "nameAr": categoryAr});
                   processedCategories.add(category.toString());
                   print(
                       "Added category from menuCategories array: $category / $categoryAr");
@@ -191,10 +180,7 @@ class _MenuscreenState extends State<Menuscreen> {
                 if (category.isNotEmpty &&
                     !processedCategories.contains(category) &&
                     !category.toLowerCase().contains("uncategorized")) {
-                  categoriesList.add(category);
-                  categoriesListAr.add(category); // No Ar version available
-                  catToAr[category] = category;
-                  arToCat[category] = category;
+                  categoriesList.add({"name": category, "nameAr": category});
                   processedCategories.add(category);
                   print("Added category from multiple: $category");
                 }
@@ -205,10 +191,8 @@ class _MenuscreenState extends State<Menuscreen> {
                 item.category != "All" &&
                 !item.category.toLowerCase().contains("uncategorized") &&
                 !processedCategories.contains(item.category)) {
-              categoriesList.add(item.category);
-              categoriesListAr.add(item.category); // No Ar version available
-              catToAr[item.category] = item.category;
-              arToCat[item.category] = item.category;
+              categoriesList
+                  .add({"name": item.category, "nameAr": item.category});
               processedCategories.add(item.category);
               print("Added category from single: ${item.category}");
             }
@@ -246,10 +230,7 @@ class _MenuscreenState extends State<Menuscreen> {
                 category != "All" &&
                 !category.toLowerCase().contains("uncategorized") &&
                 !processedCategories.contains(category)) {
-              categoriesList.add(category);
-              categoriesListAr.add(categoryAr);
-              catToAr[category] = categoryAr;
-              arToCat[categoryAr] = category;
+              categoriesList.add({"name": category, "nameAr": categoryAr});
               processedCategories.add(category);
               print(
                   "Added restaurant-level menu category: $category / $categoryAr");
@@ -261,13 +242,9 @@ class _MenuscreenState extends State<Menuscreen> {
       }
 
       print("Final categories list: $categoriesList");
-      print("Final categories list Arabic: $categoriesListAr");
 
       setState(() {
-        restaurantCategories = categoriesList;
-        restaurantCategoriesAr = categoriesListAr;
-        categoryToArabic = catToAr;
-        arabicToCategory = arToCat;
+        menuCategories = categoriesList;
         isLoadingCategories = false;
         isRtl = Directionality.of(context) == TextDirection.rtl;
         // Set the initial selected category to "All" or "الكل" based on language
@@ -277,38 +254,28 @@ class _MenuscreenState extends State<Menuscreen> {
       print("Error fetching menu categories: $e");
 
       // Fallback to directly extracting from items if all else fails
-      List<String> fallbackList = ["All"];
-      List<String> fallbackListAr = ["الكل"];
-      Map<String, String> fallbackCatToAr = {"All": "الكل"};
-      Map<String, String> fallbackArToCat = {"الكل": "All"};
+      List<Map<String, String>> fallbackList = [
+        {"name": "All", "nameAr": "الكل"}
+      ];
       Set<String> processedFallback = {"All"};
 
       for (var item in widget.items) {
         if (item.categories.isNotEmpty) {
           for (var category in item.categories) {
             if (category.isNotEmpty && !processedFallback.contains(category)) {
-              fallbackList.add(category);
-              fallbackListAr.add(category);
-              fallbackCatToAr[category] = category;
-              fallbackArToCat[category] = category;
+              fallbackList.add({"name": category, "nameAr": category});
               processedFallback.add(category);
             }
           }
         } else if (item.category.isNotEmpty &&
             !processedFallback.contains(item.category)) {
-          fallbackList.add(item.category);
-          fallbackListAr.add(item.category);
-          fallbackCatToAr[item.category] = item.category;
-          fallbackArToCat[item.category] = item.category;
+          fallbackList.add({"name": item.category, "nameAr": item.category});
           processedFallback.add(item.category);
         }
       }
 
       setState(() {
-        restaurantCategories = fallbackList;
-        restaurantCategoriesAr = fallbackListAr;
-        categoryToArabic = fallbackCatToAr;
-        arabicToCategory = fallbackArToCat;
+        menuCategories = fallbackList;
         isLoadingCategories = false;
         isRtl = Directionality.of(context) == TextDirection.rtl;
         // Set the initial selected category to "All" or "الكل" based on language
@@ -323,15 +290,20 @@ class _MenuscreenState extends State<Menuscreen> {
       return widget.items; // Show all items
     }
 
-    final String englishCategory = isRtl
-        ? arabicToCategory[selectedCategory] ?? selectedCategory
-        : selectedCategory;
+    // Find both English and Arabic names for the selected category
+    final categoryMap = menuCategories.firstWhere(
+      (cat) =>
+          cat["name"] == selectedCategory || cat["nameAr"] == selectedCategory,
+      orElse: () => {"name": selectedCategory, "nameAr": selectedCategory},
+    );
+    final String englishCategory = categoryMap["name"] ?? selectedCategory;
+    final String arabicCategory = categoryMap["nameAr"] ?? selectedCategory;
 
     // For debugging
-    print("Filtering by category: $englishCategory");
+    print("Filtering by category: $englishCategory / $arabicCategory");
     print("Total items before filtering: ${widget.items.length}");
 
-    // Only show items that match the selected category
+    // Only show items that match the selected category (in either language)
     final filtered = widget.items.where((item) {
       // For debugging
       print(
@@ -339,29 +311,33 @@ class _MenuscreenState extends State<Menuscreen> {
 
       // Check multiple categories array first (case insensitive)
       if (item.categories.isNotEmpty) {
-        final matchInArray = item.categories.any(
-          (cat) =>
-              cat.toLowerCase().trim() == englishCategory.toLowerCase().trim(),
-        );
+        final matchInArray = item.categories.any((cat) {
+          final c = cat.toLowerCase().trim();
+          return c == englishCategory.toLowerCase().trim() ||
+              c == arabicCategory.toLowerCase().trim();
+        });
         if (matchInArray) {
           print(
-              "Item ${item.name} matches category '$englishCategory' in array");
+              "Item ${item.name} matches category '$englishCategory' or '$arabicCategory' in array");
           return true;
         }
       }
 
       // Check single category field (for backward compatibility) (case insensitive)
-      final matchInField = item.category.toLowerCase().trim() ==
-          englishCategory.toLowerCase().trim();
+      final c = item.category.toLowerCase().trim();
+      final matchInField = c == englishCategory.toLowerCase().trim() ||
+          c == arabicCategory.toLowerCase().trim();
       if (matchInField) {
-        print("Item ${item.name} matches category '$englishCategory' in field");
+        print(
+            "Item ${item.name} matches category '$englishCategory' or '$arabicCategory' in field");
         return true;
       }
 
       return false;
     }).toList();
 
-    print("Found ${filtered.length} items for category: $englishCategory");
+    print(
+        "Found ${filtered.length} items for category: $englishCategory / $arabicCategory");
     return filtered;
   }
 
@@ -544,9 +520,7 @@ class _MenuscreenState extends State<Menuscreen> {
                       : ListView.builder(
                           scrollDirection: Axis.horizontal,
                           padding: EdgeInsets.symmetric(horizontal: 10.w),
-                          itemCount: isRtl
-                              ? restaurantCategoriesAr.length
-                              : restaurantCategories.length,
+                          itemCount: menuCategories.length,
                           itemBuilder: (context, index) {
                             final category = getLocalizedCategoryName(index);
                             final isSelected = category == selectedCategory;
