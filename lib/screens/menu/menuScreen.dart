@@ -90,7 +90,11 @@ class _MenuscreenState extends State<Menuscreen> {
     List<Map<String, String>> categoriesList = [
       {"name": "All", "nameAr": "الكل"}
     ];
-    Set<String> processedCategories = {"All", "الكل"};
+    Set<String> processedCategories = {
+      "all",
+      "الكل",
+      "كل"
+    }; // Use lowercase for consistent checking
 
     try {
       if (!mounted) return; // Early return if widget is disposed
@@ -118,6 +122,8 @@ class _MenuscreenState extends State<Menuscreen> {
 
           if (categoryName != null &&
               categoryName.isNotEmpty &&
+              categoryName.toLowerCase() !=
+                  "all" && // Explicitly exclude "All" in any case
               !processedCategories.contains(categoryName.toLowerCase()) &&
               !categoryName.toLowerCase().contains("uncategorized")) {
             final arabicName = categoryNameAr ?? categoryName;
@@ -159,6 +165,8 @@ class _MenuscreenState extends State<Menuscreen> {
 
                 if (category != null &&
                     category.toString().isNotEmpty &&
+                    category.toString().toLowerCase() !=
+                        "all" && // Explicitly exclude "All" in any case
                     !processedCategories
                         .contains(category.toString().toLowerCase()) &&
                     !category
@@ -192,6 +200,8 @@ class _MenuscreenState extends State<Menuscreen> {
             if (item.categories.isNotEmpty) {
               for (var category in item.categories) {
                 if (category.isNotEmpty &&
+                    category.toLowerCase() !=
+                        "all" && // Explicitly exclude "All" in any case
                     !processedCategories.contains(category.toLowerCase()) &&
                     !category.toLowerCase().contains("uncategorized")) {
                   categoriesList.add({"name": category, "nameAr": category});
@@ -202,7 +212,8 @@ class _MenuscreenState extends State<Menuscreen> {
             }
             // Handle single category
             else if (item.category.isNotEmpty &&
-                item.category != "All" &&
+                item.category.toLowerCase() !=
+                    "all" && // Explicitly exclude "All" in any case
                 !item.category.toLowerCase().contains("uncategorized") &&
                 !processedCategories.contains(item.category.toLowerCase())) {
               categoriesList
@@ -240,7 +251,8 @@ class _MenuscreenState extends State<Menuscreen> {
             }
 
             if (category.isNotEmpty &&
-                category != "All" &&
+                category.toLowerCase() !=
+                    "all" && // Explicitly exclude "All" in any case
                 !category.toLowerCase().contains("uncategorized") &&
                 !processedCategories.contains(category.toLowerCase())) {
               categoriesList.add({"name": category, "nameAr": categoryAr});
@@ -273,18 +285,26 @@ class _MenuscreenState extends State<Menuscreen> {
       List<Map<String, String>> fallbackList = [
         {"name": "All", "nameAr": "الكل"}
       ];
-      Set<String> processedFallback = {"All", "الكل"};
+      Set<String> processedFallback = {
+        "all",
+        "الكل",
+        "كل"
+      }; // Use lowercase for consistent checking
 
       for (var item in widget.items) {
         if (item.categories.isNotEmpty) {
           for (var category in item.categories) {
             if (category.isNotEmpty &&
+                category.toLowerCase() !=
+                    "all" && // Explicitly exclude "All" in any case
                 !processedFallback.contains(category.toLowerCase())) {
               fallbackList.add({"name": category, "nameAr": category});
               processedFallback.add(category.toLowerCase());
             }
           }
         } else if (item.category.isNotEmpty &&
+            item.category.toLowerCase() !=
+                "all" && // Explicitly exclude "All" in any case
             !processedFallback.contains(item.category.toLowerCase())) {
           fallbackList.add({"name": item.category, "nameAr": item.category});
           processedFallback.add(item.category.toLowerCase());

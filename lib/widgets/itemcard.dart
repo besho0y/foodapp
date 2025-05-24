@@ -79,7 +79,7 @@ Widget itemcard(context, bool fromFavourites, Item model, dynamic items) {
                       Expanded(
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment:  CrossAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             if (restaurant != null) ...[
                               Text(

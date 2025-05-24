@@ -2064,18 +2064,8 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
     final TextEditingController codeController = TextEditingController();
     final TextEditingController discountController = TextEditingController();
 
-    // Fetch promocodes if not already loaded
-    if (cubit.promocodes.isEmpty) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          try {
-            cubit.fetchPromocodes();
-          } catch (e) {
-            print('Error fetching promocodes: $e');
-          }
-        }
-      });
-    }
+    // Remove the automatic fetch that causes refresh loop
+    // Only fetch when explicitly requested via refresh button
 
     return SingleChildScrollView(
       padding: EdgeInsets.all(16.r),
