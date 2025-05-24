@@ -119,10 +119,7 @@ class _ResturantscreenState extends State<Resturantscreen> {
                                         : Colors.orange.shade100,
                                     shape: BoxShape.circle,
                                   ),
-                                  child: Image.asset(
-                                    category.img,
-                                    fit: BoxFit.contain,
-                                  ),
+                                  child: _buildCategoryImage(category.img),
                                 ),
                                 SizedBox(height: 6.h),
                                 Text(
@@ -173,5 +170,136 @@ class _ResturantscreenState extends State<Resturantscreen> {
         );
       },
     );
+  }
+
+  Widget _buildCategoryImage(String imageUrl) {
+    try {
+      print("Building category image for URL: $imageUrl");
+
+      if (imageUrl.isEmpty) {
+        // Empty URL - use default icon
+        return Icon(
+          Icons.category,
+          size: 30.sp,
+          color: Colors.orange,
+        );
+      }
+
+      if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+        // Network image from Firebase Storage
+        return ClipOval(
+          child: Image.network(
+            imageUrl,
+            fit: BoxFit.cover,
+            width: 48.w,
+            height: 48.h,
+            loadingBuilder: (context, child, loadingProgress) {
+              if (loadingProgress == null) return child;
+              return Center(
+                child: CircularProgressIndicator(
+                  value: loadingProgress.expectedTotalBytes != null
+                      ? loadingProgress.cumulativeBytesLoaded /
+                          loadingProgress.expectedTotalBytes!
+                      : null,
+                  strokeWidth: 2,
+                  valueColor:
+                      const AlwaysStoppedAnimation<Color>(Colors.orange),
+                ),
+              );
+            },
+            errorBuilder: (context, error, stackTrace) {
+              print("Error loading network category image '$imageUrl': $error");
+              // Fallback to asset image or icon
+              return _getFallbackCategoryImage(imageUrl);
+            },
+          ),
+        );
+      } else if (imageUrl.startsWith('assets/')) {
+        // Asset image
+        return ClipOval(
+          child: Image.asset(
+            imageUrl,
+            fit: BoxFit.cover,
+            width: 48.w,
+            height: 48.h,
+            errorBuilder: (context, error, stackTrace) {
+              print("Error loading asset category image '$imageUrl': $error");
+              // Fallback to default icon
+              return Icon(
+                Icons.category,
+                size: 30.sp,
+                color: Colors.orange,
+              );
+            },
+          ),
+        );
+      } else {
+        // Unknown format - try as asset first, then fallback
+        return ClipOval(
+          child: Image.asset(
+            imageUrl.startsWith('assets/')
+                ? imageUrl
+                : 'assets/images/categories/$imageUrl',
+            fit: BoxFit.cover,
+            width: 48.w,
+            height: 48.h,
+            errorBuilder: (context, error, stackTrace) {
+              print("Error loading category image '$imageUrl': $error");
+              return _getFallbackCategoryImage(imageUrl);
+            },
+          ),
+        );
+      }
+    } catch (e) {
+      print("Exception in _buildCategoryImage for '$imageUrl': $e");
+      return _getFallbackCategoryImage(imageUrl);
+    }
+  }
+
+  Widget _getFallbackCategoryImage(String originalUrl) {
+    // Try to determine appropriate fallback based on the original URL or use generic icon
+    try {
+      // Extract category name from URL to find appropriate asset
+      final String categoryName = _extractCategoryNameFromUrl(originalUrl);
+      final String assetPath = 'assets/images/categories/$categoryName.png';
+
+      return ClipOval(
+        child: Image.asset(
+          assetPath,
+          fit: BoxFit.cover,
+          width: 48.w,
+          height: 48.h,
+          errorBuilder: (context, error, stackTrace) {
+            // Final fallback - generic category icon
+            return Icon(
+              Icons.restaurant_menu,
+              size: 30.sp,
+              color: Colors.orange,
+            );
+          },
+        ),
+      );
+    } catch (e) {
+      // Ultimate fallback
+      return Icon(
+        Icons.category,
+        size: 30.sp,
+        color: Colors.orange,
+      );
+    }
+  }
+
+  String _extractCategoryNameFromUrl(String url) {
+    try {
+      if (url.contains('/')) {
+        final parts = url.split('/');
+        final fileName = parts.last;
+        // Remove file extension
+        return fileName.split('.').first.toLowerCase();
+      }
+      return url.toLowerCase();
+    } catch (e) {
+      return 'default';
+    }
   }
 }

@@ -34,6 +34,7 @@ class _ReviewsscreenState extends State<Reviewsscreen> {
   }
 
   Future<void> _fetchReviews() async {
+    if (!mounted) return;
     setState(() {
       _isLoading = true;
     });
@@ -62,12 +63,14 @@ class _ReviewsscreenState extends State<Reviewsscreen> {
         _averageRating = 0.0;
       }
 
+      if (!mounted) return;
       setState(() {
         _reviews = reviews;
         _isLoading = false;
       });
     } catch (e) {
       print("Error fetching reviews: $e");
+      if (!mounted) return;
       setState(() {
         _isLoading = false;
       });
@@ -82,6 +85,7 @@ class _ReviewsscreenState extends State<Reviewsscreen> {
       return;
     }
 
+    if (!mounted) return;
     setState(() {
       _isLoading = true;
     });
@@ -109,6 +113,7 @@ class _ReviewsscreenState extends State<Reviewsscreen> {
 
       // Clear input
       _reviewController.clear();
+      if (!mounted) return;
       setState(() {
         _rating = 3.0;
       });
@@ -119,15 +124,18 @@ class _ReviewsscreenState extends State<Reviewsscreen> {
       // Update the restaurant's average rating
       await _updateRestaurantRating();
 
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Review submitted successfully')),
       );
     } catch (e) {
       print("Error submitting review: $e");
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Failed to submit review')),
       );
     } finally {
+      if (!mounted) return;
       setState(() {
         _isLoading = false;
       });
@@ -170,7 +178,7 @@ class _ReviewsscreenState extends State<Reviewsscreen> {
         return GestureDetector(
           onTap: interactive
               ? () {
-                  if (interactive) {
+                  if (interactive && mounted) {
                     setState(() {
                       _rating = index + 1.0;
                     });

@@ -73,6 +73,9 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
   File? _categoryImageFile;
   Category? _selectedRestaurantCategory;
 
+  // Add flag to prevent multiple refresh operations
+  bool _isRefreshing = false;
+
   @override
   void initState() {
     super.initState();
@@ -305,41 +308,6 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
   List<Widget> _buildAppBarActions() {
     try {
       return [
-        // Debug test button for image upload
-        IconButton(
-          onPressed: () async {
-            // Show debug options dialog
-            final String? selectedTest = await showDialog<String>(
-              context: context,
-              builder: (dialogContext) => AlertDialog(
-                title: const Text("🐛 Debug Tests"),
-                content: const Text("Select which test to run:"),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(dialogContext, 'general'),
-                    child: const Text('General Upload'),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.pop(dialogContext, 'category'),
-                    child: const Text('Restaurant Category'),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.pop(dialogContext, null),
-                    child: const Text('Cancel'),
-                  ),
-                ],
-              ),
-            );
-
-            if (selectedTest == 'general') {
-              _testImageUpload();
-            } else if (selectedTest == 'category') {
-              _testRestaurantCategoryUpload();
-            }
-          },
-          icon: Icon(Icons.bug_report, size: 25.sp),
-          tooltip: 'Debug Tests',
-        ),
         IconButton(
           onPressed: () {
             try {
@@ -1199,6 +1167,9 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
             .toList();
       }
 
+      // Items are already ordered by creation date (newest first) from the cubit
+      // No additional sorting needed since the cubit now fetches items in descending order by createdAt
+
       if (displayedItems.isEmpty) {
         return const Center(
           child: Text("No items found in category"),
@@ -1337,7 +1308,8 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                     .collection("restaurants")
                     .doc(selectedRestaurantId)
                     .collection("menu_categories")
-                    .orderBy("createdAt", descending: false)
+                    .orderBy("createdAt",
+                        descending: true) // Order by newest first
                     .get(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
@@ -2046,9 +2018,12 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
 
   // Method to refresh the entire admin panel
   Future<void> _refreshAdminPanel() async {
-    if (!mounted) return;
+    if (!mounted || _isRefreshing) return;
 
+    _isRefreshing = true;
     try {
+      print("Starting admin panel refresh...");
+
       // Refresh restaurants data
       final adminCubit = AdminPanelCubit.get(context);
       await adminCubit.getRestaurants();
@@ -2460,17 +2435,93 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
 
   // Helper method to build category leading widget safely
   Widget _buildCategoryLeading(String? imageUrl) {
-    return CircleAvatar(
-      backgroundColor: Colors.grey.shade200,
-      backgroundImage: _getImageProvider(imageUrl),
-      onBackgroundImageError: (exception, stackTrace) {
-        print("Error loading category image '$imageUrl': $exception");
-        // The CircleAvatar will automatically fall back to backgroundColor
-      },
-      child: imageUrl == null || imageUrl.isEmpty
-          ? const Icon(Icons.category, color: Colors.blue)
-          : null,
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.grey.shade200,
+      ),
+      child: ClipOval(
+        child: _buildCategoryImageWidget(imageUrl),
+      ),
     );
+  }
+
+  Widget _buildCategoryImageWidget(String? imageUrl) {
+    try {
+      if (imageUrl == null || imageUrl.isEmpty) {
+        return const Icon(
+          Icons.category,
+          color: Colors.blue,
+          size: 24,
+        );
+      }
+
+      if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+        // Network image from Firebase Storage
+        return Image.network(
+          imageUrl,
+          fit: BoxFit.cover,
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) return child;
+            return Center(
+              child: CircularProgressIndicator(
+                value: loadingProgress.expectedTotalBytes != null
+                    ? loadingProgress.cumulativeBytesLoaded /
+                        loadingProgress.expectedTotalBytes!
+                    : null,
+                strokeWidth: 2,
+                valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
+              ),
+            );
+          },
+          errorBuilder: (context, error, stackTrace) {
+            print("Error loading network category image '$imageUrl': $error");
+            return const Icon(
+              Icons.category,
+              color: Colors.red,
+              size: 24,
+            );
+          },
+        );
+      } else if (imageUrl.startsWith('assets/')) {
+        // Asset image
+        return Image.asset(
+          imageUrl,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            print("Error loading asset category image '$imageUrl': $error");
+            return const Icon(
+              Icons.category,
+              color: Colors.orange,
+              size: 24,
+            );
+          },
+        );
+      } else {
+        // Try as asset path
+        return Image.asset(
+          'assets/images/categories/${imageUrl.toLowerCase()}.png',
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            print("Error loading category image '$imageUrl': $error");
+            return const Icon(
+              Icons.category,
+              color: Colors.grey,
+              size: 24,
+            );
+          },
+        );
+      }
+    } catch (e) {
+      print("Exception in _buildCategoryImageWidget for '$imageUrl': $e");
+      return const Icon(
+        Icons.error,
+        color: Colors.red,
+        size: 24,
+      );
+    }
   }
 
   void _submitRestaurantForm(AdminPanelCubit cubit) async {
@@ -2749,10 +2800,6 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
 
   // This is for the multiple categories selection in the admin panel
   Widget _buildCategorySelectionUI(List<String> availableMenuCategories) {
-    // Remove "All" from selection options - it's a special filter category
-    var selectableCategories =
-        availableMenuCategories.where((c) => c != "All").toSet().toList();
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

@@ -57,8 +57,14 @@ class Restuarantscubit extends Cubit<ResturantsStates> {
   Future<void> _fetchRestaurants() async {
     print("Starting to fetch restaurants...");
     try {
-      final restaurantSnapshots =
-          await FirebaseFirestore.instance.collection("restaurants").get();
+      // Clear existing restaurants to prevent duplicates
+      _allRestuarants.clear();
+
+      // Get restaurants ordered by creation date (newest first)
+      final restaurantSnapshots = await FirebaseFirestore.instance
+          .collection("restaurants")
+          .orderBy('createdAt', descending: true) // Order by newest first
+          .get();
       print("Found ${restaurantSnapshots.docs.length} restaurants");
 
       if (restaurantSnapshots.docs.isEmpty) {
@@ -73,11 +79,12 @@ class Restuarantscubit extends Cubit<ResturantsStates> {
           print(
               "Processing restaurant: ${data['resname'] ?? 'Unnamed'} (ID: $restaurantId)");
 
-          // Get items subcollection
+          // Get items subcollection ordered by creation date (newest first)
           final itemsSnapshot = await FirebaseFirestore.instance
               .collection("restaurants")
               .doc(restaurantId)
               .collection("items")
+              .orderBy('createdAt', descending: true) // Order by newest first
               .get();
 
           print(
@@ -118,6 +125,9 @@ class Restuarantscubit extends Cubit<ResturantsStates> {
                 : ['fast food'],
             menuCategories: data['menuCategories'] is List
                 ? List<String>.from(data['menuCategories'])
+                : null,
+            menuCategoriesAr: data['menuCategoriesAr'] is List
+                ? List<String>.from(data['menuCategoriesAr'])
                 : null,
           );
 
@@ -404,6 +414,7 @@ class Restuarantscubit extends Cubit<ResturantsStates> {
           ordersnum: restaurant.ordersnum,
           categories: restaurant.categories,
           menuCategories: restaurant.menuCategories,
+          menuCategoriesAr: restaurant.menuCategoriesAr,
         );
         emit(RestuarantsGetDataSuccessState());
       }

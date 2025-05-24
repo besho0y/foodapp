@@ -21,8 +21,11 @@ class AdminPanelCubit extends Cubit<AdminPanelStates> {
   Future<void> getRestaurants() async {
     emit(LoadingRestaurantsState());
     try {
-      final QuerySnapshot restaurantsSnapshot =
-          await FirebaseFirestore.instance.collection("restaurants").get();
+      // Fetch restaurants ordered by creation date (newest first)
+      final QuerySnapshot restaurantsSnapshot = await FirebaseFirestore.instance
+          .collection("restaurants")
+          .orderBy('createdAt', descending: true) // Order by newest first
+          .get();
 
       restaurants = [];
       print(
@@ -59,6 +62,7 @@ class AdminPanelCubit extends Cubit<AdminPanelStates> {
                 .collection("restaurants")
                 .doc(doc.id)
                 .collection("items")
+                .orderBy('createdAt', descending: true) // Order by newest first
                 .get();
 
             print(
@@ -90,8 +94,7 @@ class AdminPanelCubit extends Cubit<AdminPanelStates> {
                 .collection("restaurants")
                 .doc(doc.id)
                 .collection("menu_categories")
-                .orderBy("createdAt",
-                    descending: false) // Order by creation date
+                .orderBy("createdAt", descending: true) // Order by newest first
                 .get();
 
             print(

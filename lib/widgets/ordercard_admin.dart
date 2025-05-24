@@ -43,6 +43,7 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
   Future<void> _fetchUserPhoneNumber() async {
     final model = widget.model;
     if (model.userId != null && model.userId.toString().isNotEmpty) {
+      if (!mounted) return;
       setState(() {
         isLoadingPhone = true;
       });
@@ -405,6 +406,7 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
                             onChanged: (String? newValue) {
                               if (newValue != null &&
                                   newValue != currentStatus) {
+                                if (!mounted) return;
                                 setState(() {
                                   currentStatus = newValue;
                                 });
@@ -470,6 +472,7 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
                       // Header with expand button
                       InkWell(
                         onTap: () {
+                          if (!mounted) return;
                           setState(() {
                             isExpanded = !isExpanded;
                           });

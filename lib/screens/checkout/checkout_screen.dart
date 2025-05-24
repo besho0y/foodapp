@@ -53,9 +53,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       final defaultAddress = profileCubit.user.addresses.firstWhere(
           (address) => address.isDefault,
           orElse: () => profileCubit.user.addresses.first);
-      setState(() {
-        selectedAddress = defaultAddress;
-      });
+      if (mounted) {
+        setState(() {
+          selectedAddress = defaultAddress;
+        });
+      }
     }
   }
 
@@ -70,9 +72,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       return;
     }
 
-    setState(() {
-      _isPromoLoading = true;
-    });
+    if (mounted) {
+      setState(() {
+        _isPromoLoading = true;
+      });
+    }
 
     try {
       // Check if the code exists in Firestore
@@ -85,34 +89,42 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       final profileCubit = ProfileCubit.get(context);
       final bool hasUsedPromo = profileCubit.hasUsedPromocode(code);
 
+      if (!mounted) return; // Early return if widget is disposed
+
       if (!promoDoc.exists) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Invalid promocode')),
         );
-        setState(() {
-          _isPromoLoading = false;
-          _appliedPromocode = null;
-          _promoDiscount = 0.0;
-        });
+        if (mounted) {
+          setState(() {
+            _isPromoLoading = false;
+            _appliedPromocode = null;
+            _promoDiscount = 0.0;
+          });
+        }
       } else if (hasUsedPromo) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('You have already used this promocode')),
         );
-        setState(() {
-          _isPromoLoading = false;
-          _appliedPromocode = null;
-          _promoDiscount = 0.0;
-        });
+        if (mounted) {
+          setState(() {
+            _isPromoLoading = false;
+            _appliedPromocode = null;
+            _promoDiscount = 0.0;
+          });
+        }
       } else {
         // Promocode is valid and hasn't been used by this user
         final promoData = promoDoc.data() as Map<String, dynamic>;
         final double discount = (promoData['discount'] ?? 0).toDouble();
 
-        setState(() {
-          _isPromoLoading = false;
-          _appliedPromocode = code;
-          _promoDiscount = discount;
-        });
+        if (mounted) {
+          setState(() {
+            _isPromoLoading = false;
+            _appliedPromocode = code;
+            _promoDiscount = discount;
+          });
+        }
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -124,12 +136,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       }
     } catch (e) {
       print('Error validating promocode: $e');
+      if (!mounted) return; // Early return if widget is disposed
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Error checking promocode')),
       );
-      setState(() {
-        _isPromoLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isPromoLoading = false;
+        });
+      }
     }
   }
 
@@ -307,6 +323,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         Expanded(
                           child: OutlinedButton(
                             onPressed: () {
+                              if (!mounted) return;
                               setState(() {
                                 _currentStep--;
                               });
@@ -336,6 +353,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                 );
                                 return;
                               }
+                              if (!mounted) return;
                               setState(() {
                                 _currentStep = 1;
                               });

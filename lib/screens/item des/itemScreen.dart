@@ -103,13 +103,14 @@ class _ItemscreenState extends State<Itemscreen> {
   }
 
   void incrementQuantity() {
+    if (!mounted) return;
     setState(() {
       quantity++;
     });
   }
 
   void decrementQuantity() {
-    if (quantity > 1) {
+    if (quantity > 1 && mounted) {
       setState(() {
         quantity--;
       });
