@@ -10,6 +10,40 @@ class Favouritecubit extends Cubit<FavouriteState> {
   static Favouritecubit get(context) => BlocProvider.of(context);
 
   List<Item> favourites = [];
+  List<String> _favoriteIds = []; // Cache favorite IDs for quick lookup
+
+  // Check if an item is favorited
+  bool isFavorite(String itemId) {
+    return _favoriteIds.contains(itemId);
+  }
+
+  // Update favorite status for a list of items
+  void updateItemsFavoriteStatus(List<Item> items) {
+    for (var item in items) {
+      item.isfavourite = _favoriteIds.contains(item.id);
+    }
+  }
+
+  // Get current favorite IDs from Firestore
+  Future<List<String>> _getFavoriteIds() async {
+    try {
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) return [];
+
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(currentUser.uid)
+          .get();
+
+      if (!userDoc.exists || userDoc.data() == null) return [];
+
+      return List<String>.from(userDoc.data()?['favourites'] ?? []);
+    } catch (e) {
+      print("Error getting favorite IDs: $e");
+      return [];
+    }
+  }
+
   void toggleFavourite(Item item) async {
     try {
       final currentUser = FirebaseAuth.instance.currentUser;
@@ -21,8 +55,17 @@ class Favouritecubit extends Cubit<FavouriteState> {
       final userDoc =
           FirebaseFirestore.instance.collection('users').doc(currentUser.uid);
 
-      // Toggle the favorite status
+      // Toggle the favorite status locally first for immediate UI feedback
       item.isfavourite = !item.isfavourite;
+
+      // Update the cached favorite IDs
+      if (item.isfavourite) {
+        if (!_favoriteIds.contains(item.id)) {
+          _favoriteIds.add(item.id);
+        }
+      } else {
+        _favoriteIds.remove(item.id);
+      }
 
       // Get current favorites list from Firestore
       final userSnapshot = await userDoc.get();
@@ -35,54 +78,45 @@ class Favouritecubit extends Cubit<FavouriteState> {
         // Add to favorites if not already present
         if (!favIds.contains(item.id)) {
           favIds.add(item.id);
-          // Store the complete item data in Firestore
-          await FirebaseFirestore.instance
-              .collection('users')
-              .doc(currentUser.uid)
-              .collection('favorite_items')
-              .doc(item.id)
-              .set({
-            'id': item.id,
-            'name': item.name,
-            'nameAr': item.nameAr,
-            'description': item.description,
-            'descriptionAr': item.descriptionAr,
-            'price': item.price,
-            'img': item.img,
-            'category': item.category,
-            'categoryAr': item.categoryAr,
-            'categories': item.categories,
-          });
         }
-        favourites.add(item);
+
+        // Add to local favorites list if not already present
+        if (!favourites.any((i) => i.id == item.id)) {
+          favourites.add(item);
+        }
         emit(FavouriteAddState());
       } else {
         // Remove from favorites
         favIds.removeWhere((id) => id == item.id);
         favourites.removeWhere((i) => i.id == item.id);
-        // Also remove the item data from Firestore
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(currentUser.uid)
-            .collection('favorite_items')
-            .doc(item.id)
-            .delete();
         emit(FavouriteRemoveState());
       }
 
-      // Update Firestore with favorite IDs
+      // Update Firestore with favorite IDs only
       await userDoc.set({'favourites': favIds}, SetOptions(merge: true));
+
+      // Update cached favorite IDs
+      _favoriteIds = favIds;
+
+      print(
+          "Successfully toggled favorite for ${item.name}. Current favorites: ${_favoriteIds.length}");
     } catch (e) {
       print("Error toggling favorite: $e");
       emit(FavouriteErrorState(e.toString()));
 
       // Revert the local state change since the operation failed
       item.isfavourite = !item.isfavourite;
+
+      // Revert cached favorite IDs
       if (item.isfavourite) {
+        if (!_favoriteIds.contains(item.id)) {
+          _favoriteIds.add(item.id);
+        }
         if (!favourites.any((i) => i.id == item.id)) {
           favourites.add(item);
         }
       } else {
+        _favoriteIds.remove(item.id);
         favourites.removeWhere((i) => i.id == item.id);
       }
     }
@@ -115,6 +149,9 @@ class Favouritecubit extends Cubit<FavouriteState> {
       final favIds = List<String>.from(userDoc.data()?['favourites'] ?? []);
       print("Found ${favIds.length} favourite IDs: $favIds");
 
+      // Update cached favorite IDs
+      _favoriteIds = favIds;
+
       // Clear current favourites list
       favourites.clear();
 
@@ -123,41 +160,8 @@ class Favouritecubit extends Cubit<FavouriteState> {
         return;
       }
 
-      // First try to load from favorite_items collection
+      // Load items from restaurants collection
       for (String id in favIds) {
-        try {
-          final itemDoc = await FirebaseFirestore.instance
-              .collection('users')
-              .doc(currentUser.uid)
-              .collection('favorite_items')
-              .doc(id)
-              .get();
-
-          if (itemDoc.exists && itemDoc.data() != null) {
-            final data = itemDoc.data()!;
-            final item = Item(
-              id: data['id'] ?? '',
-              name: data['name'] ?? '',
-              nameAr: data['nameAr'] ?? '',
-              description: data['description'] ?? '',
-              descriptionAr: data['descriptionAr'] ?? '',
-              price: (data['price'] as num?)?.toDouble() ?? 0.0,
-              img: data['img'] ?? '',
-              category: data['category'] ?? '',
-              categoryAr: data['categoryAr'] ?? '',
-              categories: data['categories'] is List
-                  ? List<String>.from(data['categories'])
-                  : [],
-            );
-            item.isfavourite = true;
-            favourites.add(item);
-            continue; // Skip to next item since we found this one
-          }
-        } catch (e) {
-          print("Error loading favorite item $id: $e");
-        }
-
-        // If item not found in favorite_items, try restaurants collection
         try {
           bool found = false;
           final restaurantsSnapshot =
@@ -192,37 +196,29 @@ class Favouritecubit extends Cubit<FavouriteState> {
               );
               item.isfavourite = true;
               favourites.add(item);
-
-              // Store the item data in favorite_items for future use
-              await FirebaseFirestore.instance
-                  .collection('users')
-                  .doc(currentUser.uid)
-                  .collection('favorite_items')
-                  .doc(id)
-                  .set({
-                'id': item.id,
-                'name': item.name,
-                'nameAr': item.nameAr,
-                'description': item.description,
-                'descriptionAr': item.descriptionAr,
-                'price': item.price,
-                'img': item.img,
-                'category': item.category,
-                'categoryAr': item.categoryAr,
-                'categories': item.categories,
-              });
-
               found = true;
               break;
             }
           }
 
           if (!found) {
-            print("Could not find item with ID: $id in any collection");
+            print("Could not find item with ID: $id in any restaurant");
+            // Remove this ID from favorites since the item no longer exists
+            _favoriteIds.remove(id);
           }
         } catch (e) {
           print("Error searching for item $id in restaurants: $e");
         }
+      }
+
+      // Update Firestore if we removed any non-existent items
+      if (_favoriteIds.length != favIds.length) {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(currentUser.uid)
+            .set({'favourites': _favoriteIds}, SetOptions(merge: true));
+        print(
+            "Cleaned up ${favIds.length - _favoriteIds.length} non-existent favorite items");
       }
 
       print("Successfully loaded ${favourites.length} favourite items");
@@ -231,5 +227,23 @@ class Favouritecubit extends Cubit<FavouriteState> {
       print("Error loading favourites: $e");
       emit(FavouriteErrorState(e.toString()));
     }
+  }
+
+  // Initialize favorite IDs cache without loading full items
+  Future<void> initializeFavoriteIds() async {
+    try {
+      _favoriteIds = await _getFavoriteIds();
+      print("Initialized favorite IDs cache: ${_favoriteIds.length} items");
+    } catch (e) {
+      print("Error initializing favorite IDs: $e");
+      _favoriteIds = [];
+    }
+  }
+
+  // Clear all favorites (useful for logout)
+  void clearFavorites() {
+    favourites.clear();
+    _favoriteIds.clear();
+    emit(FavouriteInitialState());
   }
 }

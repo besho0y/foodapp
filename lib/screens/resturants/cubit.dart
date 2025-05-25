@@ -28,6 +28,17 @@ class Restuarantscubit extends Cubit<ResturantsStates> {
     "assets/images/banners/banner3.png",
   ];
 
+  // Synchronize favorite status for all items
+  void syncFavoriteStatus(List<String> favoriteIds) {
+    for (var restaurant in _allRestuarants) {
+      for (var item in restaurant.menuItems) {
+        item.isfavourite = favoriteIds.contains(item.id);
+      }
+    }
+    // Emit state to trigger UI update
+    emit(RestuarantsGetDataSuccessState());
+  }
+
   // Initialize all data
   Future<void> initializeData() async {
     if (_isInitialized) {

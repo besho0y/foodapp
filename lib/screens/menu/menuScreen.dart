@@ -428,7 +428,15 @@ class _MenuscreenState extends State<Menuscreen> {
     _updateSelectedCategoryForLanguage();
 
     return BlocConsumer<Favouritecubit, FavouriteState>(
-      listener: (context, state) {},
+      listener: (context, state) {
+        // Sync favorite status for items when favorite state changes
+        if (state is FavouriteLoadedState ||
+            state is FavouriteAddState ||
+            state is FavouriteRemoveState) {
+          final favCubit = Favouritecubit.get(context);
+          favCubit.updateItemsFavoriteStatus(widget.items);
+        }
+      },
       builder: (context, state) {
         var cubit = Restuarantscubit.get(context);
         return SafeArea(

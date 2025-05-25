@@ -8,6 +8,7 @@ import 'package:flutter_styled_toast/flutter_styled_toast.dart';
 import 'package:foodapp/layout/cubit.dart';
 import 'package:foodapp/layout/layout.dart';
 import 'package:foodapp/models/user.dart' as AppUser;
+import 'package:foodapp/screens/favourits/cubit.dart';
 import 'package:foodapp/screens/profile/cubit.dart';
 import 'package:foodapp/screens/signup/states.dart';
 import 'package:foodapp/shared/constants.dart';
@@ -85,10 +86,19 @@ class Signupcubit extends Cubit<SignupStates> {
       ProfileCubit profileCubit = ProfileCubit.get(context);
       profileCubit.getuserdata();
 
-      navigateAndFinish(context, Layout());
+      // Initialize favorites after user creation
+      try {
+        Favouritecubit favCubit = Favouritecubit.get(context);
+        await favCubit.initializeFavoriteIds();
+        await favCubit.loadFavourites();
+      } catch (e) {
+        print("Error initializing favorites after signup: $e");
+      }
+
+      navigateAndFinish(context, const Layout());
 
       // After navigation, ensure we're on the first tab
-      Future.delayed(Duration(milliseconds: 100), () {
+      Future.delayed(const Duration(milliseconds: 100), () {
         try {
           final layoutCubit = Layoutcubit.get(context);
           layoutCubit.changenavbar(0); // Change to the first tab
@@ -218,7 +228,7 @@ class Signupcubit extends Cubit<SignupStates> {
             ProfileCubit profileCubit = ProfileCubit.get(context);
             profileCubit.getuserdata();
 
-            navigateAndFinish(context, Layout());
+            navigateAndFinish(context, const Layout());
           }
         } else {
           throw Exception("Firebase user is null after sign-in");

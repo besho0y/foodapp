@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:foodapp/models/user.dart';
+import 'package:foodapp/screens/favourits/cubit.dart';
 import 'package:foodapp/screens/login/loginScreen.dart';
 import 'package:foodapp/screens/profile/states.dart';
 import 'package:foodapp/shared/constants.dart';
@@ -118,6 +119,14 @@ class ProfileCubit extends Cubit<ProfileState> {
   Future<void> logout(BuildContext context) async {
     emit(ProfileLoading());
     try {
+      // Clear favorites before logout
+      try {
+        final favCubit = Favouritecubit.get(context);
+        favCubit.clearFavorites();
+      } catch (e) {
+        print("Error clearing favorites on logout: $e");
+      }
+
       await auth.FirebaseAuth.instance.signOut();
       await LocalStorageService.clearAll(); // Clear local storage on logout
       emit(ProfileLogoutSuccess());

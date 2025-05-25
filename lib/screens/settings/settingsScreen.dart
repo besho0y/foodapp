@@ -6,6 +6,7 @@ import 'package:foodapp/generated/l10n.dart';
 import 'package:foodapp/layout/cubit.dart';
 import 'package:foodapp/layout/layout.dart';
 import 'package:foodapp/screens/admin%20panel/adminpanelscreen.dart';
+import 'package:foodapp/screens/favourits/cubit.dart';
 import 'package:foodapp/screens/login/loginScreen.dart';
 import 'package:foodapp/screens/profile/profileScreen.dart';
 import 'package:foodapp/screens/settingdetailsscreen/settingdetails.dart';
@@ -57,6 +58,13 @@ class Settingsscreen extends StatelessWidget {
 
         // Clear cart items from cubit
         Layoutcubit.get(context).clearCart();
+
+        // Clear favorites from cubit
+        try {
+          Favouritecubit.get(context).clearFavorites();
+        } catch (e) {
+          print("Error clearing favorites on logout: $e");
+        }
 
         await FirebaseAuth.instance.signOut();
 

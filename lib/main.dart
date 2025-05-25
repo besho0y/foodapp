@@ -74,7 +74,16 @@ class MyApp extends StatelessWidget {
             return cubit;
           },
         ),
-        BlocProvider(create: (context) => (Favouritecubit())..loadFavourites()),
+        BlocProvider(
+          create: (context) {
+            final cubit = Favouritecubit();
+            // Initialize favorite IDs first, then load favorites
+            cubit.initializeFavoriteIds().then((_) {
+              cubit.loadFavourites();
+            });
+            return cubit;
+          },
+        ),
         BlocProvider(create: (context) => (OrderCubit())),
         BlocProvider(create: (context) => (Logincubit())),
         BlocProvider(create: (context) => (Signupcubit())),

@@ -8,6 +8,7 @@ import 'package:flutter_styled_toast/flutter_styled_toast.dart';
 import 'package:foodapp/layout/cubit.dart' hide navigatorKey;
 import 'package:foodapp/layout/layout.dart';
 import 'package:foodapp/main.dart';
+import 'package:foodapp/screens/favourits/cubit.dart';
 import 'package:foodapp/screens/login/states.dart';
 import 'package:foodapp/screens/profile/cubit.dart';
 import 'package:foodapp/shared/constants.dart';
@@ -38,6 +39,15 @@ class Logincubit extends Cubit<LoginStates> {
       // Load user data before navigation
       ProfileCubit profileCubit = ProfileCubit.get(context);
       profileCubit.getuserdata();
+
+      // Initialize favorites after login
+      try {
+        Favouritecubit favCubit = Favouritecubit.get(context);
+        await favCubit.initializeFavoriteIds();
+        await favCubit.loadFavourites();
+      } catch (e) {
+        print("Error initializing favorites after login: $e");
+      }
 
       // Navigate to the Layout
       navigateAndFinish(context, const Layout());
@@ -199,6 +209,15 @@ class Logincubit extends Cubit<LoginStates> {
             ProfileCubit profileCubit = ProfileCubit.get(context);
             profileCubit.getuserdata();
 
+            // Initialize favorites after login
+            try {
+              Favouritecubit favCubit = Favouritecubit.get(context);
+              await favCubit.initializeFavoriteIds();
+              await favCubit.loadFavourites();
+            } catch (e) {
+              print("Error initializing favorites after Google sign-in: $e");
+            }
+
             // Navigate to the Layout
             navigateAndFinish(context, const Layout());
 
@@ -284,6 +303,15 @@ class Logincubit extends Cubit<LoginStates> {
           // Load user data before navigation
           ProfileCubit profileCubit = ProfileCubit.get(context);
           profileCubit.getuserdata();
+
+          // Initialize favorites after login
+          try {
+            Favouritecubit favCubit = Favouritecubit.get(context);
+            await favCubit.initializeFavoriteIds();
+            await favCubit.loadFavourites();
+          } catch (e) {
+            print("Error initializing favorites after Google sign-in: $e");
+          }
 
           // Navigate to the Layout
           navigateAndFinish(context, const Layout());

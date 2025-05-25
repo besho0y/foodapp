@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:foodapp/generated/l10n.dart';
 import 'package:foodapp/models/item.dart';
 import 'package:foodapp/models/resturant.dart';
 import 'package:foodapp/screens/favourits/cubit.dart';
+import 'package:foodapp/screens/favourits/states.dart';
 import 'package:foodapp/screens/item%20des/itemScreen.dart';
 import 'package:foodapp/shared/constants.dart';
 
@@ -131,23 +133,32 @@ Widget itemcard(context, bool fromFavourites, Item model, dynamic items) {
                                   style:
                                       Theme.of(context).textTheme.labelMedium,
                                 ),
-                                IconButton(
-                                  onPressed: () {
-                                    cubit.toggleFavourite(model);
+                                BlocBuilder<Favouritecubit, FavouriteState>(
+                                  builder: (context, state) {
+                                    // Update the model's favorite status based on cubit's cache
+                                    model.isfavourite =
+                                        cubit.isFavorite(model.id);
+
+                                    return IconButton(
+                                      onPressed: () {
+                                        cubit.toggleFavourite(model);
+                                      },
+                                      icon: Icon(
+                                        model.isfavourite
+                                            ? Icons.favorite
+                                            : Icons.favorite_border,
+                                        color: model.isfavourite
+                                            ? Colors.red
+                                            : null,
+                                        size: 20.sp,
+                                      ),
+                                      padding: EdgeInsets.zero,
+                                      constraints: BoxConstraints(
+                                        minWidth: 24.w,
+                                        minHeight: 24.h,
+                                      ),
+                                    );
                                   },
-                                  icon: Icon(
-                                    model.isfavourite
-                                        ? Icons.favorite
-                                        : Icons.favorite_border,
-                                    color:
-                                        model.isfavourite ? Colors.red : null,
-                                    size: 20.sp,
-                                  ),
-                                  padding: EdgeInsets.zero,
-                                  constraints: BoxConstraints(
-                                    minWidth: 24.w,
-                                    minHeight: 24.h,
-                                  ),
                                 ),
                               ],
                             ),
