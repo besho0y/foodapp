@@ -28,6 +28,8 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m3(count) => "${count} Reviews";
 
+  static String m4(reason) => "Reason: ${reason}";
+
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
         "AddAddress": MessageLookupByLibrary.simpleMessage("Add Address"),
@@ -151,7 +153,11 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("Category Name (Arabic)"),
         "category_name_english":
             MessageLookupByLibrary.simpleMessage("Category Name (English)"),
+        "check_card_details": MessageLookupByLibrary.simpleMessage(
+            "Please check your card details and try again, or choose a different payment method."),
         "checkout": MessageLookupByLibrary.simpleMessage("Checkout"),
+        "choose_payment_method":
+            MessageLookupByLibrary.simpleMessage("Choose Payment Method"),
         "clear_cart": MessageLookupByLibrary.simpleMessage("Clear Cart"),
         "comma_separated":
             MessageLookupByLibrary.simpleMessage("Comma Separated"),
@@ -312,8 +318,13 @@ class MessageLookup extends MessageLookupByLibrary {
         "passwords_not_match":
             MessageLookupByLibrary.simpleMessage("Passwords do not match"),
         "payment": MessageLookupByLibrary.simpleMessage("Payment"),
+        "payment_error": MessageLookupByLibrary.simpleMessage("Payment Error"),
+        "payment_error_message": MessageLookupByLibrary.simpleMessage(
+            "An error occurred while processing your payment."),
         "payment_failed":
             MessageLookupByLibrary.simpleMessage("Payment failed"),
+        "payment_processing_error": MessageLookupByLibrary.simpleMessage(
+            "Payment Error: Unable to process transaction"),
         "payment_successful":
             MessageLookupByLibrary.simpleMessage("Payment successful"),
         "payment_verification_failed":
@@ -353,6 +364,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "restaurant_items":
             MessageLookupByLibrary.simpleMessage("Restaurant Items"),
         "restaurants": MessageLookupByLibrary.simpleMessage("Restaurants"),
+        "retry_payment": MessageLookupByLibrary.simpleMessage("Retry Payment"),
         "review_hint": MessageLookupByLibrary.simpleMessage(
             "Tell us about your experience..."),
         "reviews": MessageLookupByLibrary.simpleMessage("Reviews"),
@@ -398,10 +410,16 @@ class MessageLookup extends MessageLookupByLibrary {
         "theme": MessageLookupByLibrary.simpleMessage("Theme"),
         "total": MessageLookupByLibrary.simpleMessage("Total"),
         "total_amount": MessageLookupByLibrary.simpleMessage("Total Amount"),
+        "transaction_declined":
+            MessageLookupByLibrary.simpleMessage("Transaction Declined"),
+        "transaction_declined_message": MessageLookupByLibrary.simpleMessage(
+            "Your payment could not be processed."),
+        "transaction_declined_reason": m4,
         "transfer_reference":
             MessageLookupByLibrary.simpleMessage("Transfer Reference Number"),
         "transfer_reference_hint": MessageLookupByLibrary.simpleMessage(
             "Enter the reference number from your Instapay transfer"),
+        "try_again": MessageLookupByLibrary.simpleMessage("Try Again"),
         "user": MessageLookupByLibrary.simpleMessage("User"),
         "user_id": MessageLookupByLibrary.simpleMessage("User ID"),
         "verify_payment":

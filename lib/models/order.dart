@@ -11,6 +11,7 @@ class Order {
   String? promocode;
   double? promoDiscount;
   String? paymentReference;
+  String? transactionId;
 
   Order({
     required this.id,
@@ -25,6 +26,7 @@ class Order {
     this.promocode,
     this.promoDiscount,
     this.paymentReference,
+    this.transactionId,
   });
 
   Map<String, dynamic> toJson() {
@@ -41,6 +43,7 @@ class Order {
       'promocode': promocode,
       'promoDiscount': promoDiscount,
       'paymentReference': paymentReference,
+      'transactionId': transactionId,
     };
   }
 
@@ -64,6 +67,7 @@ class Order {
               : json['promoDiscount'].toDouble())
           : null,
       paymentReference: json['paymentReference'],
+      transactionId: json['transactionId'],
     );
   }
 

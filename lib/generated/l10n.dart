@@ -2581,6 +2581,106 @@ class S {
       args: [],
     );
   }
+
+  /// `Transaction Declined`
+  String get transaction_declined {
+    return Intl.message(
+      'Transaction Declined',
+      name: 'transaction_declined',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Your payment could not be processed.`
+  String get transaction_declined_message {
+    return Intl.message(
+      'Your payment could not be processed.',
+      name: 'transaction_declined_message',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Reason: {reason}`
+  String transaction_declined_reason(Object reason) {
+    return Intl.message(
+      'Reason: $reason',
+      name: 'transaction_declined_reason',
+      desc: '',
+      args: [reason],
+    );
+  }
+
+  /// `Please check your card details and try again, or choose a different payment method.`
+  String get check_card_details {
+    return Intl.message(
+      'Please check your card details and try again, or choose a different payment method.',
+      name: 'check_card_details',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Try Again`
+  String get try_again {
+    return Intl.message(
+      'Try Again',
+      name: 'try_again',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Retry Payment`
+  String get retry_payment {
+    return Intl.message(
+      'Retry Payment',
+      name: 'retry_payment',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Payment Error`
+  String get payment_error {
+    return Intl.message(
+      'Payment Error',
+      name: 'payment_error',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `An error occurred while processing your payment.`
+  String get payment_error_message {
+    return Intl.message(
+      'An error occurred while processing your payment.',
+      name: 'payment_error_message',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Choose Payment Method`
+  String get choose_payment_method {
+    return Intl.message(
+      'Choose Payment Method',
+      name: 'choose_payment_method',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Payment Error: Unable to process transaction`
+  String get payment_processing_error {
+    return Intl.message(
+      'Payment Error: Unable to process transaction',
+      name: 'payment_processing_error',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {

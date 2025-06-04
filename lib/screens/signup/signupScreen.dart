@@ -42,7 +42,7 @@ class _SignupscreenState extends State<Signupscreen> {
       child: BlocConsumer<Signupcubit, SignupStates>(
         listener: (context, state) {
           if (state is CreateUserSuccessState) {
-            navigateAndFinish(context, Layout());
+            navigateAndFinish(context, const Layout());
           }
         },
         builder: (context, state) {
@@ -57,19 +57,20 @@ class _SignupscreenState extends State<Signupscreen> {
                   child: Column(
                     children: [
                       // Logo or illustration
-                      Container(
-                        width: 100.w,
-                        height: 100.h,
-                        decoration: BoxDecoration(
-                          color: primaryColor.withOpacity(0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Center(
-                          child: Icon(
-                            Icons.restaurant_menu,
-                            size: 50,
-                            color: primaryColor,
-                          ),
+                      Center(
+                        child: Image.asset(
+                          "assets/logo/logo.png", // Correct logo path
+                          width: 150.w,
+                          height: 150.h,
+                          fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) {
+                            // Fallback to food icon if logo doesn't exist
+                            return Icon(
+                              Icons.restaurant_menu,
+                              size: 50.sp,
+                              color: primaryColor,
+                            );
+                          },
                         ),
                       ),
                       SizedBox(height: 20.h),
@@ -235,14 +236,14 @@ class _SignupscreenState extends State<Signupscreen> {
                               // Name field
                               TextFormField(
                                 controller: namecontroller,
-                                style: TextStyle(color: textColor),
+                                style: const TextStyle(color: textColor),
                                 decoration: InputDecoration(
                                   labelText: S.of(context).Name,
                                   hintText: S.of(context).enter_full_name,
-                                  labelStyle:
-                                      TextStyle(color: secondaryTextColor),
-                                  prefixIcon:
-                                      Icon(Icons.person, color: primaryColor),
+                                  labelStyle: const TextStyle(
+                                      color: secondaryTextColor),
+                                  prefixIcon: const Icon(Icons.person,
+                                      color: primaryColor),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12.r),
                                     borderSide: BorderSide.none,
@@ -264,13 +265,13 @@ class _SignupscreenState extends State<Signupscreen> {
                               // Email field
                               TextFormField(
                                 controller: emailcontroller,
-                                style: TextStyle(color: textColor),
+                                style: const TextStyle(color: textColor),
                                 decoration: InputDecoration(
                                   labelText: S.of(context).Email,
                                   hintText: S.of(context).enter_email,
-                                  labelStyle:
-                                      TextStyle(color: secondaryTextColor),
-                                  prefixIcon: Icon(Icons.email_outlined,
+                                  labelStyle: const TextStyle(
+                                      color: secondaryTextColor),
+                                  prefixIcon: const Icon(Icons.email_outlined,
                                       color: primaryColor),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12.r),
@@ -293,13 +294,14 @@ class _SignupscreenState extends State<Signupscreen> {
                               // Phone field
                               TextFormField(
                                 controller: phonecontroller,
-                                style: TextStyle(color: textColor),
+                                style: const TextStyle(color: textColor),
                                 decoration: InputDecoration(
                                   labelText: S.of(context).Phone,
                                   hintText: S.of(context).enter_phone,
-                                  labelStyle:
-                                      TextStyle(color: secondaryTextColor),
-                                  prefixIcon: Icon(Icons.phone_iphone_outlined,
+                                  labelStyle: const TextStyle(
+                                      color: secondaryTextColor),
+                                  prefixIcon: const Icon(
+                                      Icons.phone_iphone_outlined,
                                       color: primaryColor),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12.r),
@@ -326,13 +328,13 @@ class _SignupscreenState extends State<Signupscreen> {
                               TextFormField(
                                 controller: passwordcontroller,
                                 obscureText: !_isPasswordVisible,
-                                style: TextStyle(color: textColor),
+                                style: const TextStyle(color: textColor),
                                 decoration: InputDecoration(
                                   labelText: S.of(context).password,
                                   hintText: S.of(context).create_password,
-                                  labelStyle:
-                                      TextStyle(color: secondaryTextColor),
-                                  prefixIcon: Icon(Icons.lock_outline),
+                                  labelStyle: const TextStyle(
+                                      color: secondaryTextColor),
+                                  prefixIcon: const Icon(Icons.lock_outline),
                                   suffixIcon: IconButton(
                                     icon: Icon(
                                       _isPasswordVisible
@@ -371,13 +373,13 @@ class _SignupscreenState extends State<Signupscreen> {
                               TextFormField(
                                 controller: confirmpasswordcontroller,
                                 obscureText: !_isConfirmPasswordVisible,
-                                style: TextStyle(color: textColor),
+                                style: const TextStyle(color: textColor),
                                 decoration: InputDecoration(
                                   labelText: S.of(context).confirm_password,
                                   hintText: S.of(context).confirm_password,
-                                  labelStyle:
-                                      TextStyle(color: secondaryTextColor),
-                                  prefixIcon: Icon(Icons.lock_outline),
+                                  labelStyle: const TextStyle(
+                                      color: secondaryTextColor),
+                                  prefixIcon: const Icon(Icons.lock_outline),
                                   suffixIcon: IconButton(
                                     icon: Icon(
                                       _isConfirmPasswordVisible
@@ -497,7 +499,7 @@ class _SignupscreenState extends State<Signupscreen> {
                           TextButton(
                             onPressed: () {
                               // Explicitly navigate to login screen
-                              navigateAndFinish(context, Loginscreen());
+                              navigateAndFinish(context, const Loginscreen());
                             },
                             child: Text(
                               S.of(context).log_in,

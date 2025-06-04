@@ -28,6 +28,8 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m3(count) => "${count} تقييم";
 
+  static String m4(reason) => "السبب: ${reason}";
+
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
         "AddAddress": MessageLookupByLibrary.simpleMessage("إضافة عنوان"),
@@ -145,7 +147,11 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("اسم الفئة (بالعربية)"),
         "category_name_english":
             MessageLookupByLibrary.simpleMessage("اسم الفئة (بالإنجليزية)"),
+        "check_card_details": MessageLookupByLibrary.simpleMessage(
+            "يرجى التحقق من تفاصيل بطاقتك والمحاولة مرة أخرى، أو اختيار طريقة دفع أخرى."),
         "checkout": MessageLookupByLibrary.simpleMessage("الدفع"),
+        "choose_payment_method":
+            MessageLookupByLibrary.simpleMessage("اختر طريقة الدفع"),
         "clear_cart": MessageLookupByLibrary.simpleMessage("تفريغ السلة"),
         "comma_separated":
             MessageLookupByLibrary.simpleMessage("مفصولة بفواصل"),
@@ -303,7 +309,12 @@ class MessageLookup extends MessageLookupByLibrary {
         "passwords_not_match":
             MessageLookupByLibrary.simpleMessage("كلمات المرور غير متطابقة"),
         "payment": MessageLookupByLibrary.simpleMessage("الدفع"),
+        "payment_error": MessageLookupByLibrary.simpleMessage("خطأ في الدفع"),
+        "payment_error_message":
+            MessageLookupByLibrary.simpleMessage("حدث خطأ أثناء معالجة دفعتك."),
         "payment_failed": MessageLookupByLibrary.simpleMessage("فشل الدفع"),
+        "payment_processing_error": MessageLookupByLibrary.simpleMessage(
+            "خطأ في الدفع: لا يمكن معالجة المعاملة"),
         "payment_successful":
             MessageLookupByLibrary.simpleMessage("تم الدفع بنجاح"),
         "payment_verification_failed":
@@ -342,6 +353,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "restaurant_items":
             MessageLookupByLibrary.simpleMessage("عناصر المطعم"),
         "restaurants": MessageLookupByLibrary.simpleMessage("المطاعم"),
+        "retry_payment":
+            MessageLookupByLibrary.simpleMessage("إعادة محاولة الدفع"),
         "review_hint":
             MessageLookupByLibrary.simpleMessage("أخبرنا عن تجربتك..."),
         "reviews": MessageLookupByLibrary.simpleMessage("التقييمات"),
@@ -383,10 +396,16 @@ class MessageLookup extends MessageLookupByLibrary {
         "theme": MessageLookupByLibrary.simpleMessage("المظهر"),
         "total": MessageLookupByLibrary.simpleMessage("المجموع"),
         "total_amount": MessageLookupByLibrary.simpleMessage("المبلغ الإجمالي"),
+        "transaction_declined":
+            MessageLookupByLibrary.simpleMessage("تم رفض المعاملة"),
+        "transaction_declined_message":
+            MessageLookupByLibrary.simpleMessage("لا يمكن معالجة دفعتك."),
+        "transaction_declined_reason": m4,
         "transfer_reference":
             MessageLookupByLibrary.simpleMessage("رقم مرجع التحويل"),
         "transfer_reference_hint": MessageLookupByLibrary.simpleMessage(
             "أدخل رقم المرجع من تحويل انستاباي"),
+        "try_again": MessageLookupByLibrary.simpleMessage("حاول مرة أخرى"),
         "user": MessageLookupByLibrary.simpleMessage("المستخدم"),
         "user_id": MessageLookupByLibrary.simpleMessage("رقم المستخدم"),
         "verify_payment": MessageLookupByLibrary.simpleMessage("تحقق من الدفع"),

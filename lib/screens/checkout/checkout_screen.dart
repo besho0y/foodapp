@@ -9,6 +9,7 @@ import 'package:foodapp/models/user.dart';
 import 'package:foodapp/screens/oredrs/cubit.dart';
 import 'package:foodapp/screens/profile/cubit.dart';
 import 'package:foodapp/screens/profile/states.dart';
+import 'package:foodapp/shared/paymob_service.dart';
 import 'package:uuid/uuid.dart';
 
 class CheckoutScreen extends StatefulWidget {
@@ -25,6 +26,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final transferReferenceController = TextEditingController();
   final instapayPhoneNumber = "01111350143"; // Store phone number for Instapay
   bool paymentVerified = false;
+  String? transactionId; // Store PayMob transaction ID
+  bool isProcessingPayment = false;
 
   // Add promocode controllers and variables
   final TextEditingController _promocodeController = TextEditingController();
@@ -509,12 +512,15 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   Future<void> _completeOrderPlacement(BuildContext context) async {
+    print('=== CHECKOUT: Starting order placement ===');
+
     final layoutCubit = Layoutcubit.get(context);
     final orderCubit = OrderCubit.get(context);
     final profileCubit = ProfileCubit.get(context);
 
     // Verify that an address is selected
     if (selectedAddress == null) {
+      print('ERROR: No address selected');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(S.of(context).select_address_error),
@@ -526,28 +532,42 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
     // Generate a unique order ID
     final orderId = const Uuid().v4();
+    print('Generated order ID: $orderId');
 
     // Calculate the total price (items + delivery fee) with promocode discount if applied
     final totalPrice =
         layoutCubit.calculateTotalPrice(promoDiscount: _promoDiscount);
+    print('Total price: $totalPrice');
 
-    // Create order data
+    // Create comprehensive order data
     final orderData = {
       'id': orderId,
       'userId': profileCubit.user.uid,
       'userName': profileCubit.user.name,
+      'userEmail': profileCubit.user.email,
       'items': layoutCubit.cartitems.map((item) => item.toJson()).toList(),
       'total': totalPrice,
       'address': selectedAddress!.toJson(),
       'paymentMethod': paymentMethod,
-      'paymentReference':
-          paymentMethod == 'instapay' ? transferReferenceController.text : null,
+      'paymentReference': paymentMethod == 'instapay'
+          ? transferReferenceController.text.trim()
+          : null,
+      'transactionId': paymentMethod == 'card' ? transactionId : null,
+      'paymentVerified': paymentMethod == 'card'
+          ? paymentVerified
+          : (paymentMethod == 'instapay' ? paymentVerified : true),
       'status': 'Pending',
-      'date': DateTime.now().toString(),
+      'date': DateTime.now().toIso8601String(),
+      'timestamp': FieldValue.serverTimestamp(),
       // Include promocode information if a promocode was applied
       'promocode': _appliedPromocode,
       'promoDiscount': _promoDiscount > 0 ? _promoDiscount : null,
+      // Add metadata for tracking
+      'platform': 'mobile',
+      'version': '1.0',
     };
+
+    print('Order data prepared: ${orderData.keys.join(', ')}');
 
     try {
       // Show loading indicator
@@ -561,54 +581,135 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         },
       );
 
-      // Add the order through the order cubit
-      await orderCubit.addOrder(orderData);
+      print('=== CHECKOUT: Saving order to Firestore ===');
 
-      // If a promocode was applied, add it to the user's used promocodes
-      if (_appliedPromocode != null && _promoDiscount > 0) {
-        await profileCubit.addUsedPromocode(_appliedPromocode!);
+      // Step 1: Save order to Firestore directly (primary method)
+      await FirebaseFirestore.instance
+          .collection('orders')
+          .doc(orderId)
+          .set(orderData);
+
+      print('✅ Order saved directly to Firestore');
+
+      // Step 2: Update user's orderIds array
+      try {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(profileCubit.user.uid)
+            .update({
+          'orderIds': FieldValue.arrayUnion([orderId])
+        });
+        print('✅ Order ID added to user document');
+      } catch (userUpdateError) {
+        print('⚠️ Warning - Could not update user orderIds: $userUpdateError');
+        // Continue - this is not critical for order placement
       }
 
-      // Update the user's orderIds list in memory
+      // Step 3: Update local order list via OrderCubit
+      try {
+        await orderCubit.addOrder(orderData);
+        print('✅ Order added to OrderCubit');
+      } catch (cubitError) {
+        print('⚠️ Warning - Could not add to OrderCubit: $cubitError');
+        // Continue - order is still saved to Firestore
+      }
+
+      // Step 4: Update user's local orderIds list
       if (!profileCubit.user.orderIds.contains(orderId)) {
         profileCubit.user.orderIds.add(orderId);
+        print('✅ Order ID added to local user data');
       }
 
-      // Clear the cart
-      layoutCubit.clearCart();
+      // Step 5: Handle promocode usage
+      if (_appliedPromocode != null && _promoDiscount > 0) {
+        try {
+          await profileCubit.addUsedPromocode(_appliedPromocode!);
+          print('✅ Promocode usage recorded');
+        } catch (promoError) {
+          print('⚠️ Warning - Could not update promocode usage: $promoError');
+          // Don't fail the entire order for promocode error
+        }
+      }
 
-      // Reset payment verification status and promocode
-      setState(() {
-        paymentVerified = false;
-        transferReferenceController.clear();
-        _appliedPromocode = null;
-        _promoDiscount = 0.0;
-        _promocodeController.clear();
-      });
+      // Step 6: Clear the cart
+      layoutCubit.clearCart();
+      print('✅ Cart cleared');
+
+      // Step 7: Reset UI state
+      if (mounted) {
+        setState(() {
+          paymentVerified = false;
+          transferReferenceController.clear();
+          _appliedPromocode = null;
+          _promoDiscount = 0.0;
+          _promocodeController.clear();
+          transactionId = null;
+          isProcessingPayment = false;
+        });
+        print('✅ UI state reset');
+      }
 
       // Close loading dialog
-      Navigator.of(context).pop();
+      if (Navigator.canPop(context)) {
+        Navigator.of(context).pop();
+      }
+
+      print('=== CHECKOUT: Order placement completed successfully ===');
 
       // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(S.of(context).order_placed),
           backgroundColor: Colors.green,
+          duration: const Duration(seconds: 3),
         ),
       );
+
+      // Force refresh orders to ensure they appear immediately
+      try {
+        await orderCubit.forceRefreshOrders();
+        print('✅ Orders refreshed after placement');
+      } catch (refreshError) {
+        print('⚠️ Warning - Could not refresh orders: $refreshError');
+      }
 
       // Navigate to the orders tab of the bottom navbar
       layoutCubit.changenavbar(2); // Index 2 is the Orders tab
       Navigator.pop(context);
     } catch (error) {
-      // Close loading dialog
-      Navigator.of(context).pop();
+      print('=== CHECKOUT: Order placement failed ===');
+      print('Error type: ${error.runtimeType}');
+      print('Error message: $error');
 
-      // Show error message
+      // Close loading dialog
+      if (Navigator.canPop(context)) {
+        Navigator.of(context).pop();
+      }
+
+      // Reset processing state
+      if (mounted) {
+        setState(() {
+          isProcessingPayment = false;
+        });
+      }
+
+      // Show detailed error message
+      String errorMessage = 'Failed to place order: ';
+      if (error.toString().contains('permission-denied')) {
+        errorMessage += 'Permission denied. Please check your authentication.';
+      } else if (error.toString().contains('network')) {
+        errorMessage += 'Network error. Please check your internet connection.';
+      } else if (error.toString().contains('unavailable')) {
+        errorMessage += 'Service temporarily unavailable. Please try again.';
+      } else {
+        errorMessage += error.toString();
+      }
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('${S.of(context).order_error}: $error'),
+          content: Text(errorMessage),
           backgroundColor: Colors.red,
+          duration: const Duration(seconds: 7),
         ),
       );
     }
@@ -1560,18 +1661,250 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       return;
     }
 
-    // For InstaPay payment, verify that reference has been entered and verified
-    if (paymentMethod == 'instapay' && !paymentVerified) {
+    // Prevent multiple payment processing
+    if (isProcessingPayment) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(S.of(context).payment_verification_failed),
-          backgroundColor: Colors.red,
+        const SnackBar(
+          content: Text('Payment is already being processed. Please wait.'),
+          backgroundColor: Colors.orange,
         ),
       );
       return;
     }
 
-    // Complete the order placement
-    await _completeOrderPlacement(context);
+    // Handle different payment methods
+    if (paymentMethod == 'card') {
+      await _processCardPayment(context);
+    } else if (paymentMethod == 'instapay') {
+      // For InstaPay payment, verify that reference has been entered and verified
+      if (!paymentVerified) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(S.of(context).payment_verification_failed),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+      // Complete the order placement for InstaPay
+      await _completeOrderPlacement(context);
+    } else {
+      // For cash on delivery, complete the order placement directly
+      await _completeOrderPlacement(context);
+    }
+  }
+
+  // Process card payment with PayMob
+  Future<void> _processCardPayment(BuildContext context) async {
+    if (isProcessingPayment) return;
+
+    setState(() {
+      isProcessingPayment = true;
+    });
+
+    try {
+      final layoutCubit = Layoutcubit.get(context);
+      final totalPrice =
+          layoutCubit.calculateTotalPrice(promoDiscount: _promoDiscount);
+
+      print('💳 === CHECKOUT: Starting card payment ===');
+      print('💰 Amount: $totalPrice EGP');
+
+      // Process payment with PayMob (PayMob handles its own UI)
+      final paymentResult = await PayMobService.processCardPayment(
+        context: context,
+        amount: totalPrice,
+        currency: "EGP",
+      );
+
+      if (!mounted) return;
+
+      print('📨 CHECKOUT: Payment result received');
+      print('📋 Payment result: $paymentResult');
+
+      // Safely check if payment was successful
+      final success = paymentResult['success'] ?? false;
+      final message =
+          paymentResult['message']?.toString() ?? 'Unknown payment status';
+      final receivedTransactionId = paymentResult['transactionID']?.toString();
+      final responseCode = paymentResult['responseCode']?.toString();
+
+      print('📊 Payment success: $success');
+      print('📊 Payment message: $message');
+      print('📊 Transaction ID: $receivedTransactionId');
+      print('📊 Response code: $responseCode');
+
+      if (success == true) {
+        // ✅ PAYMENT SUCCESSFUL - Place the order
+        setState(() {
+          paymentVerified = true;
+          transactionId = receivedTransactionId;
+        });
+
+        print('✅ CHECKOUT: Payment successful!');
+        print('🔗 Transaction ID: $transactionId');
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(S.of(context).payment_successful),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+
+        // Complete the order placement immediately
+        await _completeOrderPlacement(context);
+      } else {
+        // ❌ PAYMENT FAILED - Return to payment method and show declined message
+        setState(() {
+          paymentVerified = false;
+          transactionId = null;
+          _currentStep = 1; // Return to payment method step
+        });
+
+        print('❌ CHECKOUT: Payment failed');
+        print('💬 Error: $message');
+
+        if (mounted) {
+          // Show transaction declined message
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("${S.of(context).transaction_declined}: $message"),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 5),
+              action: SnackBarAction(
+                label: S.of(context).try_again,
+                textColor: Colors.white,
+                onPressed: () {
+                  // User can try payment again
+                },
+              ),
+            ),
+          );
+
+          // Show dialog for transaction declined
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: Row(
+                  children: [
+                    const Icon(Icons.error, color: Colors.red),
+                    SizedBox(width: 8.w),
+                    Text(S.of(context).transaction_declined),
+                  ],
+                ),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(S.of(context).transaction_declined_message),
+                    SizedBox(height: 8.h),
+                    Text(
+                      "Reason: $message",
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 14.sp,
+                      ),
+                    ),
+                    SizedBox(height: 16.h),
+                    Text(
+                      S.of(context).check_card_details,
+                      style: TextStyle(fontSize: 14.sp),
+                    ),
+                  ],
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text("OK"),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      // Optionally retry payment immediately
+                      _processCardPayment(context);
+                    },
+                    child: Text(S.of(context).retry_payment),
+                  ),
+                ],
+              );
+            },
+          );
+        }
+      }
+    } catch (e) {
+      print('❌ CHECKOUT: Error in card payment');
+      print('🚨 Error: ${e.runtimeType} - $e');
+
+      if (!mounted) return;
+
+      setState(() {
+        paymentVerified = false;
+        transactionId = null;
+        _currentStep = 1; // Return to payment method step
+      });
+
+      // Show error message and return to payment method
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(S.of(context).payment_processing_error),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 5),
+        ),
+      );
+
+      // Show error dialog
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Row(
+              children: [
+                const Icon(Icons.warning, color: Colors.orange),
+                SizedBox(width: 8.w),
+                Text(S.of(context).payment_error),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(S.of(context).payment_error_message),
+                SizedBox(height: 8.h),
+                Text(
+                  S.of(context).check_card_details,
+                  style: TextStyle(fontSize: 14.sp),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text("OK"),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  // Return to payment method selection
+                },
+                child: Text(S.of(context).choose_payment_method),
+              ),
+            ],
+          );
+        },
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          isProcessingPayment = false;
+        });
+      }
+    }
   }
 }

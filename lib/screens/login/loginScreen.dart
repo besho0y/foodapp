@@ -45,19 +45,20 @@ class _LoginscreenState extends State<Loginscreen> {
                   children: [
                     SizedBox(height: 60.h),
                     // Logo or illustration
-                    Container(
-                      width: 120.w,
-                      height: 120.h,
-                      decoration: BoxDecoration(
-                        color: primaryColor.withOpacity(0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Center(
-                        child: Icon(
-                          Icons.restaurant_menu,
-                          size: 60,
-                          color: primaryColor,
-                        ),
+                    Center(
+                      child: Image.asset(
+                        "assets/logo/logo.png", // Correct logo path
+                        width: 150.w,
+                        height: 150.h,
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) {
+                          // Fallback to food icon if logo doesn't exist
+                          return Icon(
+                            Icons.restaurant_menu,
+                            size: 50.sp,
+                            color: primaryColor,
+                          );
+                        },
                       ),
                     ),
                     SizedBox(height: 30.h),

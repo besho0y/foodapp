@@ -249,5 +249,15 @@
     "delivery_address": "عنوان التوصيل",
     "no_address_provided": "لا يوجد عنوان محدد",
     "payment": "الدفع",
-    "menu_categories": "فئات القائمة"
+    "menu_categories": "فئات القائمة",
+    "transaction_declined": "تم رفض المعاملة",
+    "transaction_declined_message": "لا يمكن معالجة دفعتك.",
+    "transaction_declined_reason": "السبب: {reason}",
+    "check_card_details": "يرجى التحقق من تفاصيل بطاقتك والمحاولة مرة أخرى، أو اختيار طريقة دفع أخرى.",
+    "try_again": "حاول مرة أخرى",
+    "retry_payment": "إعادة محاولة الدفع",
+    "payment_error": "خطأ في الدفع",
+    "payment_error_message": "حدث خطأ أثناء معالجة دفعتك.",
+    "choose_payment_method": "اختر طريقة الدفع",
+    "payment_processing_error": "خطأ في الدفع: لا يمكن معالجة المعاملة"
 }

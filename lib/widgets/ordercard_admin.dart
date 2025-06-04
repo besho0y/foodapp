@@ -540,6 +540,19 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
                                       ),
                                     ),
 
+                                  // Transaction ID for card payments
+                                  if (model.paymentMethod == 'card' &&
+                                      model.transactionId != null &&
+                                      model.transactionId!.isNotEmpty)
+                                    Text(
+                                      "TX: ${model.transactionId!.length > 8 ? model.transactionId!.substring(0, 8) + '...' : model.transactionId}",
+                                      style: TextStyle(
+                                        fontSize: smallScreen ? 10.sp : 11.sp,
+                                        color: Colors.green.shade700,
+                                        fontStyle: FontStyle.italic,
+                                      ),
+                                    ),
+
                                   // Final total after discount
                                   Text(
                                     "${S.of(context).total}: ${model.total.toStringAsFixed(2)} EGP",
@@ -943,7 +956,11 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
               Icon(
                 model.paymentMethod?.toLowerCase() == 'cash'
                     ? Icons.money
-                    : Icons.credit_card,
+                    : model.paymentMethod?.toLowerCase() == 'card'
+                        ? Icons.credit_card
+                        : model.paymentMethod?.toLowerCase() == 'instapay'
+                            ? Icons.mobile_friendly
+                            : Icons.payment,
                 size: 14.sp,
                 color: Colors.green[700],
               ),

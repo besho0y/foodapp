@@ -252,5 +252,15 @@
     "no_address_provided": "No address provided",
     "payment": "Payment",
     "Restaurant Categories": "Restaurant Categories",
-    "menu_categories": "Menu Categories"
+    "menu_categories": "Menu Categories",
+    "transaction_declined": "Transaction Declined",
+    "transaction_declined_message": "Your payment could not be processed.",
+    "transaction_declined_reason": "Reason: {reason}",
+    "check_card_details": "Please check your card details and try again, or choose a different payment method.",
+    "try_again": "Try Again",
+    "retry_payment": "Retry Payment",
+    "payment_error": "Payment Error",
+    "payment_error_message": "An error occurred while processing your payment.",
+    "choose_payment_method": "Choose Payment Method",
+    "payment_processing_error": "Payment Error: Unable to process transaction"
 }

@@ -391,7 +391,7 @@ class _OrderCardState extends State<OrderCard> {
 
                         SizedBox(height: 2.h),
 
-                        // Show payment reference for InstaPay
+                        // Show payment reference for InstaPay or transaction ID for card payments
                         if (widget.model.paymentMethod == 'instapay' &&
                             widget.model.paymentReference != null &&
                             widget.model.paymentReference!.isNotEmpty)
@@ -417,9 +417,35 @@ class _OrderCardState extends State<OrderCard> {
                             ),
                           ),
 
+                        // Show transaction ID for card payments
+                        if (widget.model.paymentMethod == 'card' &&
+                            widget.model.transactionId != null &&
+                            widget.model.transactionId!.isNotEmpty)
+                          Padding(
+                            padding: EdgeInsets.only(bottom: 4.h),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.credit_card,
+                                  size: 14.sp,
+                                  color: Colors.green.shade700,
+                                ),
+                                SizedBox(width: 4.w),
+                                Text(
+                                  "Transaction: ${widget.model.transactionId!.length > 10 ? widget.model.transactionId!.substring(0, 10) + '...' : widget.model.transactionId}",
+                                  style: TextStyle(
+                                    fontSize: 12.sp,
+                                    color: Colors.green.shade700,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
                         // Total price with discount applied
                         Text(
-                          "${S.of(context).total}: 130.00 ${S.of(context).egp}",
+                          "${S.of(context).total}: ${widget.model.total.toStringAsFixed(2)} ${S.of(context).egp}",
                           textAlign: TextAlign.end,
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
