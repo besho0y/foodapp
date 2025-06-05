@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:foodapp/models/banner.dart' as BannerModel;
 import 'package:foodapp/models/category.dart';
 import 'package:foodapp/models/item.dart';
 import 'package:foodapp/models/resturant.dart';
@@ -24,11 +25,7 @@ class Restuarantscubit extends Cubit<ResturantsStates> {
   String _selectedArea = 'Cairo'; // Default area
   String _searchQuery = ''; // Store current search query
 
-  List<String> banners = [
-    "assets/images/banners/banner1.png",
-    "assets/images/banners/banner2.png",
-    "assets/images/banners/banner3.png",
-  ];
+  List<BannerModel.Banner> banners = [];
 
   // Getter for selected area
   String get selectedArea => _selectedArea;
@@ -109,6 +106,9 @@ class Restuarantscubit extends Cubit<ResturantsStates> {
 
       // Then get restaurants
       await _fetchRestaurants();
+
+      // Fetch banners
+      await _fetchBanners();
 
       _isInitialized = true;
       _applyFilters(); // Apply area filtering after loading restaurants
@@ -625,6 +625,63 @@ class Restuarantscubit extends Cubit<ResturantsStates> {
     } catch (e) {
       print("Error refreshing restaurants: $e");
       emit(RestuarantsErrorState(e.toString()));
+    }
+  }
+
+  // Private method to fetch banners
+  Future<void> _fetchBanners() async {
+    try {
+      print("Starting to fetch banners...");
+
+      // First try with ordering only (to avoid index requirement)
+      QuerySnapshot bannersSnapshot;
+      try {
+        bannersSnapshot = await FirebaseFirestore.instance
+            .collection("banners")
+            .orderBy('createdAt', descending: true)
+            .get();
+      } catch (e) {
+        // If ordering fails, get all banners without ordering
+        print("OrderBy failed, fetching all banners: $e");
+        bannersSnapshot =
+            await FirebaseFirestore.instance.collection("banners").get();
+      }
+
+      print("Found ${bannersSnapshot.docs.length} total banners");
+
+      // Filter active banners in code instead of in query
+      banners = bannersSnapshot.docs
+          .map((doc) {
+            final data = doc.data() as Map<String, dynamic>;
+
+            // Handle Firestore timestamp
+            DateTime createdAt = DateTime.now();
+            if (data['createdAt'] != null) {
+              if (data['createdAt'] is Timestamp) {
+                createdAt = (data['createdAt'] as Timestamp).toDate();
+              } else if (data['createdAt'] is String) {
+                createdAt = DateTime.parse(data['createdAt']);
+              }
+            }
+
+            return BannerModel.Banner(
+              id: doc.id,
+              imageUrl: data['imageUrl'] ?? '',
+              createdAt: createdAt,
+              isActive: data['isActive'] ?? true,
+            );
+          })
+          .where((banner) => banner.isActive) // Filter active banners in code
+          .toList();
+
+      // Sort by creation date in code
+      banners.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+      print("Successfully loaded ${banners.length} active banners");
+    } catch (e) {
+      print("Error loading banners: $e");
+      // Don't throw error, just use empty list
+      banners = [];
     }
   }
 }

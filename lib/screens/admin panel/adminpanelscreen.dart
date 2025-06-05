@@ -72,6 +72,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
   List<app_models.Order> allOrders = [];
   bool isLoadingOrders = false;
   File? _categoryImageFile;
+  File? _bannerImageFile;
   Category? _selectedRestaurantCategory;
   String _selectedRestaurantArea = 'Cairo'; // Add area selection
 
@@ -89,6 +90,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
         if (mounted) {
           try {
             BlocProvider.of<AdminPanelCubit>(context).getRestaurants();
+            BlocProvider.of<AdminPanelCubit>(context).fetchBanners();
           } catch (e) {
             print('Error loading restaurants in initState: $e');
             _showSnackBar('Error loading restaurants',
@@ -414,6 +416,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
         _buildTabItem(3, S.of(context).admin_orders),
         _buildTabItem(4, S.of(context).restaurant_categories),
         _buildTabItem(5, 'Promocodes'),
+        _buildTabItem(6, 'Banners'),
       ];
     } catch (e) {
       print('Error building tab items: $e');
@@ -422,6 +425,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
         _buildTabItem(1, 'Items'),
         _buildTabItem(2, 'Categories'),
         _buildTabItem(3, 'Orders'),
+        _buildTabItem(6, 'Banners'),
       ];
     }
   }
@@ -435,6 +439,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
         _buildAllOrdersTab(cubit, state),
         _buildRestaurantCategoriesTab(cubit, state),
         _buildPromocodesTab(cubit),
+        _buildBannersTab(cubit),
       ];
     } catch (e) {
       print('Error building pages: $e');
@@ -3699,6 +3704,246 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
       print('Error building items for restaurant: $e');
       return const Center(child: Text("Error loading restaurant items"));
     }
+  }
+
+  Widget _buildBannersTab(AdminPanelCubit cubit) {
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(16.r),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Add Banner section
+          Container(
+            padding: EdgeInsets.all(16.r),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.blue),
+              borderRadius: BorderRadius.circular(12.r),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Add New Banner',
+                  style: TextStyle(
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 16.h),
+
+                // Image picker
+                GestureDetector(
+                  onTap: () async {
+                    try {
+                      final ImagePicker picker = ImagePicker();
+                      final XFile? image = await picker.pickImage(
+                        source: ImageSource.gallery,
+                        imageQuality: 80,
+                      );
+
+                      if (image != null) {
+                        setState(() {
+                          _bannerImageFile = File(image.path);
+                        });
+                      }
+                    } catch (e) {
+                      print('Error picking banner image: $e');
+                      _showSnackBar('Error picking image',
+                          backgroundColor: Colors.red);
+                    }
+                  },
+                  child: Container(
+                    height: 150.h,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey),
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                    child: _bannerImageFile != null
+                        ? ClipRRect(
+                            borderRadius: BorderRadius.circular(12.r),
+                            child: Image.file(
+                              _bannerImageFile!,
+                              fit: BoxFit.cover,
+                            ),
+                          )
+                        : Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.add_photo_alternate,
+                                  size: 50.sp, color: Colors.grey),
+                              SizedBox(height: 8.h),
+                              const Text('Tap to select banner image',
+                                  style: TextStyle(color: Colors.grey)),
+                            ],
+                          ),
+                  ),
+                ),
+
+                SizedBox(height: 16.h),
+
+                // Add button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _bannerImageFile != null
+                        ? () async {
+                            try {
+                              await cubit.addBanner(
+                                  imageFile: _bannerImageFile!);
+                              setState(() {
+                                _bannerImageFile = null;
+                              });
+                              _showSnackBar('Banner added successfully',
+                                  backgroundColor: Colors.green);
+                            } catch (e) {
+                              print('Error adding banner: $e');
+                              _showSnackBar(
+                                  'Error adding banner: ${e.toString()}',
+                                  backgroundColor: Colors.red);
+                            }
+                          }
+                        : null,
+                    child: const Text('Add Banner'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          SizedBox(height: 24.h),
+
+          // Banners List section
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Current Banners',
+                style: TextStyle(
+                  fontSize: 18.sp,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.refresh),
+                onPressed: () {
+                  cubit.fetchBanners();
+                },
+                tooltip: "Refresh",
+              ),
+            ],
+          ),
+
+          SizedBox(height: 16.h),
+
+          // Banners list
+          BlocBuilder<AdminPanelCubit, AdminPanelStates>(
+            builder: (context, state) {
+              if (state is LoadingBannersState) {
+                return const Center(child: CircularProgressIndicator());
+              } else if (state is ErrorLoadingBannersState) {
+                return Center(
+                  child: Column(
+                    children: [
+                      Text('Error: ${state.error}'),
+                      ElevatedButton(
+                        onPressed: () => cubit.fetchBanners(),
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                );
+              } else {
+                if (cubit.banners.isEmpty) {
+                  return const Center(
+                    child: Text(
+                        'No banners found. Add some banners to get started.'),
+                  );
+                } else {
+                  return ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: cubit.banners.length,
+                    itemBuilder: (context, index) {
+                      final banner = cubit.banners[index];
+                      return Container(
+                        margin: EdgeInsets.only(bottom: 8.h),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey.shade300),
+                          borderRadius: BorderRadius.circular(12.r),
+                        ),
+                        child: ListTile(
+                          leading: ClipRRect(
+                            borderRadius: BorderRadius.circular(8.r),
+                            child: Image.network(
+                              banner.imageUrl,
+                              width: 60.w,
+                              height: 40.h,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  width: 60.w,
+                                  height: 40.h,
+                                  color: Colors.grey.shade300,
+                                  child: const Icon(Icons.error),
+                                );
+                              },
+                            ),
+                          ),
+                          title: Text('Banner ${index + 1}'),
+                          subtitle: Text(
+                              'Created: ${banner.createdAt.toString().split(' ')[0]}'),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.red),
+                            onPressed: () async {
+                              try {
+                                bool confirm = await showDialog(
+                                      context: context,
+                                      builder: (dialogContext) => AlertDialog(
+                                        title: const Text('Delete Banner'),
+                                        content: const Text(
+                                            'Are you sure you want to delete this banner?'),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () => Navigator.pop(
+                                                dialogContext, false),
+                                            child: const Text('Cancel'),
+                                          ),
+                                          ElevatedButton(
+                                            onPressed: () => Navigator.pop(
+                                                dialogContext, true),
+                                            style: ElevatedButton.styleFrom(
+                                                backgroundColor: Colors.red),
+                                            child: const Text('Delete'),
+                                          ),
+                                        ],
+                                      ),
+                                    ) ??
+                                    false;
+
+                                if (confirm) {
+                                  await cubit.deleteBanner(banner.id);
+                                  _showSnackBar('Banner deleted successfully',
+                                      backgroundColor: Colors.green);
+                                }
+                              } catch (e) {
+                                print('Error deleting banner: $e');
+                                _showSnackBar('Error deleting banner',
+                                    backgroundColor: Colors.red);
+                              }
+                            },
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                }
+              }
+            },
+          ),
+        ],
+      ),
+    );
   }
 }
 

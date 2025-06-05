@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:foodapp/models/banner.dart' as BannerModel;
 import 'package:foodapp/models/promocode.dart';
 import 'package:foodapp/models/resturant.dart';
 import 'package:foodapp/screens/admin%20panel/states.dart';
@@ -1038,6 +1039,90 @@ class AdminPanelCubit extends Cubit<AdminPanelStates> {
     } catch (e) {
       print("Error adding restaurant category: $e");
       emit(ErrorAddingCategoryState(e.toString()));
+    }
+  }
+
+  // Banner methods
+  List<BannerModel.Banner> _banners = [];
+
+  List<BannerModel.Banner> get banners => _banners;
+
+  // Fetch all banners from Firestore
+  Future<void> fetchBanners() async {
+    emit(LoadingBannersState());
+
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('banners')
+          .orderBy('createdAt', descending: true)
+          .get();
+
+      final List<BannerModel.Banner> loadedBanners = snapshot.docs.map((doc) {
+        Map<String, dynamic> data = doc.data();
+        data['id'] = doc.id;
+
+        // Convert Firestore timestamp to string for the model
+        if (data['createdAt'] != null && data['createdAt'] is Timestamp) {
+          data['createdAt'] =
+              (data['createdAt'] as Timestamp).toDate().toIso8601String();
+        }
+
+        return BannerModel.Banner.fromJson(data);
+      }).toList();
+
+      _banners =
+          loadedBanners.where((banner) => banner.isActive == true).toList();
+      emit(SuccessLoadingBannersState());
+    } catch (e) {
+      print('Error fetching banners: $e');
+      emit(ErrorLoadingBannersState(e.toString()));
+    }
+  }
+
+  // Add a new banner
+  Future<void> addBanner({required File imageFile}) async {
+    emit(AddingBannerState());
+
+    try {
+      // Upload image to Firebase Storage
+      String imageUrl = await uploadImage(imageFile, 'banners');
+
+      if (imageUrl.isEmpty) {
+        throw Exception('Failed to upload banner image');
+      }
+
+      // Save banner data to Firestore
+      await FirebaseFirestore.instance.collection('banners').add({
+        'imageUrl': imageUrl,
+        'isActive': true,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      // Refresh banners list
+      await fetchBanners();
+      emit(SuccessAddingBannerState());
+    } catch (e) {
+      print('Error adding banner: $e');
+      emit(ErrorAddingBannerState(e.toString()));
+    }
+  }
+
+  // Delete a banner
+  Future<void> deleteBanner(String bannerId) async {
+    emit(DeletingBannerState());
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('banners')
+          .doc(bannerId)
+          .delete();
+
+      // Refresh banners list
+      await fetchBanners();
+      emit(SuccessDeletingBannerState());
+    } catch (e) {
+      print('Error deleting banner: $e');
+      emit(ErrorDeletingBannerState(e.toString()));
     }
   }
 }

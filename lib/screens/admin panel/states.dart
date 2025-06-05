@@ -131,3 +131,31 @@ class ErrorDeletingPromocodeState extends AdminPanelStates {
   final String error;
   ErrorDeletingPromocodeState(this.error);
 }
+
+// Banner states
+class LoadingBannersState extends AdminPanelStates {}
+
+class SuccessLoadingBannersState extends AdminPanelStates {}
+
+class ErrorLoadingBannersState extends AdminPanelStates {
+  final String error;
+  ErrorLoadingBannersState(this.error);
+}
+
+class AddingBannerState extends AdminPanelStates {}
+
+class SuccessAddingBannerState extends AdminPanelStates {}
+
+class ErrorAddingBannerState extends AdminPanelStates {
+  final String error;
+  ErrorAddingBannerState(this.error);
+}
+
+class DeletingBannerState extends AdminPanelStates {}
+
+class SuccessDeletingBannerState extends AdminPanelStates {}
+
+class ErrorDeletingBannerState extends AdminPanelStates {
+  final String error;
+  ErrorDeletingBannerState(this.error);
+}
