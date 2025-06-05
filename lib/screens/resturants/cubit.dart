@@ -21,12 +21,66 @@ class Restuarantscubit extends Cubit<ResturantsStates> {
 
   List<Category> categories = [];
   bool _isInitialized = false;
+  String _selectedArea = 'Cairo'; // Default area
+  String _searchQuery = ''; // Store current search query
 
   List<String> banners = [
     "assets/images/banners/banner1.png",
     "assets/images/banners/banner2.png",
     "assets/images/banners/banner3.png",
   ];
+
+  // Getter for selected area
+  String get selectedArea => _selectedArea;
+
+  // Method to update selected area and filter restaurants
+  void updateSelectedArea(String area) {
+    print("Updating selected area from $_selectedArea to $area");
+    _selectedArea = area;
+    _applyFilters();
+    print(
+        "After filtering: ${_filteredRestaurants?.length ?? 0} restaurants found for area $area");
+    emit(RestuarantsGetDataSuccessState());
+  }
+
+  // Apply all filters (area and search)
+  void _applyFilters() {
+    print("Applying filters for area: $_selectedArea, search: '$_searchQuery'");
+    print("Total restaurants before filtering: ${_allRestuarants.length}");
+
+    List<Restuarants> filtered = List.from(_allRestuarants);
+
+    // Debug: Show all restaurant areas
+    for (var restaurant in _allRestuarants) {
+      print("Restaurant: ${restaurant.name}, Area: ${restaurant.area}");
+    }
+
+    // Filter by area
+    filtered = filtered
+        .where((restaurant) => restaurant.area == _selectedArea)
+        .toList();
+
+    print("After area filtering: ${filtered.length} restaurants");
+
+    // Filter by search query if exists
+    if (_searchQuery.isNotEmpty) {
+      filtered = filtered.where((restaurant) {
+        return restaurant.name
+                .toLowerCase()
+                .contains(_searchQuery.toLowerCase()) ||
+            restaurant.nameAr.contains(_searchQuery) ||
+            restaurant.category
+                .toLowerCase()
+                .contains(_searchQuery.toLowerCase()) ||
+            restaurant.categoryAr.contains(_searchQuery);
+      }).toList();
+      print("After search filtering: ${filtered.length} restaurants");
+    }
+
+    // Always set filtered restaurants to show area-specific results
+    _filteredRestaurants = filtered;
+    print("Final filtered restaurants count: ${_filteredRestaurants!.length}");
+  }
 
   // Synchronize favorite status for all items
   void syncFavoriteStatus(List<String> favoriteIds) {
@@ -57,11 +111,18 @@ class Restuarantscubit extends Cubit<ResturantsStates> {
       await _fetchRestaurants();
 
       _isInitialized = true;
+      _applyFilters(); // Apply area filtering after loading restaurants
       emit(RestuarantsGetDataSuccessState());
     } catch (e) {
       print("Error initializing data: $e");
       emit(RestuarantsErrorState(e.toString()));
     }
+  }
+
+  // Initialize with user's selected area
+  void initializeWithUserArea(String userArea) {
+    _selectedArea = userArea;
+    print("Initialized restaurant cubit with user area: $userArea");
   }
 
   // Private method to fetch restaurants
@@ -140,6 +201,7 @@ class Restuarantscubit extends Cubit<ResturantsStates> {
             menuCategoriesAr: data['menuCategoriesAr'] is List
                 ? List<String>.from(data['menuCategoriesAr'])
                 : null,
+            area: data['area']?.toString() ?? 'Cairo', // Add area field
           );
 
           _allRestuarants.add(restaurant);
@@ -229,28 +291,42 @@ class Restuarantscubit extends Cubit<ResturantsStates> {
     }
   }
 
-  // Filter restaurants by category
+  // Filter restaurants by category (respecting the selected area)
   void filterRestaurants(Category category) {
     try {
-      print("Filtering restaurants for category: ${category.toString()}");
+      print(
+          "Filtering restaurants for category: ${category.toString()} in area: $_selectedArea");
       emit(RestuarantsLoadingState());
 
       if (category.en == "All") {
-        print("Selected 'All' category - showing all restaurants");
-        _filteredRestaurants = null; // Use _allRestuarants
-      } else {
-        print("Filtering for category: ${category.en}/${category.ar}");
+        print(
+            "Selected 'All' category - showing all restaurants in $_selectedArea");
+        // Apply area filter only
         _filteredRestaurants = _allRestuarants.where((restaurant) {
-          bool matches =
+          bool areaMatches = restaurant.area == _selectedArea;
+          print(
+              "Restaurant ${restaurant.name}: area=${restaurant.area}, areaMatches=$areaMatches");
+          return areaMatches;
+        }).toList();
+      } else {
+        print(
+            "Filtering for category: ${category.en}/${category.ar} in area: $_selectedArea");
+        _filteredRestaurants = _allRestuarants.where((restaurant) {
+          // Check both category and area
+          bool categoryMatches =
               restaurant.category.toLowerCase() == category.en.toLowerCase() ||
                   restaurant.categoryAr == category.ar;
+          bool areaMatches = restaurant.area == _selectedArea;
+          bool finalMatch = categoryMatches && areaMatches;
+
           print(
-              "Restaurant ${restaurant.name}: category=${restaurant.category}, categoryAr=${restaurant.categoryAr}, matches=$matches");
-          return matches;
+              "Restaurant ${restaurant.name}: category=${restaurant.category}, area=${restaurant.area}, categoryMatches=$categoryMatches, areaMatches=$areaMatches, finalMatch=$finalMatch");
+          return finalMatch;
         }).toList();
-        print("Found ${_filteredRestaurants?.length} matching restaurants");
       }
 
+      print(
+          "Found ${_filteredRestaurants?.length} matching restaurants in $_selectedArea");
       emit(RestaurantsFilteredState());
     } catch (e) {
       print("Error filtering restaurants: $e");
@@ -262,42 +338,10 @@ class Restuarantscubit extends Cubit<ResturantsStates> {
     emit(RestuarantsLoadingState());
     print("Searching restaurants for: '$value'");
 
-    if (value.trim().isEmpty) {
-      _filteredRestaurants = null; // Use all restaurants
-      print("Empty search query - showing all restaurants");
-    } else {
-      final searchTerm = value.toLowerCase().trim();
-      _filteredRestaurants = _allRestuarants.where((restaurant) {
-        // Search in restaurant name (English)
-        final nameMatches = restaurant.name.toLowerCase().contains(searchTerm);
+    _searchQuery = value.trim();
+    _applyFilters();
 
-        // Search in restaurant name (Arabic)
-        final nameArMatches =
-            restaurant.nameAr.toLowerCase().contains(searchTerm);
-
-        // Search in category (English)
-        final categoryMatches =
-            restaurant.category.toLowerCase().contains(searchTerm);
-
-        // Search in category (Arabic)
-        final categoryArMatches =
-            restaurant.categoryAr.toLowerCase().contains(searchTerm);
-
-        // Print debug info
-        print("Restaurant: ${restaurant.name}/${restaurant.nameAr}");
-        print("  Name match: $nameMatches, Name AR match: $nameArMatches");
-        print(
-            "  Category match: $categoryMatches, Category AR match: $categoryArMatches");
-
-        // Return true if any field matches
-        return nameMatches ||
-            nameArMatches ||
-            categoryMatches ||
-            categoryArMatches;
-      }).toList();
-
-      print("Found ${_filteredRestaurants?.length} matching restaurants");
-    }
+    print("Found ${_filteredRestaurants?.length} matching restaurants");
     emit(RestuarantsGetDataSuccessState());
   }
 

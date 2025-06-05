@@ -16,6 +16,7 @@ import 'package:foodapp/screens/oredrs/cubit.dart';
 import 'package:foodapp/screens/profile/cubit.dart';
 import 'package:foodapp/screens/resturants/cubit.dart';
 import 'package:foodapp/screens/signup/cubit.dart';
+import 'package:foodapp/screens/startup/location_selection_screen.dart';
 import 'package:foodapp/shared/blocObserver.dart';
 import 'package:foodapp/shared/paymob_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -46,13 +47,24 @@ void main() async {
 
   final prefs = await SharedPreferences.getInstance();
   final isArabic = prefs.getBool('isArabic') ?? false;
+  final hasSelectedLocation = prefs.getBool('hasSelectedLocation') ?? false;
+  final selectedArea = prefs.getString('selectedArea') ?? 'Cairo';
 
-  runApp(MyApp(isArabic: isArabic));
+  runApp(MyApp(
+      isArabic: isArabic,
+      hasSelectedLocation: hasSelectedLocation,
+      selectedArea: selectedArea));
 }
 
 class MyApp extends StatelessWidget {
   final bool isArabic;
-  const MyApp({super.key, required this.isArabic});
+  final bool hasSelectedLocation;
+  final String selectedArea;
+  const MyApp(
+      {super.key,
+      required this.isArabic,
+      required this.hasSelectedLocation,
+      required this.selectedArea});
 
   // This widget is the root of your application.
   @override
@@ -69,6 +81,8 @@ class MyApp extends StatelessWidget {
         BlocProvider(
           create: (context) {
             final cubit = Restuarantscubit();
+            // Initialize with user's selected area
+            cubit.initializeWithUserArea(selectedArea);
             // Initialization is handled in constructor
             print("Creating restaurant cubit instance...");
             return cubit;
@@ -117,7 +131,9 @@ class MyApp extends StatelessWidget {
                 theme: cubit.isdark,
                 navigatorKey:
                     navigatorKey, // Add navigator key for global access
-                home: const Layout(),
+                home: hasSelectedLocation
+                    ? const Layout()
+                    : const LocationSelectionScreen(),
                 routes: {
                   '/login': (context) => const Loginscreen(),
                 },

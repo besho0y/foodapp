@@ -17,6 +17,7 @@ import 'package:foodapp/screens/admin%20panel/cubit.dart';
 import 'package:foodapp/screens/admin%20panel/states.dart';
 import 'package:foodapp/screens/oredrs/cubit.dart';
 import 'package:foodapp/screens/resturants/cubit.dart';
+import 'package:foodapp/shared/colors.dart';
 import 'package:foodapp/shared/components/components.dart';
 import 'package:foodapp/shared/local_storage.dart';
 import 'package:foodapp/widgets/ordercard_admin.dart';
@@ -72,6 +73,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
   bool isLoadingOrders = false;
   File? _categoryImageFile;
   Category? _selectedRestaurantCategory;
+  String _selectedRestaurantArea = 'Cairo'; // Add area selection
 
   // Add flag to prevent multiple refresh operations
   bool _isRefreshing = false;
@@ -655,7 +657,33 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                       },
                       decoration: InputDecoration(
                         labelText: S.of(context).category,
-                        border: const OutlineInputBorder(),
+                        border: OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? AppColors.primaryDark
+                                    : AppColors.primaryLight,
+                            width: 1.5,
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? AppColors.primaryDark
+                                    : AppColors.primaryLight,
+                            width: 1.5,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? AppColors.primaryDark
+                                    : AppColors.primaryLight,
+                            width: 2.0,
+                          ),
+                        ),
                       ),
                       validator: (value) {
                         if (value == null) {
@@ -694,6 +722,57 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                     },
                   ),
                   SizedBox(height: 12.h),
+                  // Area dropdown
+                  DropdownButtonFormField<String>(
+                    value: _selectedRestaurantArea,
+                    items: ['Cairo', 'Giza'].map((String area) {
+                      return DropdownMenuItem<String>(
+                        value: area,
+                        child: Text(area),
+                      );
+                    }).toList(),
+                    onChanged: (String? newValue) {
+                      if (newValue != null && mounted) {
+                        setState(() {
+                          _selectedRestaurantArea = newValue;
+                        });
+                      }
+                    },
+                    decoration: InputDecoration(
+                      labelText: 'Area',
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? AppColors.primaryDark
+                              : AppColors.primaryLight,
+                          width: 1.5,
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? AppColors.primaryDark
+                              : AppColors.primaryLight,
+                          width: 1.5,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? AppColors.primaryDark
+                              : AppColors.primaryLight,
+                          width: 2.0,
+                        ),
+                      ),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return S.of(context).please_fill_all_fields;
+                      }
+                      return null;
+                    },
+                  ),
+                  SizedBox(height: 12.h),
                   Row(
                     children: [
                       ElevatedButton(
@@ -706,7 +785,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                               });
                             }
                           } catch (e) {
-                            print("Error selecting image: $e");
+                            print("Error selecting restaurant image: $e");
                             _showSnackBar('Error selecting image: $e',
                                 backgroundColor: Colors.red);
                           }
@@ -730,67 +809,14 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
               ),
             ),
             SizedBox(height: 24.h),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  S.of(context).restaurants,
-                  style: TextStyle(
-                    fontSize: 18.sp,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Row(
-                  children: [
-                    Text(
-                      '${S.of(context).count}: ${cubit.restaurants.length}',
-                      style: TextStyle(fontSize: 14.sp, color: Colors.grey),
-                    ),
-                    IconButton(
-                      icon: const Icon(
-                        Icons.add_circle_outline,
-                        color: Colors.green,
-                      ),
-                      onPressed: () => _addTestRestaurant(cubit),
-                      tooltip: S.of(context).add_restaurant,
-                    ),
-                  ],
-                ),
-              ],
+            Text(
+              'Existing Restaurants',
+              style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 16.h),
-            if (state is LoadingRestaurantsState)
-              Center(
-                child: Column(
-                  children: [
-                    const CircularProgressIndicator(),
-                    SizedBox(height: 10.h),
-                    Text(S.of(context).loading),
-                  ],
-                ),
-              )
-            else if (cubit.restaurants.isEmpty)
-              Center(
-                child: Column(
-                  children: [
-                    const Icon(Icons.no_food, size: 60, color: Colors.grey),
-                    SizedBox(height: 10.h),
-                    Text(S.of(context).no_data),
-                    SizedBox(height: 10.h),
-                    ElevatedButton(
-                      onPressed: () {
-                        try {
-                          cubit.getRestaurants();
-                        } catch (e) {
-                          print('Error refreshing restaurants: $e');
-                          _showSnackBar('Error refreshing restaurants',
-                              backgroundColor: Colors.red);
-                        }
-                      },
-                      child: Text(S.of(context).refresh),
-                    ),
-                  ],
-                ),
+            if (cubit.restaurants.isEmpty)
+              const Center(
+                child: Text("No restaurants found"),
               )
             else
               ListView.builder(
@@ -798,9 +824,6 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: cubit.restaurants.length,
                 itemBuilder: (context, index) {
-                  if (index >= cubit.restaurants.length) {
-                    return const SizedBox.shrink();
-                  }
                   final restaurant = cubit.restaurants[index];
                   return RestaurantListItem(
                     restaurant: restaurant,
@@ -808,501 +831,8 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                   );
                 },
               ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildItemsTab(AdminPanelCubit cubit, AdminPanelStates state) {
-    // Get available menu categories for the selected restaurant
-    List<String> availableMenuCategories = [];
-
-    if (selectedRestaurantId != null) {
-      try {
-        availableMenuCategories =
-            cubit.getMenuCategoriesForRestaurant(selectedRestaurantId!);
-      } catch (e) {
-        print('Error getting menu categories: $e');
-        availableMenuCategories = ['All', 'Uncategorized'];
-      }
-    } else {
-      availableMenuCategories = ['All', 'Uncategorized'];
-    }
-
-    // Make sure categories are unique to avoid dropdown errors
-    availableMenuCategories = availableMenuCategories.toSet().toList();
-
-    // Add "All" as the first category if not present
-    if (!availableMenuCategories.contains("All")) {
-      availableMenuCategories.insert(0, "All");
-    }
-
-    // Remove any variations of "Uncategorized" to avoid issues
-    availableMenuCategories.removeWhere(
-      (category) => category.toLowerCase().contains("uncategorized"),
-    );
-
-    // Set selected category to "All" if not set or invalid
-    if (selectedItemCategory == null ||
-        !availableMenuCategories.contains(selectedItemCategory)) {
-      selectedItemCategory = "All";
-    }
-
-    // Update the item category controller with selected value
-    if (_itemCategoryController.text.isEmpty ||
-        !availableMenuCategories.contains(_itemCategoryController.text)) {
-      _itemCategoryController.text = "All";
-    }
-
-    return SingleChildScrollView(
-      child: Padding(
-        padding: EdgeInsets.all(16.r),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              S.of(context).add_new_item,
-              style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
-            ),
             SizedBox(height: 16.h),
-            DropdownButtonFormField<String>(
-              decoration: InputDecoration(
-                labelText: S.of(context).select_restaurant,
-                border: const OutlineInputBorder(),
-                labelStyle: TextStyle(color: Theme.of(context).primaryColor),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(
-                    color: Theme.of(context).primaryColor,
-                    width: 2,
-                  ),
-                ),
-              ),
-              value: selectedRestaurantId,
-              dropdownColor: Theme.of(context).cardColor,
-              style: TextStyle(
-                color: Theme.of(context).textTheme.bodyLarge?.color ??
-                    Colors.white,
-                fontSize: 16.sp,
-              ),
-              icon: Icon(
-                Icons.arrow_drop_down,
-                color: Theme.of(context).primaryColor,
-              ),
-              items: cubit.restaurants.map((restaurant) {
-                return DropdownMenuItem<String>(
-                  value: restaurant.id,
-                  child: Text(
-                    restaurant.name,
-                    style: TextStyle(
-                      // Use the appropriate text color based on theme
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? Colors.white
-                          : Colors.black,
-                    ),
-                  ),
-                );
-              }).toList(),
-              onChanged: (value) {
-                if (value != selectedRestaurantId && mounted) {
-                  setState(() {
-                    selectedRestaurantId = value;
-                    // Initialize with "All" category when restaurant is selected
-                    if (value != null) {
-                      _itemCategoryController.text = "All";
-                    }
-                    // Reset categories and item selections when restaurant changes
-                    selectedCategories = [];
-                  });
-                }
-              },
-            ),
-            SizedBox(height: 16.h),
-            Form(
-              key: _itemFormKey,
-              child: Column(
-                children: [
-                  defaultTextField(
-                    controller: _itemNameController,
-                    type: TextInputType.text,
-                    label: S.of(context).item_name,
-                    validate: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter item name';
-                      }
-                      return null;
-                    },
-                  ),
-                  SizedBox(height: 12.h),
-                  defaultTextField(
-                    controller: _itemNameArController,
-                    type: TextInputType.text,
-                    label:
-                        '${S.of(context).item_name} (${S.of(context).arabic})',
-                    validate: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter Arabic item name';
-                      }
-                      return null;
-                    },
-                  ),
-                  SizedBox(height: 12.h),
-                  defaultTextField(
-                    controller: _itemDescriptionController,
-                    type: TextInputType.multiline,
-                    label: S.of(context).item_description,
-                    validate: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter description';
-                      }
-                      return null;
-                    },
-                  ),
-                  SizedBox(height: 12.h),
-                  defaultTextField(
-                    controller: _itemDescriptionArController,
-                    type: TextInputType.multiline,
-                    label:
-                        '${S.of(context).item_description} (${S.of(context).arabic})',
-                    validate: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter Arabic description';
-                      }
-                      return null;
-                    },
-                  ),
-                  SizedBox(height: 12.h),
-                  defaultTextField(
-                    controller: _itemPriceController,
-                    type: TextInputType.number,
-                    label: S.of(context).item_price,
-                    validate: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter price';
-                      }
-                      return null;
-                    },
-                  ),
-                  SizedBox(height: 12.h),
-                  // Category selection UI
-                  _buildCategorySelectionUI(availableMenuCategories),
-                  SizedBox(height: 12.h),
-                  Row(
-                    children: [
-                      ElevatedButton(
-                        onPressed: () async {
-                          try {
-                            final imageFile = await cubit.pickImage();
-                            if (imageFile != null && mounted) {
-                              setState(() {
-                                _itemImageFile = imageFile;
-                              });
-                            }
-                          } catch (e) {
-                            print("Error selecting image: $e");
-                            _showSnackBar('Error selecting image: $e',
-                                backgroundColor: Colors.red);
-                          }
-                        },
-                        child: Text(S.of(context).select_image),
-                      ),
-                      SizedBox(width: 16.w),
-                      _itemImageFile != null
-                          ? Text(S.of(context).image_selected)
-                          : Text(S.of(context).no_image_selected),
-                    ],
-                  ),
-                  SizedBox(height: 20.h),
-                  state is AddingItemState
-                      ? const CircularProgressIndicator()
-                      : ElevatedButton(
-                          onPressed: () async {
-                            if (_itemFormKey.currentState?.validate() == true) {
-                              if (selectedRestaurantId == null) {
-                                _showSnackBar(
-                                    "Please select a restaurant for the item",
-                                    backgroundColor: Colors.red);
-                                return;
-                              }
-
-                              try {
-                                // Show loading indicator
-                                showDialog(
-                                  context: context,
-                                  barrierDismissible: false,
-                                  builder: (BuildContext dialogContext) {
-                                    return const Center(
-                                        child: CircularProgressIndicator());
-                                  },
-                                );
-
-                                // Make sure we include the primary category in selectedCategories
-                                final allCategories =
-                                    List<String>.from(selectedCategories);
-                                if (!allCategories.contains(
-                                        _itemCategoryController.text) &&
-                                    _itemCategoryController.text != "All") {
-                                  allCategories
-                                      .add(_itemCategoryController.text);
-                                }
-
-                                await cubit.addItem(
-                                  restaurantId: selectedRestaurantId!,
-                                  name: _itemNameController.text,
-                                  nameAr: _itemNameArController.text,
-                                  description: _itemDescriptionController.text,
-                                  descriptionAr:
-                                      _itemDescriptionArController.text,
-                                  price:
-                                      double.parse(_itemPriceController.text),
-                                  category: _itemCategoryController.text,
-                                  categories: allCategories,
-                                  imageFile: _itemImageFile,
-                                );
-
-                                // Close loading dialog
-                                _safeNavigatorPop(context);
-
-                                _clearItemForm();
-                                _itemImageFile = null;
-                                if (mounted) {
-                                  setState(() {});
-                                }
-
-                                _showSnackBar("Item added successfully",
-                                    backgroundColor: Colors.green);
-
-                                // Refresh the admin panel
-                                await _refreshAdminPanel();
-                              } catch (e) {
-                                print('Error adding item: $e');
-                                _safeNavigatorPop(context);
-                                _showSnackBar('Error adding item: $e',
-                                    backgroundColor: Colors.red);
-                              }
-                            }
-                          },
-                          child: Text(S.of(context).add_item),
-                        ),
-                ],
-              ),
-            ),
-            SizedBox(height: 24.h),
-            Text(
-              S.of(context).restaurant_items,
-              style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 16.h),
-            if (selectedRestaurantId != null)
-              Builder(
-                builder: (context) {
-                  try {
-                    return _buildItemsForRestaurant(
-                      cubit,
-                      selectedRestaurantId!,
-                    );
-                  } catch (e) {
-                    print("Error building items for restaurant: $e");
-                    return Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.error_outline,
-                            color: Colors.red,
-                            size: 48,
-                          ),
-                          SizedBox(height: 16.h),
-                          const Text("Error displaying items"),
-                          SizedBox(height: 8.h),
-                          ElevatedButton(
-                            onPressed: () {
-                              try {
-                                cubit.getRestaurants();
-                              } catch (e) {
-                                print('Error refreshing data: $e');
-                              }
-                            },
-                            child: const Text("Refresh data"),
-                          ),
-                        ],
-                      ),
-                    );
-                  }
-                },
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildItemsForRestaurant(AdminPanelCubit cubit, String restaurantId) {
-    try {
-      final restaurant = cubit.restaurants.firstWhere(
-        (r) => r.id == restaurantId,
-        orElse: () => throw Exception('Restaurant not found'),
-      );
-
-      if (restaurant.menuItems.isEmpty) {
-        return const Center(child: Text("No items found for this restaurant"));
-      }
-
-      // Get the currently selected category from the dropdown
-      String selectedCategory = _itemCategoryController.text.isEmpty
-          ? "All"
-          : _itemCategoryController.text;
-
-      // Filter items based on selected category
-      var displayedItems = restaurant.menuItems;
-
-      // Only filter if not showing "All" items
-      if (selectedCategory != "All") {
-        displayedItems = restaurant.menuItems
-            .where(
-              (item) =>
-                  item.category == selectedCategory ||
-                  (item.categories.contains(selectedCategory)),
-            )
-            .toList();
-      }
-
-      // Items are already ordered by creation date (newest first) from the cubit
-      // No additional sorting needed since the cubit now fetches items in descending order by createdAt
-
-      if (displayedItems.isEmpty) {
-        return const Center(
-          child: Text("No items found in category"),
-        );
-      }
-
-      return ListView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: displayedItems.length,
-        itemBuilder: (context, index) {
-          if (index >= displayedItems.length) {
-            return const SizedBox.shrink();
-          }
-          final item = displayedItems[index];
-          return ItemListItem(
-            item: item,
-            onDelete: () => _deleteItem(cubit, restaurantId, item.id),
-          );
-        },
-      );
-    } catch (e) {
-      print('Error building items for restaurant: $e');
-      return const Center(child: Text("Error loading restaurant items"));
-    }
-  }
-
-  Widget _buildCategoriesTab(AdminPanelCubit cubit, AdminPanelStates state) {
-    // This tab is for menu categories within a restaurant
-    return SingleChildScrollView(
-      child: Padding(
-        padding: EdgeInsets.all(16.r),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              S.of(context).add_new_category,
-              style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 16.h),
-            DropdownButtonFormField<String>(
-              decoration: InputDecoration(
-                labelText: S.of(context).select_restaurant,
-                border: const OutlineInputBorder(),
-                labelStyle: TextStyle(color: Theme.of(context).primaryColor),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(
-                    color: Theme.of(context).primaryColor,
-                    width: 2,
-                  ),
-                ),
-              ),
-              value: selectedRestaurantId,
-              dropdownColor: Theme.of(context).cardColor,
-              style: TextStyle(
-                color: Theme.of(context).textTheme.bodyLarge?.color ??
-                    Colors.white,
-                fontSize: 16.sp,
-              ),
-              icon: Icon(
-                Icons.arrow_drop_down,
-                color: Theme.of(context).primaryColor,
-              ),
-              items: cubit.restaurants.map((restaurant) {
-                return DropdownMenuItem<String>(
-                  value: restaurant.id,
-                  child: Text(
-                    restaurant.name,
-                    style: TextStyle(
-                      // Use the appropriate text color based on theme
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? Colors.white
-                          : Colors.black,
-                    ),
-                  ),
-                );
-              }).toList(),
-              onChanged: (value) {
-                if (value != selectedRestaurantId && mounted) {
-                  setState(() {
-                    selectedRestaurantId = value;
-                    // Reset relevant state when restaurant changes
-                    _categoryNameController.clear();
-                    _categoryNameArController.clear();
-                  });
-                }
-              },
-            ),
-            SizedBox(height: 16.h),
-            Form(
-              key: _categoryFormKey,
-              child: Column(
-                children: [
-                  defaultTextField(
-                    controller: _categoryNameController,
-                    type: TextInputType.text,
-                    label: S.of(context).category_name_english,
-                    validate: (value) {
-                      if (value == null || value.isEmpty) {
-                        return S.of(context).please_fill_all_fields;
-                      }
-                      return null;
-                    },
-                  ),
-                  SizedBox(height: 12.h),
-                  defaultTextField(
-                    controller: _categoryNameArController,
-                    type: TextInputType.text,
-                    label: S.of(context).category_name_arabic,
-                    validate: (value) {
-                      if (value == null || value.isEmpty) {
-                        return S.of(context).please_fill_all_fields;
-                      }
-                      return null;
-                    },
-                  ),
-                  SizedBox(height: 20.h),
-                  state is AddingCategoryState
-                      ? const CircularProgressIndicator()
-                      : ElevatedButton(
-                          onPressed: () => _submitCategoryForm(cubit),
-                          child: Text(S.of(context).add_category),
-                        ),
-                ],
-              ),
-            ),
-            SizedBox(height: 24.h),
-            Text(
-              S.of(context).restaurant_items,
-              style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 16.h),
-            if (selectedRestaurantId != null)
+            if (false)
               FutureBuilder<QuerySnapshot>(
                 future: FirebaseFirestore.instance
                     .collection("restaurants")
@@ -2542,6 +2072,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
         imageFile:
             _restaurantImageFile, // Pass the file, let cubit handle upload
         categories: [],
+        area: _selectedRestaurantArea, // Add area parameter
       );
 
       // Close loading dialog
@@ -2801,7 +2332,30 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
         DropdownButtonFormField<String>(
           decoration: InputDecoration(
             labelText: "Primary Category",
-            border: const OutlineInputBorder(),
+            border: OutlineInputBorder(
+              borderSide: BorderSide(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.primaryDark
+                    : AppColors.primaryLight,
+                width: 1.5,
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderSide: BorderSide(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.primaryDark
+                    : AppColors.primaryLight,
+                width: 1.5,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderSide: BorderSide(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.primaryDark
+                    : AppColors.primaryLight,
+                width: 2.0,
+              ),
+            ),
             labelStyle: TextStyle(color: Theme.of(context).primaryColor),
           ),
           value: availableMenuCategories.contains(_itemCategoryController.text)
@@ -3502,6 +3056,648 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
       print("❌ Category addition test failed: $e");
       _showSnackBar("❌ Category addition failed: $e",
           backgroundColor: Colors.red);
+    }
+  }
+
+  // Add the missing tab methods
+  Widget _buildItemsTab(AdminPanelCubit cubit, AdminPanelStates state) {
+    // Get available menu categories for the selected restaurant
+    List<String> availableMenuCategories = [];
+
+    if (selectedRestaurantId != null) {
+      try {
+        availableMenuCategories =
+            cubit.getMenuCategoriesForRestaurant(selectedRestaurantId!);
+      } catch (e) {
+        print('Error getting menu categories: $e');
+        availableMenuCategories = ['All', 'Uncategorized'];
+      }
+    } else {
+      availableMenuCategories = ['All', 'Uncategorized'];
+    }
+
+    // Make sure categories are unique to avoid dropdown errors
+    availableMenuCategories = availableMenuCategories.toSet().toList();
+
+    // Add "All" as the first category if not present
+    if (!availableMenuCategories.contains("All")) {
+      availableMenuCategories.insert(0, "All");
+    }
+
+    // Remove any variations of "Uncategorized" to avoid issues
+    availableMenuCategories.removeWhere(
+      (category) => category.toLowerCase().contains("uncategorized"),
+    );
+
+    // Set selected category to "All" if not set or invalid
+    if (selectedItemCategory == null ||
+        !availableMenuCategories.contains(selectedItemCategory)) {
+      selectedItemCategory = "All";
+    }
+
+    // Update the item category controller with selected value
+    if (_itemCategoryController.text.isEmpty ||
+        !availableMenuCategories.contains(_itemCategoryController.text)) {
+      _itemCategoryController.text = "All";
+    }
+
+    return SingleChildScrollView(
+      child: Padding(
+        padding: EdgeInsets.all(16.r),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              S.of(context).add_new_item,
+              style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 16.h),
+            DropdownButtonFormField<String>(
+              decoration: InputDecoration(
+                labelText: S.of(context).select_restaurant,
+                border: OutlineInputBorder(
+                  borderSide: BorderSide(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.primaryDark
+                        : AppColors.primaryLight,
+                    width: 1.5,
+                  ),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.primaryDark
+                        : AppColors.primaryLight,
+                    width: 1.5,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.primaryDark
+                        : AppColors.primaryLight,
+                    width: 2.0,
+                  ),
+                ),
+                labelStyle: TextStyle(color: Theme.of(context).primaryColor),
+              ),
+              value: selectedRestaurantId,
+              dropdownColor: Theme.of(context).cardColor,
+              style: TextStyle(
+                color: Theme.of(context).textTheme.bodyLarge?.color ??
+                    Colors.white,
+                fontSize: 16.sp,
+              ),
+              icon: Icon(
+                Icons.arrow_drop_down,
+                color: Theme.of(context).primaryColor,
+              ),
+              items: cubit.restaurants.map((restaurant) {
+                return DropdownMenuItem<String>(
+                  value: restaurant.id,
+                  child: Text(
+                    restaurant.name,
+                    style: TextStyle(
+                      // Use the appropriate text color based on theme
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white
+                          : Colors.black,
+                    ),
+                  ),
+                );
+              }).toList(),
+              onChanged: (value) {
+                if (value != selectedRestaurantId && mounted) {
+                  setState(() {
+                    selectedRestaurantId = value;
+                    // Initialize with "All" category when restaurant is selected
+                    if (value != null) {
+                      _itemCategoryController.text = "All";
+                    }
+                    // Reset categories and item selections when restaurant changes
+                    selectedCategories = [];
+                  });
+                }
+              },
+            ),
+            SizedBox(height: 16.h),
+            Form(
+              key: _itemFormKey,
+              child: Column(
+                children: [
+                  defaultTextField(
+                    controller: _itemNameController,
+                    type: TextInputType.text,
+                    label: S.of(context).item_name,
+                    validate: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter item name';
+                      }
+                      return null;
+                    },
+                  ),
+                  SizedBox(height: 12.h),
+                  defaultTextField(
+                    controller: _itemNameArController,
+                    type: TextInputType.text,
+                    label:
+                        '${S.of(context).item_name} (${S.of(context).arabic})',
+                    validate: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter Arabic item name';
+                      }
+                      return null;
+                    },
+                  ),
+                  SizedBox(height: 12.h),
+                  defaultTextField(
+                    controller: _itemDescriptionController,
+                    type: TextInputType.multiline,
+                    label: S.of(context).item_description,
+                    validate: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter description';
+                      }
+                      return null;
+                    },
+                  ),
+                  SizedBox(height: 12.h),
+                  defaultTextField(
+                    controller: _itemDescriptionArController,
+                    type: TextInputType.multiline,
+                    label:
+                        '${S.of(context).item_description} (${S.of(context).arabic})',
+                    validate: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter Arabic description';
+                      }
+                      return null;
+                    },
+                  ),
+                  SizedBox(height: 12.h),
+                  defaultTextField(
+                    controller: _itemPriceController,
+                    type: TextInputType.number,
+                    label: S.of(context).item_price,
+                    validate: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter price';
+                      }
+                      return null;
+                    },
+                  ),
+                  SizedBox(height: 12.h),
+                  // Category selection UI
+                  _buildCategorySelectionUI(availableMenuCategories),
+                  SizedBox(height: 12.h),
+                  Row(
+                    children: [
+                      ElevatedButton(
+                        onPressed: () async {
+                          try {
+                            final imageFile = await cubit.pickImage();
+                            if (imageFile != null && mounted) {
+                              setState(() {
+                                _itemImageFile = imageFile;
+                              });
+                            }
+                          } catch (e) {
+                            print("Error selecting image: $e");
+                            _showSnackBar('Error selecting image: $e',
+                                backgroundColor: Colors.red);
+                          }
+                        },
+                        child: Text(S.of(context).select_image),
+                      ),
+                      SizedBox(width: 16.w),
+                      _itemImageFile != null
+                          ? Text(S.of(context).image_selected)
+                          : Text(S.of(context).no_image_selected),
+                    ],
+                  ),
+                  SizedBox(height: 20.h),
+                  state is AddingItemState
+                      ? const CircularProgressIndicator()
+                      : ElevatedButton(
+                          onPressed: () async {
+                            if (_itemFormKey.currentState?.validate() == true) {
+                              if (selectedRestaurantId == null) {
+                                _showSnackBar(
+                                    "Please select a restaurant for the item",
+                                    backgroundColor: Colors.red);
+                                return;
+                              }
+
+                              try {
+                                // Show loading indicator
+                                showDialog(
+                                  context: context,
+                                  barrierDismissible: false,
+                                  builder: (BuildContext dialogContext) {
+                                    return const Center(
+                                        child: CircularProgressIndicator());
+                                  },
+                                );
+
+                                // Make sure we include the primary category in selectedCategories
+                                final allCategories =
+                                    List<String>.from(selectedCategories);
+                                if (!allCategories.contains(
+                                        _itemCategoryController.text) &&
+                                    _itemCategoryController.text != "All") {
+                                  allCategories
+                                      .add(_itemCategoryController.text);
+                                }
+
+                                await cubit.addItem(
+                                  restaurantId: selectedRestaurantId!,
+                                  name: _itemNameController.text,
+                                  nameAr: _itemNameArController.text,
+                                  description: _itemDescriptionController.text,
+                                  descriptionAr:
+                                      _itemDescriptionArController.text,
+                                  price:
+                                      double.parse(_itemPriceController.text),
+                                  category: _itemCategoryController.text,
+                                  categories: allCategories,
+                                  imageFile: _itemImageFile,
+                                );
+
+                                // Close loading dialog
+                                _safeNavigatorPop(context);
+
+                                _clearItemForm();
+                                _itemImageFile = null;
+                                if (mounted) {
+                                  setState(() {});
+                                }
+
+                                _showSnackBar("Item added successfully",
+                                    backgroundColor: Colors.green);
+
+                                // Refresh the admin panel
+                                await _refreshAdminPanel();
+                              } catch (e) {
+                                print('Error adding item: $e');
+                                _safeNavigatorPop(context);
+                                _showSnackBar('Error adding item: $e',
+                                    backgroundColor: Colors.red);
+                              }
+                            }
+                          },
+                          child: Text(S.of(context).add_item),
+                        ),
+                ],
+              ),
+            ),
+            SizedBox(height: 24.h),
+            Text(
+              S.of(context).restaurant_items,
+              style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 16.h),
+            if (selectedRestaurantId != null)
+              Builder(
+                builder: (context) {
+                  try {
+                    return _buildItemsForRestaurant(
+                      cubit,
+                      selectedRestaurantId!,
+                    );
+                  } catch (e) {
+                    print("Error building items for restaurant: $e");
+                    return Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.error_outline,
+                            color: Colors.red,
+                            size: 48,
+                          ),
+                          SizedBox(height: 16.h),
+                          const Text("Error displaying items"),
+                          SizedBox(height: 8.h),
+                          ElevatedButton(
+                            onPressed: () {
+                              try {
+                                cubit.getRestaurants();
+                              } catch (e) {
+                                print('Error refreshing data: $e');
+                              }
+                            },
+                            child: const Text("Refresh data"),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                },
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCategoriesTab(AdminPanelCubit cubit, AdminPanelStates state) {
+    // This tab is for menu categories within a restaurant
+    return SingleChildScrollView(
+      child: Padding(
+        padding: EdgeInsets.all(16.r),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              S.of(context).add_new_category,
+              style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 16.h),
+            DropdownButtonFormField<String>(
+              decoration: InputDecoration(
+                labelText: S.of(context).select_restaurant,
+                border: OutlineInputBorder(
+                  borderSide: BorderSide(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.primaryDark
+                        : AppColors.primaryLight,
+                    width: 1.5,
+                  ),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.primaryDark
+                        : AppColors.primaryLight,
+                    width: 1.5,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.primaryDark
+                        : AppColors.primaryLight,
+                    width: 2.0,
+                  ),
+                ),
+                labelStyle: TextStyle(color: Theme.of(context).primaryColor),
+              ),
+              value: selectedRestaurantId,
+              dropdownColor: Theme.of(context).cardColor,
+              style: TextStyle(
+                color: Theme.of(context).textTheme.bodyLarge?.color ??
+                    Colors.white,
+                fontSize: 16.sp,
+              ),
+              icon: Icon(
+                Icons.arrow_drop_down,
+                color: Theme.of(context).primaryColor,
+              ),
+              items: cubit.restaurants.map((restaurant) {
+                return DropdownMenuItem<String>(
+                  value: restaurant.id,
+                  child: Text(
+                    restaurant.name,
+                    style: TextStyle(
+                      // Use the appropriate text color based on theme
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white
+                          : Colors.black,
+                    ),
+                  ),
+                );
+              }).toList(),
+              onChanged: (value) {
+                if (value != selectedRestaurantId && mounted) {
+                  setState(() {
+                    selectedRestaurantId = value;
+                    // Reset relevant state when restaurant changes
+                    _categoryNameController.clear();
+                    _categoryNameArController.clear();
+                  });
+                }
+              },
+            ),
+            SizedBox(height: 16.h),
+            Form(
+              key: _categoryFormKey,
+              child: Column(
+                children: [
+                  defaultTextField(
+                    controller: _categoryNameController,
+                    type: TextInputType.text,
+                    label: S.of(context).category_name_english,
+                    validate: (value) {
+                      if (value == null || value.isEmpty) {
+                        return S.of(context).please_fill_all_fields;
+                      }
+                      return null;
+                    },
+                  ),
+                  SizedBox(height: 12.h),
+                  defaultTextField(
+                    controller: _categoryNameArController,
+                    type: TextInputType.text,
+                    label: S.of(context).category_name_arabic,
+                    validate: (value) {
+                      if (value == null || value.isEmpty) {
+                        return S.of(context).please_fill_all_fields;
+                      }
+                      return null;
+                    },
+                  ),
+                  SizedBox(height: 20.h),
+                  state is AddingCategoryState
+                      ? const CircularProgressIndicator()
+                      : ElevatedButton(
+                          onPressed: () => _submitCategoryForm(cubit),
+                          child: Text(S.of(context).add_category),
+                        ),
+                ],
+              ),
+            ),
+            SizedBox(height: 24.h),
+            Text(
+              S.of(context).restaurant_items,
+              style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 16.h),
+            if (selectedRestaurantId != null)
+              FutureBuilder<QuerySnapshot>(
+                future: FirebaseFirestore.instance
+                    .collection("restaurants")
+                    .doc(selectedRestaurantId)
+                    .collection("menu_categories")
+                    .orderBy("createdAt",
+                        descending: true) // Order by newest first
+                    .get(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  if (snapshot.hasError) {
+                    print("Error loading menu categories: ${snapshot.error}");
+                    // Fallback to the in-memory data if we can't load from Firestore
+                    try {
+                      final restaurant = cubit.restaurants.firstWhere(
+                        (r) => r.id == selectedRestaurantId!,
+                        orElse: () => throw Exception("Restaurant not found"),
+                      );
+
+                      final menuCategories = restaurant.menuCategories ?? [];
+                      final menuCategoriesAr =
+                          restaurant.menuCategoriesAr ?? [];
+
+                      if (menuCategories.isEmpty) {
+                        return const Center(
+                          child: Text(
+                              "No menu categories found for this restaurant"),
+                        );
+                      }
+
+                      return _buildCategoriesList(
+                        cubit,
+                        menuCategories,
+                        menuCategoriesAr,
+                      );
+                    } catch (e) {
+                      print("Error accessing fallback data: $e");
+                      return const Center(
+                        child: Text("Error loading categories"),
+                      );
+                    }
+                  }
+
+                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                    // Check in-memory data as fallback
+                    try {
+                      final restaurant = cubit.restaurants.firstWhere(
+                        (r) => r.id == selectedRestaurantId!,
+                        orElse: () => throw Exception("Restaurant not found"),
+                      );
+
+                      final menuCategories = restaurant.menuCategories ?? [];
+
+                      if (menuCategories.isEmpty) {
+                        return const Center(
+                          child: Text(
+                              "No menu categories found for this restaurant"),
+                        );
+                      }
+
+                      return _buildCategoriesList(
+                        cubit,
+                        restaurant.menuCategories ?? [],
+                        restaurant.menuCategoriesAr ?? [],
+                      );
+                    } catch (e) {
+                      print("Error accessing fallback data: $e");
+                      return const Center(
+                        child: Text("No menu categories found"),
+                      );
+                    }
+                  }
+
+                  // Process subcollection data
+                  final List<String> menuCategories = [];
+                  final List<String> menuCategoriesAr = [];
+                  final List<String> categoryIds = [];
+
+                  try {
+                    for (var doc in snapshot.data!.docs) {
+                      final data = doc.data() as Map<String, dynamic>;
+                      final categoryName = data['name']?.toString();
+
+                      if (categoryName != null && categoryName.isNotEmpty) {
+                        menuCategories.add(categoryName);
+                        menuCategoriesAr
+                            .add(data['nameAr']?.toString() ?? categoryName);
+                        categoryIds.add(doc.id);
+                      }
+                    }
+                  } catch (e) {
+                    print("Error processing subcollection data: $e");
+                    return const Center(
+                      child: Text("Error processing categories data"),
+                    );
+                  }
+
+                  return _buildCategoriesListFromSubcollection(
+                    cubit,
+                    menuCategories,
+                    menuCategoriesAr,
+                    categoryIds,
+                  );
+                },
+              )
+            else
+              Center(
+                child: Text(S.of(context).select_restaurant_to_view_items),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildItemsForRestaurant(AdminPanelCubit cubit, String restaurantId) {
+    try {
+      final restaurant = cubit.restaurants.firstWhere(
+        (r) => r.id == restaurantId,
+        orElse: () => throw Exception('Restaurant not found'),
+      );
+
+      if (restaurant.menuItems.isEmpty) {
+        return const Center(child: Text("No items found for this restaurant"));
+      }
+
+      // Get the currently selected category from the dropdown
+      String selectedCategory = _itemCategoryController.text.isEmpty
+          ? "All"
+          : _itemCategoryController.text;
+
+      // Filter items based on selected category
+      var displayedItems = restaurant.menuItems;
+
+      // Only filter if not showing "All" items
+      if (selectedCategory != "All") {
+        displayedItems = restaurant.menuItems
+            .where(
+              (item) =>
+                  item.category == selectedCategory ||
+                  (item.categories.contains(selectedCategory)),
+            )
+            .toList();
+      }
+
+      // Items are already ordered by creation date (newest first) from the cubit
+      // No additional sorting needed since the cubit now fetches items in descending order by createdAt
+
+      if (displayedItems.isEmpty) {
+        return const Center(
+          child: Text("No items found in category"),
+        );
+      }
+
+      return ListView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: displayedItems.length,
+        itemBuilder: (context, index) {
+          if (index >= displayedItems.length) {
+            return const SizedBox.shrink();
+          }
+          final item = displayedItems[index];
+          return ItemListItem(
+            item: item,
+            onDelete: () => _deleteItem(cubit, restaurantId, item.id),
+          );
+        },
+      );
+    } catch (e) {
+      print('Error building items for restaurant: $e');
+      return const Center(child: Text("Error loading restaurant items"));
     }
   }
 }

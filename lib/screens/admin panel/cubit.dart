@@ -345,6 +345,7 @@ class AdminPanelCubit extends Cubit<AdminPanelStates> {
     required String deliveryTime,
     required File? imageFile,
     required List<String> categories,
+    String area = 'Cairo', // Add area parameter with default value
   }) async {
     emit(AddingRestaurantState());
     try {
@@ -417,6 +418,7 @@ class AdminPanelCubit extends Cubit<AdminPanelStates> {
           'الكل',
           'غير مصنف'
         ], // Default Arabic menu categories
+        'area': area, // Add area field
         'createdAt': FieldValue.serverTimestamp(),
       };
 

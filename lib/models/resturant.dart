@@ -17,6 +17,7 @@ class Restuarants {
   List<String> categories;
   List<String>? menuCategories;
   List<String>? menuCategoriesAr;
+  String area;
 
   Restuarants({
     required this.name,
@@ -33,6 +34,7 @@ class Restuarants {
     required this.categories,
     this.menuCategories,
     this.menuCategoriesAr,
+    this.area = 'Cairo',
   }) {
     // Ensure categories is not null
     categories = categories.isEmpty ? ['Uncategorized'] : categories;
@@ -53,7 +55,8 @@ class Restuarants {
         categoryAr = json['categoryar']?.toString() ?? 'طعام سريع',
         categories = _parseCategories(json['categories']),
         menuCategories = _parseMenuCategories(json['menuCategories']),
-        menuCategoriesAr = _parseMenuCategories(json['menuCategoriesAr']) {
+        menuCategoriesAr = _parseMenuCategories(json['menuCategoriesAr']),
+        area = json['area']?.toString() ?? 'Cairo' {
     try {
       // Parse menu items with error handling
       if (json['items'] is List) {
@@ -200,6 +203,7 @@ class Restuarants {
         'categories': categories,
         'menuCategories': menuCategories,
         'menuCategoriesAr': menuCategoriesAr,
+        'area': area,
         'items': menuItems.map((item) => item.toJson()).toList(),
       };
     } catch (e) {
@@ -230,6 +234,7 @@ class Restuarants {
       categories: [],
       menuCategories: [],
       menuCategoriesAr: [],
+      area: 'Cairo',
     );
   }
 }

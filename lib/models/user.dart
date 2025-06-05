@@ -9,6 +9,7 @@ class User {
   List<String> favourites;
   List<String> usedPromocodes;
   bool isAdmin;
+  String selectedArea;
 
   User({
     required this.name,
@@ -21,6 +22,7 @@ class User {
     this.favourites = const [],
     this.usedPromocodes = const [],
     this.isAdmin = false,
+    this.selectedArea = 'Cairo',
   });
 
   User.fromJson(Map<String, dynamic> json)
@@ -41,6 +43,7 @@ class User {
             ? List<String>.from(json['usedPromocodes'])
             : [],
         isAdmin = json['isAdmin'] ?? false,
+        selectedArea = json['selectedArea'] ?? 'Cairo',
         cart = []; // Cart is only stored locally, not in Firestore
 
   Map<String, dynamic> tomap() => {
@@ -53,6 +56,7 @@ class User {
         'favourites': favourites,
         'usedPromocodes': usedPromocodes,
         'isAdmin': isAdmin,
+        'selectedArea': selectedArea,
         // Note: Cart is not included as it's only stored locally
       };
 }

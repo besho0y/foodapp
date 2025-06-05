@@ -5,6 +5,8 @@ import 'package:foodapp/generated/l10n.dart';
 import 'package:foodapp/models/user.dart';
 import 'package:foodapp/screens/profile/cubit.dart';
 import 'package:foodapp/screens/profile/states.dart';
+import 'package:foodapp/screens/resturants/cubit.dart';
+import 'package:foodapp/shared/colors.dart';
 
 class Profilescreen extends StatefulWidget {
   const Profilescreen({super.key});
@@ -57,12 +59,12 @@ class _ProfilescreenState extends State<Profilescreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.error_outline, size: 60, color: Colors.red),
+                  const Icon(Icons.error_outline, size: 60, color: Colors.red),
                   SizedBox(height: 16.h),
-                  Text("Error loading profile data"),
+                  const Text("Error loading profile data"),
                   ElevatedButton(
                     onPressed: () => cubit.getuserdata(),
-                    child: Text("Retry"),
+                    child: const Text("Retry"),
                   ),
                 ],
               ),
@@ -176,6 +178,123 @@ class _ProfilescreenState extends State<Profilescreen> {
                           value: cubit.user.email,
                         ),
 
+                        // Area Selection
+                        Padding(
+                          padding: EdgeInsets.symmetric(vertical: 8.h),
+                          child: Row(
+                            children: [
+                              Icon(Icons.location_city,
+                                  size: 24.sp,
+                                  color: Theme.of(context).primaryColor),
+                              SizedBox(width: 10.w),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Area',
+                                      style: TextStyle(
+                                        fontSize: 12.sp,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                    SizedBox(height: 4.h),
+                                    DropdownButtonFormField<String>(
+                                      value: cubit.user.selectedArea,
+                                      decoration: InputDecoration(
+                                        border: OutlineInputBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(8.r),
+                                          borderSide: BorderSide(
+                                            color:
+                                                Theme.of(context).brightness ==
+                                                        Brightness.dark
+                                                    ? AppColors.primaryDark
+                                                    : AppColors.primaryLight,
+                                            width: 1.5,
+                                          ),
+                                        ),
+                                        enabledBorder: OutlineInputBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(8.r),
+                                          borderSide: BorderSide(
+                                            color:
+                                                Theme.of(context).brightness ==
+                                                        Brightness.dark
+                                                    ? AppColors.primaryDark
+                                                    : AppColors.primaryLight,
+                                            width: 1.5,
+                                          ),
+                                        ),
+                                        focusedBorder: OutlineInputBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(8.r),
+                                          borderSide: BorderSide(
+                                            color:
+                                                Theme.of(context).brightness ==
+                                                        Brightness.dark
+                                                    ? AppColors.primaryDark
+                                                    : AppColors.primaryLight,
+                                            width: 2.0,
+                                          ),
+                                        ),
+                                        contentPadding: EdgeInsets.symmetric(
+                                            horizontal: 12.w, vertical: 8.h),
+                                      ),
+                                      items:
+                                          ['Cairo', 'Giza'].map((String area) {
+                                        return DropdownMenuItem<String>(
+                                          value: area,
+                                          child: Text(area),
+                                        );
+                                      }).toList(),
+                                      onChanged: (String? newValue) async {
+                                        if (newValue != null &&
+                                            newValue !=
+                                                cubit.user.selectedArea) {
+                                          try {
+                                            await cubit
+                                                .updateSelectedArea(newValue);
+
+                                            // Update restaurants based on new area
+                                            try {
+                                              final restCubit =
+                                                  Restuarantscubit.get(context);
+                                              restCubit
+                                                  .updateSelectedArea(newValue);
+                                            } catch (e) {
+                                              print(
+                                                  'Error updating restaurant area filter: $e');
+                                            }
+
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(
+                                              SnackBar(
+                                                content: Text(
+                                                    'Area updated to $newValue'),
+                                                backgroundColor: Colors.green,
+                                              ),
+                                            );
+                                          } catch (e) {
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(
+                                              SnackBar(
+                                                content: Text(
+                                                    'Error updating area: $e'),
+                                                backgroundColor: Colors.red,
+                                              ),
+                                            );
+                                          }
+                                        }
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
                         // Addresses Section
                         SizedBox(height: 30.h),
                         Row(
@@ -189,7 +308,7 @@ class _ProfilescreenState extends State<Profilescreen> {
                               ),
                             ),
                             IconButton(
-                              icon: Icon(Icons.add_circle_outline),
+                              icon: const Icon(Icons.add_circle_outline),
                               onPressed: () =>
                                   _showAddAddressBottomSheet(context),
                             ),
@@ -202,7 +321,7 @@ class _ProfilescreenState extends State<Profilescreen> {
                             ? Center(
                                 child: Column(
                                   children: [
-                                    Icon(Icons.location_off,
+                                    const Icon(Icons.location_off,
                                         size: 40, color: Colors.grey),
                                     SizedBox(height: 10.h),
                                     Text(S.of(context).Naddresses),
@@ -217,7 +336,7 @@ class _ProfilescreenState extends State<Profilescreen> {
                               )
                             : ListView.builder(
                                 shrinkWrap: true,
-                                physics: NeverScrollableScrollPhysics(),
+                                physics: const NeverScrollableScrollPhysics(),
                                 itemCount: cubit.user.addresses.length,
                                 itemBuilder: (context, index) {
                                   final address = cubit.user.addresses[index];
@@ -341,7 +460,7 @@ class _ProfilescreenState extends State<Profilescreen> {
                       ),
                     ),
                   ),
-                Spacer(),
+                const Spacer(),
                 PopupMenuButton<String>(
                   onSelected: (value) {
                     if (value == 'edit') {
@@ -357,7 +476,7 @@ class _ProfilescreenState extends State<Profilescreen> {
                       value: 'edit',
                       child: Row(
                         children: [
-                          Icon(Icons.edit),
+                          const Icon(Icons.edit),
                           SizedBox(width: 8.w),
                           Text(S.of(context).Edit),
                         ],
@@ -368,7 +487,7 @@ class _ProfilescreenState extends State<Profilescreen> {
                         value: S.of(context).default1,
                         child: Row(
                           children: [
-                            Icon(Icons.check_circle),
+                            const Icon(Icons.check_circle),
                             SizedBox(width: 8.w),
                             Text(S.of(context).Setdefaultaddress),
                           ],
@@ -378,10 +497,10 @@ class _ProfilescreenState extends State<Profilescreen> {
                       value: S.of(context).delete,
                       child: Row(
                         children: [
-                          Icon(Icons.delete, color: Colors.red),
+                          const Icon(Icons.delete, color: Colors.red),
                           SizedBox(width: 8.w),
                           Text(S.of(context).delete,
-                              style: TextStyle(color: Colors.red)),
+                              style: const TextStyle(color: Colors.red)),
                         ],
                       ),
                     ),
@@ -450,7 +569,7 @@ class _ProfilescreenState extends State<Profilescreen> {
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.r),
-                  borderSide: BorderSide(color: Colors.grey),
+                  borderSide: const BorderSide(color: Colors.grey),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.r),
@@ -477,7 +596,7 @@ class _ProfilescreenState extends State<Profilescreen> {
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.r),
-                  borderSide: BorderSide(color: Colors.grey),
+                  borderSide: const BorderSide(color: Colors.grey),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.r),
@@ -584,7 +703,7 @@ class _ProfilescreenState extends State<Profilescreen> {
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.r),
-                  borderSide: BorderSide(color: Colors.grey),
+                  borderSide: const BorderSide(color: Colors.grey),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.r),
@@ -611,7 +730,7 @@ class _ProfilescreenState extends State<Profilescreen> {
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.r),
-                  borderSide: BorderSide(color: Colors.grey),
+                  borderSide: const BorderSide(color: Colors.grey),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.r),
@@ -740,7 +859,7 @@ class _ProfilescreenState extends State<Profilescreen> {
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.r),
-                  borderSide: BorderSide(color: Colors.grey),
+                  borderSide: const BorderSide(color: Colors.grey),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.r),
@@ -767,7 +886,7 @@ class _ProfilescreenState extends State<Profilescreen> {
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.r),
-                  borderSide: BorderSide(color: Colors.grey),
+                  borderSide: const BorderSide(color: Colors.grey),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.r),
@@ -795,7 +914,7 @@ class _ProfilescreenState extends State<Profilescreen> {
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.r),
-                  borderSide: BorderSide(color: Colors.grey),
+                  borderSide: const BorderSide(color: Colors.grey),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.r),
@@ -834,7 +953,7 @@ class _ProfilescreenState extends State<Profilescreen> {
                   showDialog(
                     context: context,
                     barrierDismissible: false,
-                    builder: (context) => Center(
+                    builder: (context) => const Center(
                       child: CircularProgressIndicator(),
                     ),
                   );

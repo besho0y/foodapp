@@ -8,6 +8,7 @@ import 'package:foodapp/screens/login/loginScreen.dart';
 import 'package:foodapp/screens/profile/states.dart';
 import 'package:foodapp/shared/constants.dart';
 import 'package:foodapp/shared/local_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfileCubit extends Cubit<ProfileState> {
   ProfileCubit() : super(ProfileInitial());
@@ -424,11 +425,46 @@ class ProfileCubit extends Cubit<ProfileState> {
           .update({
         'name': name,
         'phone': phone,
+        'selectedArea': user.selectedArea,
       });
 
       emit(ProfileLoaded(user));
     } catch (error) {
       print("Error updating profile: $error");
+      emit(ProfileError());
+    }
+  }
+
+  // Update user's selected area
+  Future<void> updateSelectedArea(String area) async {
+    try {
+      final currentUser = auth.FirebaseAuth.instance.currentUser;
+      if (currentUser == null) {
+        emit(ProfileError());
+        return;
+      }
+
+      print("ProfileCubit: Updating selected area to $area");
+
+      // Update the user model
+      user.selectedArea = area;
+
+      // Update in Firestore
+      await FirebaseFirestore.instance
+          .collection("users")
+          .doc(currentUser.uid)
+          .update({
+        'selectedArea': area,
+      });
+
+      // Also update SharedPreferences to persist the change
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('selectedArea', area);
+      print("ProfileCubit: Updated SharedPreferences with area $area");
+
+      emit(ProfileLoaded(user));
+    } catch (error) {
+      print("Error updating selected area: $error");
       emit(ProfileError());
     }
   }
