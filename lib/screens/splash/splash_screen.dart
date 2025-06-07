@@ -4,7 +4,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:foodapp/layout/layout.dart';
 import 'package:foodapp/screens/admin%20panel/adminpanelscreen.dart';
-import 'package:foodapp/screens/login/loginScreen.dart';
 import 'package:foodapp/screens/profile/cubit.dart';
 import 'package:foodapp/shared/constants.dart';
 import 'package:video_player/video_player.dart';
@@ -24,6 +23,13 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
     _initializeVideo();
+
+    // Add timeout to prevent long loading times
+    Timer(const Duration(seconds: 3), () {
+      if (!_hasNavigated) {
+        _checkUserAuth();
+      }
+    });
   }
 
   void _initializeVideo() async {
@@ -42,8 +48,8 @@ class _SplashScreenState extends State<SplashScreen> {
       }
     } catch (e) {
       debugPrint('Video initialization error: $e');
-      // If video fails, proceed to authentication after a delay
-      Timer(const Duration(seconds: 2), () {
+      // If video fails, proceed to authentication immediately
+      Timer(const Duration(seconds: 1), () {
         if (!_hasNavigated) {
           _checkUserAuth();
         }
@@ -69,13 +75,12 @@ class _SplashScreenState extends State<SplashScreen> {
       final currentUser = FirebaseAuth.instance.currentUser;
 
       if (currentUser != null) {
-        // User is logged in, get user data and navigate to layout
+        // User is logged in, get user data
         ProfileCubit.get(context).getuserdata();
-        navigateAndFinish(context, const Layout());
-      } else {
-        // User is not logged in, navigate to login screen
-        navigateAndFinish(context, const Loginscreen());
       }
+
+      // Navigate everyone to layout - authentication will be handled in specific screens
+      navigateAndFinish(context, const Layout());
     }
   }
 

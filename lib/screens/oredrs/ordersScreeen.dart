@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:foodapp/generated/l10n.dart';
 import 'package:foodapp/screens/oredrs/cubit.dart';
 import 'package:foodapp/screens/oredrs/states.dart';
+import 'package:foodapp/shared/auth_helper.dart';
 import 'package:foodapp/widgets/ordercard.dart';
 
 class Ordersscreeen extends StatefulWidget {
@@ -23,6 +24,38 @@ class _OrdersscreeenState extends State<Ordersscreeen> {
 
   @override
   Widget build(BuildContext context) {
+    // Check if user is authenticated
+    if (!AuthHelper.isUserLoggedIn()) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.receipt_long,
+              size: 100.sp,
+              color: Colors.grey,
+            ),
+            SizedBox(height: 20.h),
+            Text(
+              'Please login to view your orders',
+              style: Theme.of(context).textTheme.bodyLarge,
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 20.h),
+            ElevatedButton(
+              onPressed: () =>
+                  AuthHelper.requireAuthenticationForOrders(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Login'),
+            ),
+          ],
+        ),
+      );
+    }
+
     var cubit = OrderCubit.get(context);
     return BlocConsumer<OrderCubit, OrdersStates>(
       listener: (context, state) {
@@ -37,7 +70,7 @@ class _OrdersscreeenState extends State<Ordersscreeen> {
       },
       builder: (context, state) {
         if (state is OrderLoadingState) {
-          return Center(child: CircularProgressIndicator());
+          return const Center(child: CircularProgressIndicator());
         }
 
         // Get unique orders by ID to prevent duplicates
@@ -77,7 +110,7 @@ class _OrdersscreeenState extends State<Ordersscreeen> {
         return RefreshIndicator(
           onRefresh: () => cubit.fetchOrders(),
           child: SingleChildScrollView(
-            physics: AlwaysScrollableScrollPhysics(),
+            physics: const AlwaysScrollableScrollPhysics(),
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: 5.w),
               child: Column(
