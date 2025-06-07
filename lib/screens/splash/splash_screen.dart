@@ -7,7 +7,7 @@ import 'package:foodapp/screens/admin%20panel/adminpanelscreen.dart';
 import 'package:foodapp/screens/login/loginScreen.dart';
 import 'package:foodapp/screens/profile/cubit.dart';
 import 'package:foodapp/shared/constants.dart';
-
+import 'package:video_player/video_player.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);
@@ -17,26 +17,65 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  VideoPlayerController? controller;
+  bool _hasNavigated = false;
+
   @override
   void initState() {
     super.initState();
-    _checkUserAuth();
+    _initializeVideo();
+  }
+
+  void _initializeVideo() async {
+    try {
+      controller = VideoPlayerController.asset('assets/startup/startup.mp4');
+      await controller!.initialize();
+
+      if (mounted) {
+        setState(() {});
+        controller!.setLooping(false);
+        controller!.setVolume(0.0);
+        controller!.play();
+
+        // Listen for video completion
+        controller!.addListener(_onVideoStatusChanged);
+      }
+    } catch (e) {
+      debugPrint('Video initialization error: $e');
+      // If video fails, proceed to authentication after a delay
+      Timer(const Duration(seconds: 2), () {
+        if (!_hasNavigated) {
+          _checkUserAuth();
+        }
+      });
+    }
+  }
+
+  void _onVideoStatusChanged() {
+    if (controller != null &&
+        controller!.value.isInitialized &&
+        controller!.value.position >= controller!.value.duration &&
+        controller!.value.duration.inMilliseconds > 0 &&
+        !_hasNavigated) {
+      _checkUserAuth();
+    }
   }
 
   void _checkUserAuth() async {
-    // Add a slight delay to show splash screen
-    await Future.delayed(const Duration(seconds: 2));
+    if (!_hasNavigated && mounted) {
+      _hasNavigated = true;
 
-    // Check if user is logged in
-    final currentUser = FirebaseAuth.instance.currentUser;
+      // Check if user is logged in
+      final currentUser = FirebaseAuth.instance.currentUser;
 
-    if (currentUser != null) {
-      // User is logged in, get user data and navigate to layout
-      ProfileCubit.get(context).getuserdata();
-      navigateAndFinish(context, Layout());
-    } else {
-      // User is not logged in, navigate to login screen
-      navigateAndFinish(context, Loginscreen());
+      if (currentUser != null) {
+        // User is logged in, get user data and navigate to layout
+        ProfileCubit.get(context).getuserdata();
+        navigateAndFinish(context, const Layout());
+      } else {
+        // User is not logged in, navigate to login screen
+        navigateAndFinish(context, const Loginscreen());
+      }
     }
   }
 
@@ -46,43 +85,35 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   @override
+  void dispose() {
+    controller?.removeListener(_onVideoStatusChanged);
+    controller?.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color.fromRGBO(255, 227, 189, 1.0),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // App logo or name
-            const Icon(
-              Icons.restaurant,
-              size: 80,
-              color: Colors.deepOrange,
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              "Food App",
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.deepOrange,
+        child: controller != null && controller!.value.isInitialized
+            ? SizedBox(
+                width: MediaQuery.of(context).size.width * 0.95,
+                height: MediaQuery.of(context).size.height,
+                child: FittedBox(
+                  fit: BoxFit.contain,
+                  child: SizedBox(
+                    width: controller!.value.size.width,
+                    height: controller!.value.size.height,
+                    child: VideoPlayer(controller!),
+                  ),
+                ),
+              )
+            : Container(
+                width: MediaQuery.of(context).size.width * 0.5,
+                height: MediaQuery.of(context).size.height * 0.5,
+                color: Colors.transparent,
               ),
-            ),
-            const SizedBox(height: 30),
-            const CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.deepOrange),
-            ),
-            const SizedBox(height: 50),
-            // Test button for admin panel - REMOVE IN PRODUCTION
-            ElevatedButton(
-              onPressed: _goToAdminPanel,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.deepOrange,
-              ),
-              child: const Text('Test Admin Panel'),
-            ),
-          ],
-        ),
       ),
     );
   }

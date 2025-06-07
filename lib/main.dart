@@ -16,6 +16,7 @@ import 'package:foodapp/screens/oredrs/cubit.dart';
 import 'package:foodapp/screens/profile/cubit.dart';
 import 'package:foodapp/screens/resturants/cubit.dart';
 import 'package:foodapp/screens/signup/cubit.dart';
+import 'package:foodapp/screens/splash/splash_screen.dart';
 import 'package:foodapp/screens/startup/location_selection_screen.dart';
 import 'package:foodapp/shared/blocObserver.dart';
 import 'package:foodapp/shared/paymob_service.dart';
@@ -131,9 +132,7 @@ class MyApp extends StatelessWidget {
                 theme: cubit.isdark,
                 navigatorKey:
                     navigatorKey, // Add navigator key for global access
-                home: hasSelectedLocation
-                    ? const Layout()
-                    : const LocationSelectionScreen(),
+                home: SplashScreen(),
                 routes: {
                   '/login': (context) => const Loginscreen(),
                 },
