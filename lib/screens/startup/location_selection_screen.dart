@@ -79,7 +79,9 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                         color: AppColors.primaryLight),
                     style: TextStyle(
                       fontSize: 18.sp,
-                      color: Colors.black,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white
+                          : Colors.black,
                       fontWeight: FontWeight.w500,
                     ),
                     items: areas.map((String area) {
@@ -90,7 +92,15 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                             Icon(Icons.location_city,
                                 color: AppColors.primaryLight, size: 20.sp),
                             SizedBox(width: 10.w),
-                            Text(area),
+                            Text(
+                              area,
+                              style: TextStyle(
+                                color: Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Colors.white
+                                    : Colors.black,
+                              ),
+                            ),
                           ],
                         ),
                       );

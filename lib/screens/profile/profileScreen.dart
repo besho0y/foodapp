@@ -245,7 +245,16 @@ class _ProfilescreenState extends State<Profilescreen> {
                                           ['Cairo', 'Giza'].map((String area) {
                                         return DropdownMenuItem<String>(
                                           value: area,
-                                          child: Text(area),
+                                          child: Text(
+                                            area,
+                                            style: TextStyle(
+                                              color: Theme.of(context)
+                                                          .brightness ==
+                                                      Brightness.dark
+                                                  ? Colors.white
+                                                  : Colors.black,
+                                            ),
+                                          ),
                                         );
                                       }).toList(),
                                       onChanged: (String? newValue) async {

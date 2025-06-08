@@ -647,7 +647,15 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                       items: restCategories.map((cat) {
                         return DropdownMenuItem<Category>(
                           value: cat,
-                          child: Text('${cat.en} / ${cat.ar}'),
+                          child: Text(
+                            '${cat.en} / ${cat.ar}',
+                            style: TextStyle(
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.white
+                                  : Colors.black,
+                            ),
+                          ),
                         );
                       }).toList(),
                       onChanged: (cat) {
@@ -733,7 +741,15 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                     items: ['Cairo', 'Giza'].map((String area) {
                       return DropdownMenuItem<String>(
                         value: area,
-                        child: Text(area),
+                        child: Text(
+                          area,
+                          style: TextStyle(
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.white
+                                    : Colors.black,
+                          ),
+                        ),
                       );
                     }).toList(),
                     onChanged: (String? newValue) {

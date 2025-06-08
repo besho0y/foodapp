@@ -414,7 +414,10 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
                                 widget.onStatusChange(model.id, newValue);
                               }
                             },
-                            dropdownColor: Colors.white,
+                            dropdownColor:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.grey[800]
+                                    : Colors.white,
                             items: statusOptions
                                 .map<DropdownMenuItem<String>>((String value) {
                               return DropdownMenuItem<String>(
