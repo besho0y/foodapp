@@ -67,6 +67,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "UpdateProfile": MessageLookupByLibrary.simpleMessage("تحديث الحساب"),
         "YesDeleteMyAccount":
             MessageLookupByLibrary.simpleMessage("نعم، حذف حسابي"),
+        "about_us": MessageLookupByLibrary.simpleMessage("من نحن"),
         "add_address": MessageLookupByLibrary.simpleMessage("إضافة عنوان جديد"),
         "add_category": MessageLookupByLibrary.simpleMessage("إضافة فئة"),
         "add_item": MessageLookupByLibrary.simpleMessage("إضافة منتج"),
@@ -392,7 +393,7 @@ class MessageLookup extends MessageLookupByLibrary {
             "هل أنت متأكد أنك تريد حذف هذا العنوان؟"),
         "sweets": MessageLookupByLibrary.simpleMessage("حلويات"),
         "terms_and_conditions":
-            MessageLookupByLibrary.simpleMessage("أوافق على الشروط والأحكام"),
+            MessageLookupByLibrary.simpleMessage("الشروط والأحكام"),
         "theme": MessageLookupByLibrary.simpleMessage("المظهر"),
         "total": MessageLookupByLibrary.simpleMessage("المجموع"),
         "total_amount": MessageLookupByLibrary.simpleMessage("المبلغ الإجمالي"),

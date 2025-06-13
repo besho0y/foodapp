@@ -920,10 +920,10 @@ class S {
     );
   }
 
-  /// `I agree to the terms and conditions`
+  /// `Terms & Conditions`
   String get terms_and_conditions {
     return Intl.message(
-      'I agree to the terms and conditions',
+      'Terms & Conditions',
       name: 'terms_and_conditions',
       desc: '',
       args: [],
@@ -2677,6 +2677,16 @@ class S {
     return Intl.message(
       'Payment Error: Unable to process transaction',
       name: 'payment_processing_error',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `About Us`
+  String get about_us {
+    return Intl.message(
+      'About Us',
+      name: 'about_us',
       desc: '',
       args: [],
     );

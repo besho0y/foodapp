@@ -70,7 +70,7 @@ ThemeData lightTheme = ThemeData(
   floatingActionButtonTheme: const FloatingActionButtonThemeData(
     backgroundColor: AppColors.primaryLight,
   ),
-  cardTheme: const CardTheme(color: Colors.white, elevation: 5),
+  cardTheme: const CardThemeData(color: Colors.white, elevation: 5),
 );
 
 ThemeData darkTheme = ThemeData(
@@ -137,5 +137,5 @@ ThemeData darkTheme = ThemeData(
   floatingActionButtonTheme: const FloatingActionButtonThemeData(
     backgroundColor: AppColors.primaryDark,
   ),
-  cardTheme: CardTheme(color: Colors.grey[900], elevation: 5),
+  cardTheme: CardThemeData(color: Colors.grey[900], elevation: 5),
 );

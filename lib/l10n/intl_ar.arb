@@ -86,7 +86,7 @@
     "enter_phone": "أدخل رقم هاتفك",
     "create_password": "أنشئ كلمة مرور",
     "confirm_password": "تأكيد كلمة المرور",
-    "terms_and_conditions": "أوافق على الشروط والأحكام",
+    "terms_and_conditions": "الشروط والأحكام",
     "sign_up_button": "تسجيل",
     "already_have_account": "لديك حساب بالفعل؟",
     "log_in": "تسجيل الدخول",
@@ -259,5 +259,6 @@
     "payment_error": "خطأ في الدفع",
     "payment_error_message": "حدث خطأ أثناء معالجة دفعتك.",
     "choose_payment_method": "اختر طريقة الدفع",
-    "payment_processing_error": "خطأ في الدفع: لا يمكن معالجة المعاملة"
+    "payment_processing_error": "خطأ في الدفع: لا يمكن معالجة المعاملة",
+    "about_us": "من نحن"
 }

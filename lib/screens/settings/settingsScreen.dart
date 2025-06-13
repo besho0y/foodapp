@@ -5,11 +5,13 @@ import 'package:flutter_styled_toast/flutter_styled_toast.dart';
 import 'package:foodapp/generated/l10n.dart';
 import 'package:foodapp/layout/cubit.dart';
 import 'package:foodapp/layout/layout.dart';
+import 'package:foodapp/screens/about_us/about_us_screen.dart';
 import 'package:foodapp/screens/admin%20panel/adminpanelscreen.dart';
 import 'package:foodapp/screens/favourits/cubit.dart';
 import 'package:foodapp/screens/login/loginScreen.dart';
 import 'package:foodapp/screens/profile/profileScreen.dart';
 import 'package:foodapp/screens/settingdetailsscreen/settingdetails.dart';
+import 'package:foodapp/screens/terms/terms_screen.dart';
 import 'package:foodapp/shared/constants.dart';
 import 'package:foodapp/shared/local_storage.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -215,6 +217,46 @@ class Settingsscreen extends StatelessWidget {
                     SizedBox(width: 5.w),
                     Text(
                       S.of(context).contact_us,
+                      style: Theme.of(context).textTheme.labelLarge,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // About Us
+          GestureDetector(
+            onTap: () => navigateTo(context, const AboutUsScreen()),
+            child: Card(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 5.w),
+                child: Row(
+                  children: [
+                    const Icon(Icons.info_outline),
+                    SizedBox(width: 5.w),
+                    Text(
+                      S.of(context).about_us,
+                      style: Theme.of(context).textTheme.labelLarge,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // Terms & Conditions
+          GestureDetector(
+            onTap: () => navigateTo(context, const TermsScreen()),
+            child: Card(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 5.w),
+                child: Row(
+                  children: [
+                    const Icon(Icons.description_outlined),
+                    SizedBox(width: 5.w),
+                    Text(
+                      S.of(context).terms_and_conditions,
                       style: Theme.of(context).textTheme.labelLarge,
                     ),
                   ],

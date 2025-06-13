@@ -157,8 +157,15 @@ class _ResturantscreenState extends State<Resturantscreen> {
                                     color: Theme.of(context).brightness ==
                                             Brightness.dark
                                         ? AppColors.darkCard
-                                        : Colors.orange.shade100,
-                                    shape: BoxShape.circle,
+                                        : AppColors.lightBackground,
+                                    borderRadius: BorderRadius.circular(10.r),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.grey.shade300,
+                                        blurRadius: 10,
+                                        offset: Offset(0, 10),
+                                      )
+                                    ]
                                   ),
                                   child: _buildCategoryImage(category.img),
                                 ),
@@ -221,7 +228,7 @@ class _ResturantscreenState extends State<Resturantscreen> {
         // Empty URL - use default icon
         return Icon(
           Icons.category,
-          size: 30.sp,
+          size: 35.sp,
           color: Colors.orange,
         );
       }
@@ -231,9 +238,9 @@ class _ResturantscreenState extends State<Resturantscreen> {
         return ClipOval(
           child: Image.network(
             imageUrl,
-            fit: BoxFit.cover,
-            width: 48.w,
-            height: 48.h,
+            fit: BoxFit.contain,
+            width: 50.w,
+            height: 50.h,
             loadingBuilder: (context, child, loadingProgress) {
               if (loadingProgress == null) return child;
               return Center(

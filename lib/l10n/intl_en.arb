@@ -86,7 +86,7 @@
     "enter_phone": "Enter your phone number",
     "create_password": "Create a password",
     "confirm_password": "Confirm your password",
-    "terms_and_conditions": "I agree to the terms and conditions",
+    "terms_and_conditions": "Terms & Conditions",
     "sign_up_button": "SIGN UP",
     "already_have_account": "Already have an account?",
     "log_in": "Log In",
@@ -262,5 +262,6 @@
     "payment_error": "Payment Error",
     "payment_error_message": "An error occurred while processing your payment.",
     "choose_payment_method": "Choose Payment Method",
-    "payment_processing_error": "Payment Error: Unable to process transaction"
+    "payment_processing_error": "Payment Error: Unable to process transaction",
+    "about_us": "About Us"
 }

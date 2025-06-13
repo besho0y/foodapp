@@ -68,6 +68,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "UpdateProfile": MessageLookupByLibrary.simpleMessage("Update Profile"),
         "YesDeleteMyAccount":
             MessageLookupByLibrary.simpleMessage("Yes, Delete My Account"),
+        "about_us": MessageLookupByLibrary.simpleMessage("About Us"),
         "add_address": MessageLookupByLibrary.simpleMessage("Add New Address"),
         "add_category": MessageLookupByLibrary.simpleMessage("Add Category"),
         "add_item": MessageLookupByLibrary.simpleMessage("Add Item"),
@@ -405,8 +406,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "suredeleteaddress": MessageLookupByLibrary.simpleMessage(
             "Are you sure you want to delete this address?"),
         "sweets": MessageLookupByLibrary.simpleMessage("sweets"),
-        "terms_and_conditions": MessageLookupByLibrary.simpleMessage(
-            "I agree to the terms and conditions"),
+        "terms_and_conditions":
+            MessageLookupByLibrary.simpleMessage("Terms & Conditions"),
         "theme": MessageLookupByLibrary.simpleMessage("Theme"),
         "total": MessageLookupByLibrary.simpleMessage("Total"),
         "total_amount": MessageLookupByLibrary.simpleMessage("Total Amount"),

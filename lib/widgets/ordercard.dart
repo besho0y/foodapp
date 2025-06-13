@@ -151,6 +151,12 @@ class _OrderCardState extends State<OrderCard> {
                             color: _getStatusColor(model.status),
                           ),
                     ),
+                    SizedBox(width: 5.w),
+                    Icon(
+                      _getStatusIcon(model.status),
+                      color: _getStatusColor(model.status),
+                      size: 20.sp,
+                    ),
                   ],
                 ),
               ),
@@ -373,7 +379,7 @@ class _OrderCardState extends State<OrderCard> {
 
                         // Always show the items subtotal
                         Text(
-                          "${S.of(context).items}: 100.00 ${S.of(context).egp}",
+                          "${S.of(context).items}: ${calculatedTotal.toStringAsFixed(2)} ${S.of(context).egp}",
                           style: TextStyle(
                             fontSize: 12.sp,
                             color: Colors.grey[700],
@@ -382,7 +388,7 @@ class _OrderCardState extends State<OrderCard> {
 
                         // Show delivery fee
                         Text(
-                          "${S.of(context).delivery_fee}: 30.00 ${S.of(context).egp}",
+                          "${S.of(context).delivery_fee}: ${(widget.model.total - calculatedTotal).toStringAsFixed(2)} ${S.of(context).egp}",
                           style: TextStyle(
                             fontSize: 12.sp,
                             color: Colors.grey[700],
@@ -515,6 +521,21 @@ class _OrderCardState extends State<OrderCard> {
         return S.of(context).processing;
       default:
         return status;
+    }
+  }
+
+  IconData _getStatusIcon(String status) {
+    switch (status.toLowerCase()) {
+      case 'delivered':
+        return Icons.check_circle;
+      case 'pending':
+        return Icons.pending;
+      case 'cancelled':
+        return Icons.cancel;
+      case 'processing':
+        return Icons.sync;
+      default:
+        return Icons.info;
     }
   }
 }
