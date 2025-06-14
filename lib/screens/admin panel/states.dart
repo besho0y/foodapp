@@ -159,3 +159,59 @@ class ErrorDeletingBannerState extends AdminPanelStates {
   final String error;
   ErrorDeletingBannerState(this.error);
 }
+
+// City states
+class LoadingCitiesState extends AdminPanelStates {}
+
+class SuccessLoadingCitiesState extends AdminPanelStates {}
+
+class ErrorLoadingCitiesState extends AdminPanelStates {
+  final String error;
+  ErrorLoadingCitiesState(this.error);
+}
+
+class AddingCityState extends AdminPanelStates {}
+
+class SuccessAddingCityState extends AdminPanelStates {}
+
+class ErrorAddingCityState extends AdminPanelStates {
+  final String error;
+  ErrorAddingCityState(this.error);
+}
+
+class DeletingCityState extends AdminPanelStates {}
+
+class SuccessDeletingCityState extends AdminPanelStates {}
+
+class ErrorDeletingCityState extends AdminPanelStates {
+  final String error;
+  ErrorDeletingCityState(this.error);
+}
+
+// Area states
+class LoadingAreasState extends AdminPanelStates {}
+
+class SuccessLoadingAreasState extends AdminPanelStates {}
+
+class ErrorLoadingAreasState extends AdminPanelStates {
+  final String error;
+  ErrorLoadingAreasState(this.error);
+}
+
+class AddingAreaState extends AdminPanelStates {}
+
+class SuccessAddingAreaState extends AdminPanelStates {}
+
+class ErrorAddingAreaState extends AdminPanelStates {
+  final String error;
+  ErrorAddingAreaState(this.error);
+}
+
+class DeletingAreaState extends AdminPanelStates {}
+
+class SuccessDeletingAreaState extends AdminPanelStates {}
+
+class ErrorDeletingAreaState extends AdminPanelStates {
+  final String error;
+  ErrorDeletingAreaState(this.error);
+}

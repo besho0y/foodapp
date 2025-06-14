@@ -52,10 +52,13 @@ class Restuarantscubit extends Cubit<ResturantsStates> {
       print("Restaurant: ${restaurant.name}, Area: ${restaurant.area}");
     }
 
-    // Filter by area
-    filtered = filtered
-        .where((restaurant) => restaurant.area == _selectedArea)
-        .toList();
+    // Filter by area - check both single area and areas array
+    filtered = filtered.where((restaurant) {
+      // Check if restaurant serves the selected area
+      bool servesArea = restaurant.area == _selectedArea ||
+          restaurant.areas.contains(_selectedArea);
+      return servesArea;
+    }).toList();
 
     print("After area filtering: ${filtered.length} restaurants");
 
@@ -201,7 +204,13 @@ class Restuarantscubit extends Cubit<ResturantsStates> {
             menuCategoriesAr: data['menuCategoriesAr'] is List
                 ? List<String>.from(data['menuCategoriesAr'])
                 : null,
-            area: data['area']?.toString() ?? 'Cairo', // Add area field
+            area: data['area']?.toString() ??
+                'Cairo', // Keep for backward compatibility
+            areas: data['areas'] is List
+                ? List<String>.from(data['areas'])
+                : [
+                    data['area']?.toString() ?? 'Cairo'
+                  ], // Use areas array or fallback to single area
           );
 
           _allRestuarants.add(restaurant);
@@ -303,9 +312,10 @@ class Restuarantscubit extends Cubit<ResturantsStates> {
             "Selected 'All' category - showing all restaurants in $_selectedArea");
         // Apply area filter only
         _filteredRestaurants = _allRestuarants.where((restaurant) {
-          bool areaMatches = restaurant.area == _selectedArea;
+          bool areaMatches = restaurant.area == _selectedArea ||
+              restaurant.areas.contains(_selectedArea);
           print(
-              "Restaurant ${restaurant.name}: area=${restaurant.area}, areaMatches=$areaMatches");
+              "Restaurant ${restaurant.name}: area=${restaurant.area}, areas=${restaurant.areas}, areaMatches=$areaMatches");
           return areaMatches;
         }).toList();
       } else {
@@ -316,11 +326,12 @@ class Restuarantscubit extends Cubit<ResturantsStates> {
           bool categoryMatches =
               restaurant.category.toLowerCase() == category.en.toLowerCase() ||
                   restaurant.categoryAr == category.ar;
-          bool areaMatches = restaurant.area == _selectedArea;
+          bool areaMatches = restaurant.area == _selectedArea ||
+              restaurant.areas.contains(_selectedArea);
           bool finalMatch = categoryMatches && areaMatches;
 
           print(
-              "Restaurant ${restaurant.name}: category=${restaurant.category}, area=${restaurant.area}, categoryMatches=$categoryMatches, areaMatches=$areaMatches, finalMatch=$finalMatch");
+              "Restaurant ${restaurant.name}: category=${restaurant.category}, area=${restaurant.area}, areas=${restaurant.areas}, categoryMatches=$categoryMatches, areaMatches=$areaMatches, finalMatch=$finalMatch");
           return finalMatch;
         }).toList();
       }
@@ -470,6 +481,8 @@ class Restuarantscubit extends Cubit<ResturantsStates> {
           categories: restaurant.categories,
           menuCategories: restaurant.menuCategories,
           menuCategoriesAr: restaurant.menuCategoriesAr,
+          area: restaurant.area,
+          areas: restaurant.areas,
         );
         emit(RestuarantsGetDataSuccessState());
       }

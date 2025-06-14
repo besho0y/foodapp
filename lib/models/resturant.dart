@@ -17,7 +17,8 @@ class Restuarants {
   List<String> categories;
   List<String>? menuCategories;
   List<String>? menuCategoriesAr;
-  String area;
+  String area; // Keep for backward compatibility
+  List<String> areas; // New field for multiple areas
 
   Restuarants({
     required this.name,
@@ -35,9 +36,14 @@ class Restuarants {
     this.menuCategories,
     this.menuCategoriesAr,
     this.area = 'Cairo',
+    this.areas = const [], // Default to empty list
   }) {
     // Ensure categories is not null
     categories = categories.isEmpty ? ['Uncategorized'] : categories;
+    // If areas is empty but area is set, use area as single item in areas
+    if (areas.isEmpty && area.isNotEmpty) {
+      areas = [area];
+    }
   }
 
   Restuarants.fromJson(Map<String, dynamic> json)
@@ -56,7 +62,8 @@ class Restuarants {
         categories = _parseCategories(json['categories']),
         menuCategories = _parseMenuCategories(json['menuCategories']),
         menuCategoriesAr = _parseMenuCategories(json['menuCategoriesAr']),
-        area = json['area']?.toString() ?? 'Cairo' {
+        area = json['area']?.toString() ?? 'Cairo',
+        areas = _parseAreas(json['areas']) {
     try {
       // Parse menu items with error handling
       if (json['items'] is List) {
@@ -79,6 +86,11 @@ class Restuarants {
       if (nameAr.isEmpty) nameAr = 'مطعم بدون اسم';
       if (category.isEmpty) category = 'Uncategorized';
       if (categoryAr.isEmpty) categoryAr = 'غير مصنف';
+
+      // If areas is empty but area is set, use area as single item in areas
+      if (areas.isEmpty && area.isNotEmpty) {
+        areas = [area];
+      }
     } catch (e) {
       print('Error initializing restaurant from JSON: $e');
       rethrow;
@@ -187,6 +199,19 @@ class Restuarants {
     return null;
   }
 
+  static List<String> _parseAreas(dynamic value) {
+    if (value == null) return [];
+    if (value is List) {
+      try {
+        return List<String>.from(value);
+      } catch (e) {
+        print('Error parsing areas: $e');
+        return [];
+      }
+    }
+    return [];
+  }
+
   Map<String, dynamic> toJson() {
     try {
       return {
@@ -204,6 +229,7 @@ class Restuarants {
         'menuCategories': menuCategories,
         'menuCategoriesAr': menuCategoriesAr,
         'area': area,
+        'areas': areas, // Include areas array
         'items': menuItems.map((item) => item.toJson()).toList(),
       };
     } catch (e) {
@@ -214,7 +240,7 @@ class Restuarants {
 
   @override
   String toString() {
-    return 'Restaurant: $name ($nameAr), ID: $id, Category: $category';
+    return 'Restaurant: $name ($nameAr), ID: $id, Category: $category, Areas: $areas';
   }
 
   // Static empty restaurant for null-safety fallback
@@ -235,6 +261,7 @@ class Restuarants {
       menuCategories: [],
       menuCategoriesAr: [],
       area: 'Cairo',
+      areas: [],
     );
   }
 }

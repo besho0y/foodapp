@@ -4,7 +4,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:foodapp/models/area.dart';
 import 'package:foodapp/models/banner.dart' as BannerModel;
+import 'package:foodapp/models/city.dart';
 import 'package:foodapp/models/promocode.dart';
 import 'package:foodapp/models/resturant.dart';
 import 'package:foodapp/screens/admin%20panel/states.dart';
@@ -166,6 +168,7 @@ class AdminPanelCubit extends Cubit<AdminPanelStates> {
             print("Successfully created restaurant object: ${restaurant.name}");
             print(
                 "Menu categories for ${restaurant.name}: ${restaurant.menuCategories}");
+            print("Areas for ${restaurant.name}: ${restaurant.areas}");
             restaurants.add(restaurant);
           } catch (e) {
             print("Error creating restaurant object from data: $e");
@@ -346,7 +349,8 @@ class AdminPanelCubit extends Cubit<AdminPanelStates> {
     required String deliveryTime,
     required File? imageFile,
     required List<String> categories,
-    String area = 'Cairo', // Add area parameter with default value
+    String area = 'Cairo', // Keep for backward compatibility
+    List<String> areas = const [], // Add areas array parameter
   }) async {
     emit(AddingRestaurantState());
     try {
@@ -419,7 +423,10 @@ class AdminPanelCubit extends Cubit<AdminPanelStates> {
           'الكل',
           'غير مصنف'
         ], // Default Arabic menu categories
-        'area': area, // Add area field
+        'area': area, // Keep for backward compatibility
+        'areas': areas.isNotEmpty
+            ? areas
+            : [area], // Use areas array or fallback to single area
         'createdAt': FieldValue.serverTimestamp(),
       };
 
@@ -1123,6 +1130,190 @@ class AdminPanelCubit extends Cubit<AdminPanelStates> {
     } catch (e) {
       print('Error deleting banner: $e');
       emit(ErrorDeletingBannerState(e.toString()));
+    }
+  }
+
+  // Cities methods
+  List<City> _cities = [];
+
+  List<City> get cities => _cities;
+
+  // Fetch all cities from Firestore
+  Future<void> fetchCities() async {
+    emit(LoadingCitiesState());
+
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('cities')
+          .orderBy('createdAt', descending: true)
+          .get();
+
+      final List<City> loadedCities = snapshot.docs.map((doc) {
+        Map<String, dynamic> data = doc.data();
+        data['id'] = doc.id;
+
+        // Convert Firestore timestamp to string for the model
+        if (data['createdAt'] != null && data['createdAt'] is Timestamp) {
+          data['createdAt'] =
+              (data['createdAt'] as Timestamp).toDate().toIso8601String();
+        }
+
+        return City.fromJson(data);
+      }).toList();
+
+      _cities = loadedCities;
+      emit(SuccessLoadingCitiesState());
+    } catch (e) {
+      print('Error fetching cities: $e');
+      emit(ErrorLoadingCitiesState(e.toString()));
+    }
+  }
+
+  // Add a new city
+  Future<void> addCity({
+    required String name,
+    required String nameAr,
+  }) async {
+    emit(AddingCityState());
+
+    try {
+      await FirebaseFirestore.instance.collection('cities').add({
+        'name': name,
+        'nameAr': nameAr,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      // Refresh cities list
+      await fetchCities();
+      emit(SuccessAddingCityState());
+    } catch (e) {
+      print('Error adding city: $e');
+      emit(ErrorAddingCityState(e.toString()));
+    }
+  }
+
+  // Delete a city
+  Future<void> deleteCity(String cityId) async {
+    emit(DeletingCityState());
+
+    try {
+      // First delete all areas in this city
+      final areasSnapshot = await FirebaseFirestore.instance
+          .collection('cities')
+          .doc(cityId)
+          .collection('areas')
+          .get();
+
+      for (var doc in areasSnapshot.docs) {
+        await FirebaseFirestore.instance
+            .collection('cities')
+            .doc(cityId)
+            .collection('areas')
+            .doc(doc.id)
+            .delete();
+      }
+
+      // Then delete the city document
+      await FirebaseFirestore.instance
+          .collection('cities')
+          .doc(cityId)
+          .delete();
+
+      // Refresh cities list
+      await fetchCities();
+      emit(SuccessDeletingCityState());
+    } catch (e) {
+      print('Error deleting city: $e');
+      emit(ErrorDeletingCityState(e.toString()));
+    }
+  }
+
+  // Areas methods
+  List<Area> _areas = [];
+
+  List<Area> get areas => _areas;
+
+  // Fetch all areas for a specific city
+  Future<void> fetchAreas(String cityId) async {
+    emit(LoadingAreasState());
+
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('cities')
+          .doc(cityId)
+          .collection('areas')
+          .orderBy('createdAt', descending: true)
+          .get();
+
+      final List<Area> loadedAreas = snapshot.docs.map((doc) {
+        Map<String, dynamic> data = doc.data();
+        data['id'] = doc.id;
+        data['cityId'] = cityId;
+
+        // Convert Firestore timestamp to string for the model
+        if (data['createdAt'] != null && data['createdAt'] is Timestamp) {
+          data['createdAt'] =
+              (data['createdAt'] as Timestamp).toDate().toIso8601String();
+        }
+
+        return Area.fromJson(data);
+      }).toList();
+
+      _areas = loadedAreas;
+      emit(SuccessLoadingAreasState());
+    } catch (e) {
+      print('Error fetching areas: $e');
+      emit(ErrorLoadingAreasState(e.toString()));
+    }
+  }
+
+  // Add a new area to a city
+  Future<void> addArea({
+    required String cityId,
+    required String name,
+    required String nameAr,
+  }) async {
+    emit(AddingAreaState());
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('cities')
+          .doc(cityId)
+          .collection('areas')
+          .add({
+        'name': name,
+        'nameAr': nameAr,
+        'cityId': cityId,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      // Refresh areas list
+      await fetchAreas(cityId);
+      emit(SuccessAddingAreaState());
+    } catch (e) {
+      print('Error adding area: $e');
+      emit(ErrorAddingAreaState(e.toString()));
+    }
+  }
+
+  // Delete an area
+  Future<void> deleteArea(String cityId, String areaId) async {
+    emit(DeletingAreaState());
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('cities')
+          .doc(cityId)
+          .collection('areas')
+          .doc(areaId)
+          .delete();
+
+      // Refresh areas list
+      await fetchAreas(cityId);
+      emit(SuccessDeletingAreaState());
+    } catch (e) {
+      print('Error deleting area: $e');
+      emit(ErrorDeletingAreaState(e.toString()));
     }
   }
 }

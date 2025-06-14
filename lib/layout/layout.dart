@@ -7,11 +7,14 @@ import 'package:foodapp/generated/l10n.dart';
 import 'package:foodapp/layout/cubit.dart';
 import 'package:foodapp/layout/states.dart';
 import 'package:foodapp/models/user.dart';
+import 'package:foodapp/screens/admin%20panel/cubit.dart';
+import 'package:foodapp/screens/admin%20panel/states.dart';
 import 'package:foodapp/screens/checkout/checkout_screen.dart';
 import 'package:foodapp/screens/login/loginScreen.dart';
 import 'package:foodapp/screens/profile/cubit.dart';
 import 'package:foodapp/screens/profile/states.dart';
 import 'package:foodapp/screens/resturants/cubit.dart';
+import 'package:foodapp/screens/resturants/states.dart';
 import 'package:foodapp/shared/colors.dart';
 
 class Layout extends StatefulWidget {
@@ -108,7 +111,7 @@ class _LayoutState extends State<Layout> {
                   key: scaffoldKey,
                   appBar: cubit.currentindex == 0
                       ? PreferredSize(
-                          preferredSize: Size(double.infinity, 120.h),
+                          preferredSize: Size(double.infinity, 160.h),
                           child: AppBar(
                             toolbarHeight: double.infinity,
                             automaticallyImplyLeading:
@@ -164,6 +167,47 @@ class _LayoutState extends State<Layout> {
                                   onChanged: (value) {
                                     Restuarantscubit.get(context).search(value);
                                   },
+                                ),
+                                SizedBox(height: 8.h),
+                                // Location Selection Button
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: ElevatedButton.icon(
+                                    onPressed: () =>
+                                        _showLocationSelectionDialog(context),
+                                    icon: const Icon(Icons.location_on),
+                                    label: BlocBuilder<Restuarantscubit,
+                                        ResturantsStates>(
+                                      builder: (context, state) {
+                                        final restCubit =
+                                            Restuarantscubit.get(context);
+                                        return Text(
+                                          'Location: ${restCubit.selectedArea}',
+                                          style: TextStyle(fontSize: 14.sp),
+                                        );
+                                      },
+                                    ),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Theme.of(context)
+                                          .primaryColor
+                                          .withOpacity(0.1),
+                                      foregroundColor:
+                                          Theme.of(context).primaryColor,
+                                      elevation: 0,
+                                      padding: EdgeInsets.symmetric(
+                                          vertical: 12.h, horizontal: 16.w),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(12.r),
+                                        side: BorderSide(
+                                          color: Theme.of(context)
+                                              .primaryColor
+                                              .withOpacity(0.3),
+                                          width: 1,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
                                 ),
                                 SizedBox(
                                   height: 5.h,
@@ -842,5 +886,149 @@ class _LayoutState extends State<Layout> {
         ),
       );
     }
+  }
+
+  // Location Selection Dialog
+  void _showLocationSelectionDialog(BuildContext context) {
+    String? selectedCityId;
+    String? selectedAreaId;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Select Location'),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // City Dropdown
+                BlocBuilder<AdminPanelCubit, AdminPanelStates>(
+                  builder: (context, state) {
+                    final adminCubit = AdminPanelCubit.get(context);
+
+                    // Load cities if not already loaded
+                    if (adminCubit.cities.isEmpty) {
+                      adminCubit.fetchCities();
+                    }
+
+                    return DropdownButtonFormField<String>(
+                      value: selectedCityId,
+                      decoration: const InputDecoration(
+                        labelText: 'Select City',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: adminCubit.cities.map((city) {
+                        return DropdownMenuItem<String>(
+                          value: city.id,
+                          child: Text(
+                            '${city.name} - ${city.nameAr}',
+                            style: TextStyle(
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.white
+                                  : Colors.black,
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          selectedCityId = value;
+                          selectedAreaId = null; // Reset area when city changes
+                        });
+                        if (value != null) {
+                          adminCubit.fetchAreas(value);
+                        }
+                      },
+                    );
+                  },
+                ),
+
+                SizedBox(height: 16.h),
+
+                // Area Dropdown
+                if (selectedCityId != null)
+                  BlocBuilder<AdminPanelCubit, AdminPanelStates>(
+                    builder: (context, state) {
+                      final adminCubit = AdminPanelCubit.get(context);
+
+                      if (state is LoadingAreasState) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+
+                      if (adminCubit.areas.isEmpty) {
+                        return const Text('No areas found for selected city');
+                      }
+
+                      return DropdownButtonFormField<String>(
+                        value: selectedAreaId,
+                        decoration: const InputDecoration(
+                          labelText: 'Select Area',
+                          border: OutlineInputBorder(),
+                        ),
+                        items: adminCubit.areas.map((area) {
+                          return DropdownMenuItem<String>(
+                            value: area.id,
+                            child: Text(
+                              '${area.name} - ${area.nameAr}',
+                              style: TextStyle(
+                                color: Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Colors.white
+                                    : Colors.black,
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            selectedAreaId = value;
+                          });
+                        },
+                      );
+                    },
+                  ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: selectedAreaId != null
+                  ? () {
+                      // Find the selected area name
+                      final adminCubit = AdminPanelCubit.get(context);
+                      final selectedArea = adminCubit.areas.firstWhere(
+                        (area) => area.id == selectedAreaId,
+                        orElse: () => adminCubit.areas.first,
+                      );
+
+                      // Update the restaurant cubit with the selected area
+                      final restCubit = Restuarantscubit.get(context);
+                      restCubit.updateSelectedArea(selectedArea.name);
+
+                      Navigator.pop(dialogContext);
+
+                      // Show success message
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content:
+                              Text('Location updated to ${selectedArea.name}'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                    }
+                  : null,
+              child: const Text('Select'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

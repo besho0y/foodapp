@@ -74,10 +74,21 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
   File? _categoryImageFile;
   File? _bannerImageFile;
   Category? _selectedRestaurantCategory;
-  String _selectedRestaurantArea = 'Cairo'; // Add area selection
+  String? _selectedRestaurantCityId; // Selected city for restaurant
+  final List<String> _selectedRestaurantAreas =
+      []; // Selected areas for restaurant
 
   // Add flag to prevent multiple refresh operations
   bool _isRefreshing = false;
+
+  // Add flags to track data initialization
+  bool _citiesInitialized = false;
+  bool _areasInitialized = false;
+
+  // Areas tab variables
+  String? _selectedCityId;
+  final TextEditingController _areaNameController = TextEditingController();
+  final TextEditingController _areaNameArController = TextEditingController();
 
   @override
   void initState() {
@@ -91,6 +102,8 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
           try {
             BlocProvider.of<AdminPanelCubit>(context).getRestaurants();
             BlocProvider.of<AdminPanelCubit>(context).fetchBanners();
+            BlocProvider.of<AdminPanelCubit>(context)
+                .fetchCities(); // Load cities for restaurant form
           } catch (e) {
             print('Error loading restaurants in initState: $e');
             _showSnackBar('Error loading restaurants',
@@ -141,6 +154,8 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
       _itemCategoryController.dispose();
       _categoryNameController.dispose();
       _categoryNameArController.dispose();
+      _areaNameController.dispose();
+      _areaNameArController.dispose();
     } catch (e) {
       print('Error in dispose: $e');
     }
@@ -417,6 +432,8 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
         _buildTabItem(4, S.of(context).restaurant_categories),
         _buildTabItem(5, 'Promocodes'),
         _buildTabItem(6, 'Banners'),
+        _buildTabItem(7, 'Cities'),
+        _buildTabItem(8, 'Areas'),
       ];
     } catch (e) {
       print('Error building tab items: $e');
@@ -440,6 +457,8 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
         _buildRestaurantCategoriesTab(cubit, state),
         _buildPromocodesTab(cubit),
         _buildBannersTab(cubit),
+        _buildCitiesTab(cubit),
+        _buildAreasTab(cubit),
       ];
     } catch (e) {
       print('Error building pages: $e');
@@ -735,64 +754,145 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                     },
                   ),
                   SizedBox(height: 12.h),
-                  // Area dropdown
-                  DropdownButtonFormField<String>(
-                    value: _selectedRestaurantArea,
-                    items: ['Cairo', 'Giza'].map((String area) {
-                      return DropdownMenuItem<String>(
-                        value: area,
-                        child: Text(
-                          area,
-                          style: TextStyle(
-                            color:
-                                Theme.of(context).brightness == Brightness.dark
+                  // City dropdown
+                  BlocBuilder<AdminPanelCubit, AdminPanelStates>(
+                    builder: (context, state) {
+                      return DropdownButtonFormField<String>(
+                        value: _selectedRestaurantCityId,
+                        items: cubit.cities.map((city) {
+                          return DropdownMenuItem<String>(
+                            value: city.id,
+                            child: Text(
+                              '${city.name} - ${city.nameAr}',
+                              style: TextStyle(
+                                color: Theme.of(context).brightness ==
+                                        Brightness.dark
                                     ? Colors.white
                                     : Colors.black,
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (String? newValue) {
+                          if (newValue != null && mounted) {
+                            setState(() {
+                              _selectedRestaurantCityId = newValue;
+                              _selectedRestaurantAreas
+                                  .clear(); // Clear areas when city changes
+                            });
+                            // Fetch areas for the selected city
+                            cubit.fetchAreas(newValue);
+                          }
+                        },
+                        decoration: InputDecoration(
+                          labelText: 'City',
+                          border: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? AppColors.primaryDark
+                                  : AppColors.primaryLight,
+                              width: 1.5,
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? AppColors.primaryDark
+                                  : AppColors.primaryLight,
+                              width: 1.5,
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? AppColors.primaryDark
+                                  : AppColors.primaryLight,
+                              width: 2.0,
+                            ),
                           ),
                         ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return S.of(context).please_fill_all_fields;
+                          }
+                          return null;
+                        },
                       );
-                    }).toList(),
-                    onChanged: (String? newValue) {
-                      if (newValue != null && mounted) {
-                        setState(() {
-                          _selectedRestaurantArea = newValue;
-                        });
-                      }
-                    },
-                    decoration: InputDecoration(
-                      labelText: 'Area',
-                      border: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Theme.of(context).brightness == Brightness.dark
-                              ? AppColors.primaryDark
-                              : AppColors.primaryLight,
-                          width: 1.5,
-                        ),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Theme.of(context).brightness == Brightness.dark
-                              ? AppColors.primaryDark
-                              : AppColors.primaryLight,
-                          width: 1.5,
-                        ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Theme.of(context).brightness == Brightness.dark
-                              ? AppColors.primaryDark
-                              : AppColors.primaryLight,
-                          width: 2.0,
-                        ),
-                      ),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return S.of(context).please_fill_all_fields;
-                      }
-                      return null;
                     },
                   ),
+                  SizedBox(height: 12.h),
+                  // Areas checkboxes
+                  if (_selectedRestaurantCityId != null)
+                    BlocBuilder<AdminPanelCubit, AdminPanelStates>(
+                      builder: (context, state) {
+                        if (cubit.areas.isEmpty) {
+                          return Container(
+                            padding: EdgeInsets.all(16.r),
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.grey.shade300),
+                              borderRadius: BorderRadius.circular(8.r),
+                            ),
+                            child: Text(
+                              'No areas found for selected city',
+                              style: TextStyle(
+                                  color: Colors.grey, fontSize: 14.sp),
+                            ),
+                          );
+                        }
+
+                        return Container(
+                          padding: EdgeInsets.all(16.r),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey.shade300),
+                            borderRadius: BorderRadius.circular(8.r),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Select Areas',
+                                style: TextStyle(
+                                  fontSize: 16.sp,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              SizedBox(height: 8.h),
+                              ...cubit.areas.map((area) {
+                                return CheckboxListTile(
+                                  value: _selectedRestaurantAreas
+                                      .contains(area.id),
+                                  onChanged: (bool? value) {
+                                    setState(() {
+                                      if (value == true) {
+                                        _selectedRestaurantAreas.add(area.id);
+                                      } else {
+                                        _selectedRestaurantAreas
+                                            .remove(area.id);
+                                      }
+                                    });
+                                  },
+                                  title: Text('${area.name} - ${area.nameAr}'),
+                                  controlAffinity:
+                                      ListTileControlAffinity.leading,
+                                  dense: true,
+                                );
+                              }).toList(),
+                              if (_selectedRestaurantAreas.isEmpty)
+                                Text(
+                                  'Please select at least one area',
+                                  style: TextStyle(
+                                    color: Colors.red,
+                                    fontSize: 12.sp,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
                   SizedBox(height: 12.h),
                   Row(
                     children: [
@@ -2082,6 +2182,14 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
         },
       );
 
+      // Validate that areas are selected
+      if (_selectedRestaurantAreas.isEmpty) {
+        _safeNavigatorPop(context);
+        _showSnackBar("Please select at least one area for the restaurant",
+            backgroundColor: Colors.red);
+        return;
+      }
+
       // Let the cubit handle the image upload
       await cubit.addRestaurant(
         name: _restaurantNameController.text.trim(),
@@ -2093,7 +2201,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
         imageFile:
             _restaurantImageFile, // Pass the file, let cubit handle upload
         categories: [],
-        area: _selectedRestaurantArea, // Add area parameter
+        areas: _selectedRestaurantAreas, // Pass selected areas
       );
 
       // Close loading dialog
@@ -2281,6 +2389,8 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
       if (mounted) {
         setState(() {
           _restaurantImageFile = null;
+          _selectedRestaurantCityId = null;
+          _selectedRestaurantAreas.clear();
         });
       }
     } catch (e) {
@@ -3961,6 +4071,472 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
       ),
     );
   }
+
+  // Cities Tab
+  Widget _buildCitiesTab(AdminPanelCubit cubit) {
+    // Initialize cities data only once
+    if (!_citiesInitialized) {
+      _citiesInitialized = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          cubit.fetchCities();
+        }
+      });
+    }
+
+    // Controllers for the form
+    final TextEditingController cityNameController = TextEditingController();
+    final TextEditingController cityNameArController = TextEditingController();
+
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(16.r),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Add City section
+          Container(
+            padding: EdgeInsets.all(16.r),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.blue),
+              borderRadius: BorderRadius.circular(12.r),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Add New City',
+                  style: TextStyle(
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 16.h),
+
+                // City name in English
+                TextFormField(
+                  controller: cityNameController,
+                  decoration: const InputDecoration(
+                    labelText: 'City Name (English)',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                SizedBox(height: 12.h),
+
+                // City name in Arabic
+                TextFormField(
+                  controller: cityNameArController,
+                  decoration: const InputDecoration(
+                    labelText: 'City Name (Arabic)',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                SizedBox(height: 16.h),
+
+                // Add button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      if (cityNameController.text.isNotEmpty &&
+                          cityNameArController.text.isNotEmpty) {
+                        try {
+                          await cubit.addCity(
+                            name: cityNameController.text.trim(),
+                            nameAr: cityNameArController.text.trim(),
+                          );
+                          cityNameController.clear();
+                          cityNameArController.clear();
+                          _showSnackBar('City added successfully',
+                              backgroundColor: Colors.green);
+                        } catch (e) {
+                          _showSnackBar('Error adding city: $e',
+                              backgroundColor: Colors.red);
+                        }
+                      } else {
+                        _showSnackBar('Please fill all fields',
+                            backgroundColor: Colors.red);
+                      }
+                    },
+                    child: const Text('Add City'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          SizedBox(height: 24.h),
+
+          // Cities List section
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Current Cities',
+                style: TextStyle(
+                  fontSize: 18.sp,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.refresh),
+                onPressed: () {
+                  cubit.fetchCities();
+                },
+                tooltip: "Refresh",
+              ),
+            ],
+          ),
+
+          SizedBox(height: 16.h),
+
+          // Cities list
+          BlocBuilder<AdminPanelCubit, AdminPanelStates>(
+            builder: (context, state) {
+              if (state is LoadingCitiesState) {
+                return const Center(child: CircularProgressIndicator());
+              } else if (state is ErrorLoadingCitiesState) {
+                return Center(
+                  child: Column(
+                    children: [
+                      Text('Error: ${state.error}'),
+                      ElevatedButton(
+                        onPressed: () => cubit.fetchCities(),
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                );
+              } else {
+                if (cubit.cities.isEmpty) {
+                  return const Center(
+                    child: Text(
+                        'No cities found. Add some cities to get started.'),
+                  );
+                } else {
+                  return ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: cubit.cities.length,
+                    itemBuilder: (context, index) {
+                      final city = cubit.cities[index];
+                      return Container(
+                        margin: EdgeInsets.only(bottom: 8.h),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey.shade300),
+                          borderRadius: BorderRadius.circular(12.r),
+                        ),
+                        child: ListTile(
+                          leading: const Icon(Icons.location_city,
+                              color: Colors.blue),
+                          title: Text(city.name),
+                          subtitle: Text(city.nameAr),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.red),
+                            onPressed: () async {
+                              try {
+                                bool confirm = await showDialog(
+                                      context: context,
+                                      builder: (dialogContext) => AlertDialog(
+                                        title: const Text('Delete City'),
+                                        content: const Text(
+                                            'Are you sure you want to delete this city? This will also delete all areas within this city.'),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () => Navigator.pop(
+                                                dialogContext, false),
+                                            child: const Text('Cancel'),
+                                          ),
+                                          ElevatedButton(
+                                            onPressed: () => Navigator.pop(
+                                                dialogContext, true),
+                                            style: ElevatedButton.styleFrom(
+                                                backgroundColor: Colors.red),
+                                            child: const Text('Delete'),
+                                          ),
+                                        ],
+                                      ),
+                                    ) ??
+                                    false;
+
+                                if (confirm) {
+                                  await cubit.deleteCity(city.id);
+                                  _showSnackBar('City deleted successfully',
+                                      backgroundColor: Colors.green);
+                                }
+                              } catch (e) {
+                                print('Error deleting city: $e');
+                                _showSnackBar('Error deleting city',
+                                    backgroundColor: Colors.red);
+                              }
+                            },
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                }
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Areas Tab
+  Widget _buildAreasTab(AdminPanelCubit cubit) {
+    // Initialize cities data only once for areas tab
+    if (!_areasInitialized) {
+      _areasInitialized = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          cubit.fetchCities();
+        }
+      });
+    }
+
+    // Using class-level controllers for proper state management
+
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(16.r),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Add Area section
+          Container(
+            padding: EdgeInsets.all(16.r),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.green),
+              borderRadius: BorderRadius.circular(12.r),
+            ),
+            child: StatefulBuilder(
+              builder: (context, setState) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Add New Area',
+                      style: TextStyle(
+                        fontSize: 18.sp,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 16.h),
+
+                    // City selection dropdown
+                    DropdownButtonFormField<String>(
+                      value: _selectedCityId,
+                      decoration: const InputDecoration(
+                        labelText: 'Select City',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: cubit.cities.map((city) {
+                        return DropdownMenuItem<String>(
+                          value: city.id,
+                          child: Text(
+                            '${city.name} - ${city.nameAr}',
+                            style: TextStyle(
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.white
+                                  : Colors.black,
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedCityId = value;
+                        });
+                        if (value != null) {
+                          cubit.fetchAreas(value);
+                        }
+                      },
+                    ),
+                    SizedBox(height: 12.h),
+
+                    // Area name in English
+                    TextFormField(
+                      controller: _areaNameController,
+                      decoration: const InputDecoration(
+                        labelText: 'Area Name (English)',
+                        border: OutlineInputBorder(),
+                      ),
+                      onChanged: (value) => setState(() {}), // Trigger rebuild
+                    ),
+                    SizedBox(height: 12.h),
+
+                    // Area name in Arabic
+                    TextFormField(
+                      controller: _areaNameArController,
+                      decoration: const InputDecoration(
+                        labelText: 'Area Name (Arabic)',
+                        border: OutlineInputBorder(),
+                      ),
+                      onChanged: (value) => setState(() {}), // Trigger rebuild
+                    ),
+                    SizedBox(height: 16.h),
+
+                    // Add button
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _selectedCityId != null &&
+                                _areaNameController.text.isNotEmpty &&
+                                _areaNameArController.text.isNotEmpty
+                            ? () async {
+                                try {
+                                  await cubit.addArea(
+                                    cityId: _selectedCityId!,
+                                    name: _areaNameController.text.trim(),
+                                    nameAr: _areaNameArController.text.trim(),
+                                  );
+                                  _areaNameController.clear();
+                                  _areaNameArController.clear();
+                                  _showSnackBar('Area added successfully',
+                                      backgroundColor: Colors.green);
+                                } catch (e) {
+                                  _showSnackBar('Error adding area: $e',
+                                      backgroundColor: Colors.red);
+                                }
+                              }
+                            : null,
+                        child: const Text('Add Area'),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+
+          SizedBox(height: 24.h),
+
+          // Areas List section
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Areas in Selected City',
+                style: TextStyle(
+                  fontSize: 18.sp,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.refresh),
+                onPressed: () {
+                  if (_selectedCityId != null) {
+                    cubit.fetchAreas(_selectedCityId!);
+                  }
+                },
+                tooltip: "Refresh",
+              ),
+            ],
+          ),
+
+          SizedBox(height: 16.h),
+
+          // Areas list
+          BlocBuilder<AdminPanelCubit, AdminPanelStates>(
+            builder: (context, state) {
+              if (state is LoadingAreasState) {
+                return const Center(child: CircularProgressIndicator());
+              } else if (state is ErrorLoadingAreasState) {
+                return Center(
+                  child: Column(
+                    children: [
+                      Text('Error: ${state.error}'),
+                      ElevatedButton(
+                        onPressed: () {
+                          if (_selectedCityId != null) {
+                            cubit.fetchAreas(_selectedCityId!);
+                          }
+                        },
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                );
+              } else {
+                if (_selectedCityId == null) {
+                  return const Center(
+                    child: Text('Please select a city to view its areas.'),
+                  );
+                } else if (cubit.areas.isEmpty) {
+                  return const Center(
+                    child: Text('No areas found for the selected city.'),
+                  );
+                } else {
+                  return ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: cubit.areas.length,
+                    itemBuilder: (context, index) {
+                      final area = cubit.areas[index];
+                      return Container(
+                        margin: EdgeInsets.only(bottom: 8.h),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey.shade300),
+                          borderRadius: BorderRadius.circular(12.r),
+                        ),
+                        child: ListTile(
+                          leading: const Icon(Icons.location_on,
+                              color: Colors.green),
+                          title: Text(area.name),
+                          subtitle: Text(area.nameAr),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.red),
+                            onPressed: () async {
+                              try {
+                                bool confirm = await showDialog(
+                                      context: context,
+                                      builder: (dialogContext) => AlertDialog(
+                                        title: const Text('Delete Area'),
+                                        content: const Text(
+                                            'Are you sure you want to delete this area?'),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () => Navigator.pop(
+                                                dialogContext, false),
+                                            child: const Text('Cancel'),
+                                          ),
+                                          ElevatedButton(
+                                            onPressed: () => Navigator.pop(
+                                                dialogContext, true),
+                                            style: ElevatedButton.styleFrom(
+                                                backgroundColor: Colors.red),
+                                            child: const Text('Delete'),
+                                          ),
+                                        ],
+                                      ),
+                                    ) ??
+                                    false;
+
+                                if (confirm) {
+                                  await cubit.deleteArea(area.cityId, area.id);
+                                  _showSnackBar('Area deleted successfully',
+                                      backgroundColor: Colors.green);
+                                }
+                              } catch (e) {
+                                print('Error deleting area: $e');
+                                _showSnackBar('Error deleting area',
+                                    backgroundColor: Colors.red);
+                              }
+                            },
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                }
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class RestaurantListItem extends StatelessWidget {
@@ -4006,6 +4582,11 @@ class RestaurantListItem extends StatelessWidget {
               restaurant.categoryAr,
               style: TextStyle(fontSize: 12.sp, color: Colors.grey),
             ),
+            if (restaurant.areas.isNotEmpty)
+              Text(
+                'Areas: ${restaurant.areas.length}',
+                style: TextStyle(fontSize: 12.sp, color: Colors.blue),
+              ),
           ],
         ),
         trailing: IconButton(
