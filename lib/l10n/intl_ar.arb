@@ -260,5 +260,10 @@
     "payment_error_message": "حدث خطأ أثناء معالجة دفعتك.",
     "choose_payment_method": "اختر طريقة الدفع",
     "payment_processing_error": "خطأ في الدفع: لا يمكن معالجة المعاملة",
-    "about_us": "من نحن"
+    "about_us": "من نحن",
+    "select_city": "اختر المدينة",
+    "select_location": "اختر الموقع",
+    "select_area": "اختر المنطقة",
+    "location_updated_to": "تم تحديث الموقع إلى",
+    "restaurants_found": "مطعم"
 }

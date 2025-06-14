@@ -256,6 +256,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "loading": MessageLookupByLibrary.simpleMessage("Loading..."),
         "loadingres":
             MessageLookupByLibrary.simpleMessage("Loading restaurants..."),
+        "location_updated_to":
+            MessageLookupByLibrary.simpleMessage("Location updated to"),
         "log_in": MessageLookupByLibrary.simpleMessage("Log In"),
         "log_in_button": MessageLookupByLibrary.simpleMessage("LOG IN"),
         "login": MessageLookupByLibrary.simpleMessage("login"),
@@ -365,6 +367,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "restaurant_items":
             MessageLookupByLibrary.simpleMessage("Restaurant Items"),
         "restaurants": MessageLookupByLibrary.simpleMessage("Restaurants"),
+        "restaurants_found":
+            MessageLookupByLibrary.simpleMessage("restaurants found"),
         "retry_payment": MessageLookupByLibrary.simpleMessage("Retry Payment"),
         "review_hint": MessageLookupByLibrary.simpleMessage(
             "Tell us about your experience..."),
@@ -376,11 +380,15 @@ class MessageLookup extends MessageLookupByLibrary {
             "Search for food, restaurants..."),
         "select_address_error": MessageLookupByLibrary.simpleMessage(
             "Please select a delivery address"),
+        "select_area": MessageLookupByLibrary.simpleMessage("Select Area"),
         "select_category":
             MessageLookupByLibrary.simpleMessage("Select Category"),
+        "select_city": MessageLookupByLibrary.simpleMessage("Select City"),
         "select_delivery_address":
             MessageLookupByLibrary.simpleMessage("Select Delivery Address"),
         "select_image": MessageLookupByLibrary.simpleMessage("Select Image"),
+        "select_location":
+            MessageLookupByLibrary.simpleMessage("Select Location"),
         "select_payment_method":
             MessageLookupByLibrary.simpleMessage("Select Payment Method"),
         "select_restaurant":
@@ -428,8 +436,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "verifying_payment":
             MessageLookupByLibrary.simpleMessage("Verifying payment..."),
         "welcome_back": MessageLookupByLibrary.simpleMessage("Welcome Back"),
-        "what_do_you_want_to_eat_today": MessageLookupByLibrary.simpleMessage(
-            "What do you want to eat today?"),
+        "what_do_you_want_to_eat_today":
+            MessageLookupByLibrary.simpleMessage("What are you craving today?"),
         "write_review": MessageLookupByLibrary.simpleMessage("Write a Review"),
         "yes": MessageLookupByLibrary.simpleMessage("Yes"),
         "youhave": MessageLookupByLibrary.simpleMessage("You have"),

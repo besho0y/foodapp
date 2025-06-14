@@ -4,6 +4,7 @@ import 'package:flutter_styled_toast/flutter_styled_toast.dart';
 import 'package:foodapp/generated/l10n.dart';
 import 'package:foodapp/layout/cubit.dart';
 import 'package:foodapp/shared/constants.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class Itemscreen extends StatefulWidget {
   const Itemscreen({
@@ -351,6 +352,40 @@ class _ItemscreenState extends State<Itemscreen> {
     }
   }
 
+  // Add WhatsApp functionality
+  Future<void> _openWhatsApp() async {
+    const phoneNumber = '+201274939902';
+    const whatsappUrl = 'https://wa.me/$phoneNumber';
+
+    try {
+      if (await canLaunchUrl(Uri.parse(whatsappUrl))) {
+        await launchUrl(Uri.parse(whatsappUrl));
+      } else {
+        if (mounted) {
+          showToast(
+            "Could not launch WhatsApp",
+            context: context,
+            duration: const Duration(seconds: 2),
+            backgroundColor: Colors.red,
+            textStyle: const TextStyle(color: Colors.white, fontSize: 16.0),
+            position: StyledToastPosition.bottom,
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        showToast(
+          "Error opening WhatsApp: ${e.toString()}",
+          context: context,
+          duration: const Duration(seconds: 2),
+          backgroundColor: Colors.red,
+          textStyle: const TextStyle(color: Colors.white, fontSize: 16.0),
+          position: StyledToastPosition.bottom,
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final cubit = Layoutcubit.get(context);
@@ -439,8 +474,49 @@ class _ItemscreenState extends State<Itemscreen> {
                                     prefixIcon: const Icon(Icons.comment),
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(8.r),
+                                      borderSide: BorderSide(
+                                        color: Theme.of(context).brightness ==
+                                                Brightness.dark
+                                            ? Colors.white
+                                            : Colors.black,
+                                      ),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8.r),
+                                      borderSide: BorderSide(
+                                        color: Theme.of(context).brightness ==
+                                                Brightness.dark
+                                            ? Colors.white
+                                            : Colors.black,
+                                      ),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8.r),
+                                      borderSide: BorderSide(
+                                        color: Theme.of(context).brightness ==
+                                                Brightness.dark
+                                            ? Colors.white
+                                            : Colors.black,
+                                        width: 2.0,
+                                      ),
+                                    ),
+                                    labelStyle: TextStyle(
+                                      color: Theme.of(context).brightness ==
+                                              Brightness.dark
+                                          ? Colors.white
+                                          : Colors.black,
+                                    ),
+                                    hintStyle: TextStyle(
+                                      color: Theme.of(context).brightness ==
+                                              Brightness.dark
+                                          ? Colors.white70
+                                          : Colors.black54,
                                     ),
                                   ),
+                                  cursorColor: Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? Colors.white
+                                      : Colors.black,
                                   maxLines: 2,
                                 ),
 

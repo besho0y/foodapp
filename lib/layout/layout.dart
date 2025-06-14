@@ -111,7 +111,12 @@ class _LayoutState extends State<Layout> {
                   key: scaffoldKey,
                   appBar: cubit.currentindex == 0
                       ? PreferredSize(
-                          preferredSize: Size(double.infinity, 160.h),
+                          preferredSize: Size(
+                            double.infinity,
+                            Directionality.of(context) == TextDirection.rtl
+                                ? 175.h
+                                : 160.h,
+                          ),
                           child: AppBar(
                             toolbarHeight: double.infinity,
                             automaticallyImplyLeading:
@@ -181,8 +186,13 @@ class _LayoutState extends State<Layout> {
                                       builder: (context, state) {
                                         final restCubit =
                                             Restuarantscubit.get(context);
+                                        final isRTL =
+                                            Directionality.of(context) ==
+                                                TextDirection.rtl;
                                         return Text(
-                                          'Location: ${restCubit.selectedArea}',
+                                          isRTL
+                                              ? 'الموقع: ${restCubit.selectedArea}'
+                                              : 'Location: ${restCubit.selectedArea}',
                                           style: TextStyle(fontSize: 14.sp),
                                         );
                                       },
@@ -897,7 +907,7 @@ class _LayoutState extends State<Layout> {
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          title: const Text('Select Location'),
+          title: Text('${S.of(context).select_location}'),
           content: SizedBox(
             width: double.maxFinite,
             child: Column(
@@ -916,7 +926,7 @@ class _LayoutState extends State<Layout> {
                     return DropdownButtonFormField<String>(
                       value: selectedCityId,
                       decoration: InputDecoration(
-                        labelText: 'Select City',
+                        labelText: S.of(context).select_city,
                         labelStyle: TextStyle(
                           color: Theme.of(context).brightness == Brightness.dark
                               ? Colors.white
@@ -954,10 +964,12 @@ class _LayoutState extends State<Layout> {
                         ),
                       ),
                       items: adminCubit.cities.map((city) {
+                        final isRTL =
+                            Directionality.of(context) == TextDirection.rtl;
                         return DropdownMenuItem<String>(
                           value: city.id,
                           child: Text(
-                            '${city.name} - ${city.nameAr}',
+                            isRTL ? city.nameAr : city.name,
                             style: TextStyle(
                               color: Theme.of(context).brightness ==
                                       Brightness.dark
@@ -999,7 +1011,7 @@ class _LayoutState extends State<Layout> {
                       return DropdownButtonFormField<String>(
                         value: selectedAreaId,
                         decoration: InputDecoration(
-                          labelText: 'Select Area',
+                          labelText: S.of(context).select_area,
                           labelStyle: TextStyle(
                             color:
                                 Theme.of(context).brightness == Brightness.dark
@@ -1039,10 +1051,12 @@ class _LayoutState extends State<Layout> {
                           ),
                         ),
                         items: adminCubit.areas.map((area) {
+                          final isRTL =
+                              Directionality.of(context) == TextDirection.rtl;
                           return DropdownMenuItem<String>(
                             value: area.id,
                             child: Text(
-                              '${area.name} - ${area.nameAr}',
+                              isRTL ? area.nameAr : area.name,
                               style: TextStyle(
                                 color: Theme.of(context).brightness ==
                                         Brightness.dark
@@ -1067,7 +1081,7 @@ class _LayoutState extends State<Layout> {
             TextButton(
               onPressed: () => Navigator.pop(dialogContext),
               child: Text(
-                'Cancel',
+                S.of(context).cancel,
                 style: TextStyle(
                   color: Theme.of(context).brightness == Brightness.dark
                       ? Colors.white
@@ -1105,14 +1119,14 @@ class _LayoutState extends State<Layout> {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(
-                              'Location updated to ${selectedArea.name}\n${restCubit.restaurants.length} restaurants found'),
+                              '${S.of(context).location_updated_to} ${selectedArea.name}\n${restCubit.restaurants.length} ${S.of(context).restaurants_found}'),
                           backgroundColor: Colors.green,
                           duration: const Duration(seconds: 3),
                         ),
                       );
                     }
                   : null,
-              child: const Text('Select'),
+              child: Text(S.of(context).select_location),
             ),
           ],
         ),

@@ -1415,4 +1415,176 @@ class AdminPanelCubit extends Cubit<AdminPanelStates> {
       return null;
     }
   }
+
+  // Edit restaurant method
+  Future<void> editRestaurant({
+    required String restaurantId,
+    required String name,
+    required String nameAr,
+    required String category,
+    required String categoryAr,
+    required String deliveryFee,
+    required String deliveryTime,
+    File? imageFile,
+    required List<String> categories,
+    String area = 'Cairo',
+    List<String> areas = const [],
+  }) async {
+    emit(AddingRestaurantState()); // Reuse the same loading state
+
+    try {
+      print("🔄 Starting restaurant edit for ID: $restaurantId");
+
+      String imageUrl = '';
+      bool imageUploadSuccess = false;
+
+      // Handle image upload if a new image is provided
+      if (imageFile != null) {
+        print("📷 New image provided, uploading...");
+        try {
+          imageUrl = await uploadImage(imageFile, 'restaurants');
+          imageUploadSuccess = imageUrl.isNotEmpty;
+          print("✅ Image upload success: $imageUploadSuccess");
+          print("🔗 New image URL: $imageUrl");
+        } catch (e) {
+          print("❌ Image upload failed: $e");
+          emit(ErrorAddingRestaurantState("Image upload failed: $e"));
+          return;
+        }
+      } else {
+        // Keep existing image - get it from current restaurant data
+        try {
+          final existingRestaurant = restaurants.firstWhere(
+            (r) => r.id == restaurantId,
+            orElse: () => throw Exception("Restaurant not found"),
+          );
+          imageUrl = existingRestaurant.img;
+          imageUploadSuccess = true;
+          print("📷 Keeping existing image: $imageUrl");
+        } catch (e) {
+          print("⚠️ Could not find existing restaurant, using default image");
+          imageUrl = 'assets/images/restuarants/store.jpg';
+          imageUploadSuccess = true;
+        }
+      }
+
+      // Prepare updated restaurant data
+      final Map<String, dynamic> restaurantData = {
+        'resname': name,
+        'namear': nameAr,
+        'category': category,
+        'categoryar': categoryAr,
+        'delivery fee': deliveryFee,
+        'delivery time': deliveryTime,
+        'img': imageUrl,
+        'categories': categories,
+        'area': area,
+        'areas': areas.isNotEmpty ? areas : [area],
+        'updatedAt': FieldValue.serverTimestamp(),
+      };
+
+      print("💾 Updating restaurant data in Firestore...");
+      print("📊 Restaurant data preview:");
+      print("   Name: $name");
+      print("   Category: $category");
+      print("   Image URL: $imageUrl");
+      print("   Areas: $areas");
+
+      // Update restaurant data in Firestore
+      await FirebaseFirestore.instance
+          .collection("restaurants")
+          .doc(restaurantId)
+          .update(restaurantData);
+
+      print("✅ Restaurant data updated in Firestore successfully!");
+
+      // Refresh restaurants list
+      print("🔄 Refreshing restaurants list...");
+      await getRestaurants();
+
+      print("=== RESTAURANT EDITED SUCCESSFULLY ===");
+      emit(SuccessAddingRestaurantState()); // Reuse the same success state
+    } catch (e) {
+      print("💥 Error editing restaurant: $e");
+      emit(ErrorAddingRestaurantState(e.toString()));
+    }
+  }
+
+  // Edit restaurant category method
+  Future<void> editRestaurantCategory({
+    required String categoryId,
+    required String englishName,
+    required String arabicName,
+    File? imageFile,
+  }) async {
+    emit(AddingCategoryState()); // Reuse the same loading state
+
+    try {
+      print("🔄 Starting restaurant category edit for ID: $categoryId");
+
+      String imageUrl = '';
+
+      // Handle image upload if a new image is provided
+      if (imageFile != null) {
+        print("📷 New image provided, uploading...");
+        try {
+          imageUrl = await uploadImage(imageFile, 'restaurant_categories');
+          print("✅ Image upload successful");
+          print("🔗 New image URL: $imageUrl");
+        } catch (e) {
+          print("❌ Image upload failed: $e");
+          emit(ErrorAddingCategoryState("Image upload failed: $e"));
+          return;
+        }
+      } else {
+        // Keep existing image - get it from Firestore
+        try {
+          final doc = await FirebaseFirestore.instance
+              .collection('restaurants_categories')
+              .doc(categoryId)
+              .get();
+
+          if (doc.exists) {
+            final data = doc.data() as Map<String, dynamic>;
+            imageUrl = data['img'] ?? '';
+            print("📷 Keeping existing image: $imageUrl");
+          }
+        } catch (e) {
+          print("⚠️ Could not get existing image: $e");
+          imageUrl = '';
+        }
+      }
+
+      // Prepare updated category data
+      final Map<String, dynamic> categoryData = {
+        'en': englishName,
+        'ar': arabicName,
+        'updatedAt': FieldValue.serverTimestamp(),
+      };
+
+      // Only update image if we have one
+      if (imageUrl.isNotEmpty) {
+        categoryData['img'] = imageUrl;
+      }
+
+      print("💾 Updating category data in Firestore...");
+      print("📊 Category data preview:");
+      print("   English: $englishName");
+      print("   Arabic: $arabicName");
+      print("   Image URL: $imageUrl");
+
+      // Update category data in Firestore
+      await FirebaseFirestore.instance
+          .collection('restaurants_categories')
+          .doc(categoryId)
+          .update(categoryData);
+
+      print("✅ Restaurant category updated in Firestore successfully!");
+      print("=== RESTAURANT CATEGORY EDITED SUCCESSFULLY ===");
+      emit(SuccessAddingCategoryState()); // Reuse the same success state
+    } catch (e) {
+      print("💥 Error editing restaurant category: $e");
+      emit(ErrorAddingCategoryState(e.toString()));
+    }
+  }
 }

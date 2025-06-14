@@ -70,10 +70,10 @@ class S {
     );
   }
 
-  /// `What do you want to eat today?`
+  /// `What are you craving today?`
   String get what_do_you_want_to_eat_today {
     return Intl.message(
-      'What do you want to eat today?',
+      'What are you craving today?',
       name: 'what_do_you_want_to_eat_today',
       desc: '',
       args: [],
@@ -2687,6 +2687,56 @@ class S {
     return Intl.message(
       'About Us',
       name: 'about_us',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Select City`
+  String get select_city {
+    return Intl.message(
+      'Select City',
+      name: 'select_city',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Select Location`
+  String get select_location {
+    return Intl.message(
+      'Select Location',
+      name: 'select_location',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Select Area`
+  String get select_area {
+    return Intl.message(
+      'Select Area',
+      name: 'select_area',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Location updated to`
+  String get location_updated_to {
+    return Intl.message(
+      'Location updated to',
+      name: 'location_updated_to',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `restaurants found`
+  String get restaurants_found {
+    return Intl.message(
+      'restaurants found',
+      name: 'restaurants_found',
       desc: '',
       args: [],
     );

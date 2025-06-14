@@ -17,6 +17,7 @@ import 'package:foodapp/screens/admin%20panel/cubit.dart';
 import 'package:foodapp/screens/admin%20panel/states.dart';
 import 'package:foodapp/screens/oredrs/cubit.dart';
 import 'package:foodapp/screens/resturants/cubit.dart';
+import 'package:foodapp/screens/resturants/states.dart';
 import 'package:foodapp/shared/colors.dart';
 import 'package:foodapp/shared/components/components.dart';
 import 'package:foodapp/shared/local_storage.dart';
@@ -950,6 +951,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                   return RestaurantListItem(
                     restaurant: restaurant,
                     onDelete: () => _deleteRestaurant(cubit, restaurant.id),
+                    onEdit: () => _showEditRestaurantDialog(cubit, restaurant),
                   );
                 },
               ),
@@ -1399,11 +1401,26 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                           style: const TextStyle(fontWeight: FontWeight.w500),
                         ),
                         subtitle: Text(arabicName ?? ''),
-                        trailing: IconButton(
-                          icon: const Icon(Icons.delete, color: Colors.red),
-                          onPressed: () => _deleteRestaurantCategory(
-                              doc.id, englishName, setStateLocal),
-                          tooltip: "Delete Category",
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.edit, color: Colors.blue),
+                              onPressed: () =>
+                                  _showEditRestaurantCategoryDialog(
+                                      doc.id,
+                                      englishName,
+                                      arabicName ?? '',
+                                      data['img']?.toString()),
+                              tooltip: "Edit Category",
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete, color: Colors.red),
+                              onPressed: () => _deleteRestaurantCategory(
+                                  doc.id, englishName, setStateLocal),
+                              tooltip: "Delete Category",
+                            ),
+                          ],
                         ),
                       ),
                     );
@@ -4552,16 +4569,803 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
       ),
     );
   }
+
+  // Show edit restaurant dialog
+  void _showEditRestaurantDialog(
+      AdminPanelCubit cubit, Restuarants restaurant) {
+    // Create separate controllers for editing
+    final TextEditingController editRestaurantNameController =
+        TextEditingController(text: restaurant.name);
+    final TextEditingController editRestaurantNameArController =
+        TextEditingController(text: restaurant.nameAr);
+    final TextEditingController editDeliveryFeeController =
+        TextEditingController(text: restaurant.deliveryFee);
+    final TextEditingController editDeliveryTimeController =
+        TextEditingController(text: restaurant.deliveryTime);
+
+    File? editRestaurantImageFile;
+    Category? editSelectedRestaurantCategory;
+    String? editSelectedRestaurantCityId;
+    List<String> editSelectedRestaurantAreas = List.from(restaurant.areas);
+
+    // Find the current category
+    try {
+      final restCategories = Restuarantscubit.get(context)
+          .categories
+          .where((cat) => cat.en != 'All')
+          .toList();
+      if (restCategories.isNotEmpty) {
+        editSelectedRestaurantCategory = restCategories.firstWhere(
+          (cat) => cat.en == restaurant.category,
+          orElse: () => restCategories.first,
+        );
+      }
+    } catch (e) {
+      print('Error finding restaurant category: $e');
+    }
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title:
+              Text('${S.of(context).Edit} ${S.of(context).admin_restaurants}'),
+          content: SizedBox(
+            width: double.maxFinite,
+            height: 600.h,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Restaurant Name
+                  TextFormField(
+                    controller: editRestaurantNameController,
+                    decoration: InputDecoration(
+                      labelText: S.of(context).Name,
+                      labelStyle: TextStyle(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white
+                            : Colors.black,
+                      ),
+                      hintStyle: TextStyle(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white70
+                            : Colors.black54,
+                      ),
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : Colors.black,
+                          width: 1.5,
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : Colors.black,
+                          width: 1.5,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : Colors.black,
+                          width: 2.0,
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 12.h),
+
+                  // Restaurant Name Arabic
+                  TextFormField(
+                    controller: editRestaurantNameArController,
+                    decoration: InputDecoration(
+                      labelText:
+                          '${S.of(context).Name} (${S.of(context).arabic})',
+                      labelStyle: TextStyle(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white
+                            : Colors.black,
+                      ),
+                      hintStyle: TextStyle(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white70
+                            : Colors.black54,
+                      ),
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : Colors.black,
+                          width: 1.5,
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : Colors.black,
+                          width: 1.5,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : Colors.black,
+                          width: 2.0,
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 12.h),
+
+                  // Category Dropdown
+                  BlocBuilder<Restuarantscubit, ResturantsStates>(
+                    builder: (context, state) {
+                      final restCategories = Restuarantscubit.get(context)
+                          .categories
+                          .where((cat) => cat.en != 'All')
+                          .toList();
+
+                      return DropdownButtonFormField<Category>(
+                        value: editSelectedRestaurantCategory,
+                        decoration: InputDecoration(
+                          labelText: S.of(context).category,
+                          labelStyle: TextStyle(
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.white
+                                    : Colors.black,
+                          ),
+                          hintStyle: TextStyle(
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.white70
+                                    : Colors.black54,
+                          ),
+                          border: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.white
+                                  : Colors.black,
+                              width: 1.5,
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.white
+                                  : Colors.black,
+                              width: 1.5,
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.white
+                                  : Colors.black,
+                              width: 2.0,
+                            ),
+                          ),
+                        ),
+                        items: restCategories.map((cat) {
+                          return DropdownMenuItem<Category>(
+                            value: cat,
+                            child: Text(
+                              '${cat.en} / ${cat.ar}',
+                              style: TextStyle(
+                                color: Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Colors.white
+                                    : Colors.black,
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (cat) {
+                          setState(() {
+                            editSelectedRestaurantCategory = cat;
+                          });
+                        },
+                      );
+                    },
+                  ),
+                  SizedBox(height: 12.h),
+
+                  // Delivery Fee
+                  TextFormField(
+                    controller: editDeliveryFeeController,
+                    decoration: InputDecoration(
+                      labelText: S.of(context).delivery_fee,
+                      labelStyle: TextStyle(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white
+                            : Colors.black,
+                      ),
+                      hintStyle: TextStyle(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white70
+                            : Colors.black54,
+                      ),
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : Colors.black,
+                          width: 1.5,
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : Colors.black,
+                          width: 1.5,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : Colors.black,
+                          width: 2.0,
+                        ),
+                      ),
+                    ),
+                    keyboardType: TextInputType.number,
+                  ),
+                  SizedBox(height: 12.h),
+
+                  // Delivery Time
+                  TextFormField(
+                    controller: editDeliveryTimeController,
+                    decoration: InputDecoration(
+                      labelText: S.of(context).delivery_time,
+                      labelStyle: TextStyle(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white
+                            : Colors.black,
+                      ),
+                      hintStyle: TextStyle(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white70
+                            : Colors.black54,
+                      ),
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : Colors.black,
+                          width: 1.5,
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : Colors.black,
+                          width: 1.5,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : Colors.black,
+                          width: 2.0,
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 12.h),
+
+                  // City Dropdown
+                  BlocBuilder<AdminPanelCubit, AdminPanelStates>(
+                    builder: (context, state) {
+                      return DropdownButtonFormField<String>(
+                        value: editSelectedRestaurantCityId,
+                        decoration: InputDecoration(
+                          labelText: 'City',
+                          labelStyle: TextStyle(
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.white
+                                    : Colors.black,
+                          ),
+                          hintStyle: TextStyle(
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.white70
+                                    : Colors.black54,
+                          ),
+                          border: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.white
+                                  : Colors.black,
+                              width: 1.5,
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.white
+                                  : Colors.black,
+                              width: 1.5,
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.white
+                                  : Colors.black,
+                              width: 2.0,
+                            ),
+                          ),
+                        ),
+                        items: cubit.cities.map((city) {
+                          return DropdownMenuItem<String>(
+                            value: city.id,
+                            child: Text(
+                              '${city.name} - ${city.nameAr}',
+                              style: TextStyle(
+                                color: Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Colors.white
+                                    : Colors.black,
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (String? newValue) {
+                          setState(() {
+                            editSelectedRestaurantCityId = newValue;
+                            editSelectedRestaurantAreas.clear();
+                          });
+                          if (newValue != null) {
+                            cubit.fetchAreas(newValue);
+                          }
+                        },
+                      );
+                    },
+                  ),
+                  SizedBox(height: 12.h),
+
+                  // Areas Checkboxes
+                  if (editSelectedRestaurantCityId != null)
+                    BlocBuilder<AdminPanelCubit, AdminPanelStates>(
+                      builder: (context, state) {
+                        if (cubit.areas.isEmpty) {
+                          return Container(
+                            padding: EdgeInsets.all(16.r),
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Colors.white
+                                    : Colors.black,
+                              ),
+                              borderRadius: BorderRadius.circular(8.r),
+                            ),
+                            child:
+                                const Text('No areas found for selected city'),
+                          );
+                        }
+
+                        return Container(
+                          padding: EdgeInsets.all(16.r),
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.white
+                                  : Colors.black,
+                            ),
+                            borderRadius: BorderRadius.circular(8.r),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text('Select Areas',
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.bold)),
+                              SizedBox(height: 8.h),
+                              ...cubit.areas.map((area) {
+                                return CheckboxListTile(
+                                  value: editSelectedRestaurantAreas
+                                      .contains(area.name),
+                                  onChanged: (bool? value) {
+                                    setState(() {
+                                      if (value == true) {
+                                        editSelectedRestaurantAreas
+                                            .add(area.name);
+                                      } else {
+                                        editSelectedRestaurantAreas
+                                            .remove(area.name);
+                                      }
+                                    });
+                                  },
+                                  title: Text('${area.name} - ${area.nameAr}'),
+                                  dense: true,
+                                );
+                              }).toList(),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  SizedBox(height: 12.h),
+
+                  // Image Selection
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            try {
+                              final imageFile = await cubit.pickImage();
+                              if (imageFile != null) {
+                                setState(() {
+                                  editRestaurantImageFile = imageFile;
+                                });
+                              }
+                            } catch (e) {
+                              print("Error selecting image: $e");
+                            }
+                          },
+                          child: Text(S.of(context).select_image),
+                        ),
+                      ),
+                      SizedBox(height: 8.h),
+                      Text(
+                        editRestaurantImageFile != null
+                            ? '✅ ${S.of(context).image_selected}'
+                            : '📷 Keep current image',
+                        style: TextStyle(
+                          fontSize: 12.sp,
+                          color: editRestaurantImageFile != null
+                              ? Colors.green
+                              : Colors.grey,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(
+                S.of(context).cancel,
+                style: TextStyle(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white
+                      : Colors.black,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                try {
+                  // Show loading
+                  showDialog(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (loadingContext) => const Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                  );
+
+                  await cubit.editRestaurant(
+                    restaurantId: restaurant.id,
+                    name: editRestaurantNameController.text.trim(),
+                    nameAr: editRestaurantNameArController.text.trim(),
+                    category: editSelectedRestaurantCategory?.en ??
+                        restaurant.category,
+                    categoryAr: editSelectedRestaurantCategory?.ar ??
+                        restaurant.categoryAr,
+                    deliveryFee: editDeliveryFeeController.text.trim(),
+                    deliveryTime: editDeliveryTimeController.text.trim(),
+                    imageFile: editRestaurantImageFile,
+                    categories: [],
+                    areas: editSelectedRestaurantAreas,
+                  );
+
+                  // Close loading dialog
+                  Navigator.pop(context);
+                  // Close edit dialog
+                  Navigator.pop(dialogContext);
+
+                  _showSnackBar('Restaurant updated successfully',
+                      backgroundColor: Colors.green);
+                } catch (e) {
+                  // Close loading dialog
+                  Navigator.pop(context);
+                  _showSnackBar('Error updating restaurant: $e',
+                      backgroundColor: Colors.red);
+                }
+              },
+              child: Text(S.of(context).UpdateProfile),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Show edit restaurant category dialog
+  void _showEditRestaurantCategoryDialog(
+      String categoryId,
+      String currentEnglishName,
+      String currentArabicName,
+      String? currentImageUrl) {
+    final TextEditingController editCategoryNameController =
+        TextEditingController(text: currentEnglishName);
+    final TextEditingController editCategoryNameArController =
+        TextEditingController(text: currentArabicName);
+    File? editCategoryImageFile;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: Text(
+              '${S.of(context).Edit} ${S.of(context).restaurant_categories}'),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // English Name
+                TextFormField(
+                  controller: editCategoryNameController,
+                  decoration: InputDecoration(
+                    labelText: S.of(context).category_name_english,
+                    labelStyle: TextStyle(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white
+                          : Colors.black,
+                    ),
+                    hintStyle: TextStyle(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white70
+                          : Colors.black54,
+                    ),
+                    border: OutlineInputBorder(
+                      borderSide: BorderSide(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white
+                            : Colors.black,
+                        width: 1.5,
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white
+                            : Colors.black,
+                        width: 1.5,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white
+                            : Colors.black,
+                        width: 2.0,
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 12.h),
+
+                // Arabic Name
+                TextFormField(
+                  controller: editCategoryNameArController,
+                  decoration: InputDecoration(
+                    labelText: S.of(context).category_name_arabic,
+                    labelStyle: TextStyle(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white
+                          : Colors.black,
+                    ),
+                    hintStyle: TextStyle(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white70
+                          : Colors.black54,
+                    ),
+                    border: OutlineInputBorder(
+                      borderSide: BorderSide(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white
+                            : Colors.black,
+                        width: 1.5,
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white
+                            : Colors.black,
+                        width: 1.5,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white
+                            : Colors.black,
+                        width: 2.0,
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 12.h),
+
+                // Current Image Display
+                if (currentImageUrl != null && currentImageUrl.isNotEmpty)
+                  Column(
+                    children: [
+                      const Text('Current Image:',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      SizedBox(height: 8.h),
+                      Container(
+                        height: 100.h,
+                        width: 100.w,
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.white
+                                    : Colors.black,
+                          ),
+                          borderRadius: BorderRadius.circular(8.r),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8.r),
+                          child: Image.network(
+                            currentImageUrl,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return const Icon(Icons.error, color: Colors.red);
+                            },
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 12.h),
+                    ],
+                  ),
+
+                // Image Selection
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          try {
+                            final cubit = AdminPanelCubit.get(context);
+                            final imageFile = await cubit.pickImage();
+                            if (imageFile != null) {
+                              setState(() {
+                                editCategoryImageFile = imageFile;
+                              });
+                            }
+                          } catch (e) {
+                            print("Error selecting image: $e");
+                          }
+                        },
+                        child: Text(S.of(context).select_image),
+                      ),
+                    ),
+                    SizedBox(height: 8.h),
+                    Text(
+                      editCategoryImageFile != null
+                          ? '✅ ${S.of(context).image_selected}'
+                          : '📷 Keep current image',
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        color: editCategoryImageFile != null
+                            ? Colors.green
+                            : Colors.grey,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(
+                S.of(context).cancel,
+                style: TextStyle(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white
+                      : Colors.black,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (editCategoryNameController.text.trim().isEmpty ||
+                    editCategoryNameArController.text.trim().isEmpty) {
+                  _showSnackBar(S.of(context).please_fill_all_fields,
+                      backgroundColor: Colors.red);
+                  return;
+                }
+
+                try {
+                  // Show loading
+                  showDialog(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (loadingContext) => const Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                  );
+
+                  final cubit = AdminPanelCubit.get(context);
+                  await cubit.editRestaurantCategory(
+                    categoryId: categoryId,
+                    englishName: editCategoryNameController.text.trim(),
+                    arabicName: editCategoryNameArController.text.trim(),
+                    imageFile: editCategoryImageFile,
+                  );
+
+                  // Close loading dialog
+                  Navigator.pop(context);
+                  // Close edit dialog
+                  Navigator.pop(dialogContext);
+
+                  _showSnackBar('Category updated successfully',
+                      backgroundColor: Colors.green);
+
+                  // Refresh the admin panel
+                  await _refreshAdminPanel();
+                } catch (e) {
+                  // Close loading dialog
+                  Navigator.pop(context);
+                  _showSnackBar('Error updating category: $e',
+                      backgroundColor: Colors.red);
+                }
+              },
+              child: Text(S.of(context).UpdateProfile),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class RestaurantListItem extends StatelessWidget {
   final Restuarants restaurant;
   final VoidCallback onDelete;
+  final VoidCallback? onEdit;
 
   const RestaurantListItem({
     Key? key,
     required this.restaurant,
     required this.onDelete,
+    this.onEdit,
   }) : super(key: key);
 
   @override
@@ -4604,9 +5408,21 @@ class RestaurantListItem extends StatelessWidget {
               ),
           ],
         ),
-        trailing: IconButton(
-          icon: const Icon(Icons.delete, color: Colors.red),
-          onPressed: onDelete,
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (onEdit != null)
+              IconButton(
+                icon: const Icon(Icons.edit, color: Colors.blue),
+                onPressed: onEdit,
+                tooltip: "Edit Restaurant",
+              ),
+            IconButton(
+              icon: const Icon(Icons.delete, color: Colors.red),
+              onPressed: onDelete,
+              tooltip: "Delete Restaurant",
+            ),
+          ],
         ),
       ),
     );

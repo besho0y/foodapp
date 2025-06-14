@@ -249,6 +249,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "loading": MessageLookupByLibrary.simpleMessage("جاري التحميل..."),
         "loadingres":
             MessageLookupByLibrary.simpleMessage("جاري تحميل المطاعم..."),
+        "location_updated_to":
+            MessageLookupByLibrary.simpleMessage("تم تحديث الموقع إلى"),
         "log_in": MessageLookupByLibrary.simpleMessage("تسجيل الدخول"),
         "log_in_button": MessageLookupByLibrary.simpleMessage("تسجيل الدخول"),
         "login": MessageLookupByLibrary.simpleMessage("تسجيل الدخول"),
@@ -354,6 +356,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "restaurant_items":
             MessageLookupByLibrary.simpleMessage("عناصر المطعم"),
         "restaurants": MessageLookupByLibrary.simpleMessage("المطاعم"),
+        "restaurants_found": MessageLookupByLibrary.simpleMessage("مطعم"),
         "retry_payment":
             MessageLookupByLibrary.simpleMessage("إعادة محاولة الدفع"),
         "review_hint":
@@ -366,10 +369,13 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("ابحث عن طعام، مطاعم..."),
         "select_address_error":
             MessageLookupByLibrary.simpleMessage("الرجاء اختيار عنوان التوصيل"),
+        "select_area": MessageLookupByLibrary.simpleMessage("اختر المنطقة"),
         "select_category": MessageLookupByLibrary.simpleMessage("اختر الفئة"),
+        "select_city": MessageLookupByLibrary.simpleMessage("اختر المدينة"),
         "select_delivery_address":
             MessageLookupByLibrary.simpleMessage("اختر عنوان التوصيل"),
         "select_image": MessageLookupByLibrary.simpleMessage("اختر صورة"),
+        "select_location": MessageLookupByLibrary.simpleMessage("اختر الموقع"),
         "select_payment_method":
             MessageLookupByLibrary.simpleMessage("اختر طريقة الدفع"),
         "select_restaurant":
