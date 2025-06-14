@@ -179,9 +179,14 @@ class _ResturantscreenState extends State<Resturantscreen> {
                                             BorderRadius.circular(10.r),
                                         boxShadow: [
                                           BoxShadow(
-                                            color: Colors.grey.shade500,
+                                            color:
+                                                Theme.of(context).brightness ==
+                                                        Brightness.dark
+                                                    ? const Color.fromARGB(
+                                                        255, 159, 156, 156)
+                                                    : Colors.black12,
                                             blurRadius: 2,
-                                            offset: const Offset(2, 1),
+                                            offset: const Offset(3, 1),
                                           )
                                         ]),
                                     child: _buildCategoryImage(category.img),

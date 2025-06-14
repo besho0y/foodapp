@@ -198,11 +198,16 @@ class _LayoutState extends State<Layout> {
                                       },
                                     ),
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: Theme.of(context)
-                                          .primaryColor
-                                          .withOpacity(0.1),
+                                      backgroundColor:
+                                          Theme.of(context).brightness ==
+                                                  Brightness.dark
+                                              ? AppColors.darkCard
+                                              : AppColors.lightBackground,
                                       foregroundColor:
-                                          Theme.of(context).primaryColor,
+                                          Theme.of(context).brightness ==
+                                                  Brightness.dark
+                                              ? Colors.white
+                                              : Colors.black,
                                       elevation: 0,
                                       padding: EdgeInsets.symmetric(
                                           vertical: 12.h, horizontal: 16.w),
@@ -907,7 +912,7 @@ class _LayoutState extends State<Layout> {
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          title: Text('${S.of(context).select_location}'),
+          title: Text(S.of(context).select_location),
           content: SizedBox(
             width: double.maxFinite,
             child: Column(

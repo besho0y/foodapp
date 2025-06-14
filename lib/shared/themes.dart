@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'colors.dart';
 
@@ -9,7 +8,7 @@ ThemeData lightTheme = ThemeData(
   primaryColor: AppColors.primaryLight,
   scaffoldBackgroundColor: AppColors.lightBackground,
   appBarTheme: const AppBarTheme(
-    backgroundColor: Colors.white,
+    backgroundColor: AppColors.lightBackground,
     elevation: 0,
     scrolledUnderElevation: 0,
     iconTheme: IconThemeData(color: AppColors.primaryLight),
@@ -19,58 +18,79 @@ ThemeData lightTheme = ThemeData(
       fontWeight: FontWeight.bold,
     ),
     systemOverlayStyle: SystemUiOverlayStyle(
-      statusBarColor: Colors.white,
+      statusBarColor: AppColors.lightBackground,
       statusBarIconBrightness: Brightness.dark,
     ),
   ),
   colorScheme: ColorScheme.fromSwatch().copyWith(
     secondary: AppColors.accentLight,
+    primary: AppColors.primaryLight,
+    surface: AppColors.lightCard,
   ),
-  progressIndicatorTheme: const ProgressIndicatorThemeData(color: AppColors.primaryLight,),
+  progressIndicatorTheme:
+      const ProgressIndicatorThemeData(color: AppColors.primaryLight),
 
-  textTheme: TextTheme(
-    bodyLarge: const TextStyle(fontSize: 16, color: Color(0xFF333333)),
-    bodyMedium: const TextStyle(
+  // Bottom Navigation Bar Theme with creative styling
+  bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+    backgroundColor: AppColors.lightNavBackground,
+    selectedItemColor: AppColors.navIconLight,
+    unselectedItemColor: AppColors.lightSecondaryText,
+    type: BottomNavigationBarType.fixed,
+    elevation: 8,
+  ),
+
+  textTheme: const TextTheme(
+    bodyLarge: TextStyle(fontSize: 16, color: AppColors.lightText),
+    bodyMedium: TextStyle(
       fontSize: 20,
       color: AppColors.primaryLight,
       fontWeight: FontWeight.bold,
     ),
-    bodySmall: TextStyle(fontSize: 14, color: Colors.grey[600]),
-    headlineLarge: const TextStyle(
+    bodySmall: TextStyle(fontSize: 14, color: AppColors.lightSecondaryText),
+    headlineLarge: TextStyle(
       fontSize: 30,
       fontWeight: FontWeight.bold,
       color: AppColors.primaryLight,
     ),
-    headlineSmall: const TextStyle(
+    headlineSmall: TextStyle(
       fontSize: 22,
       fontWeight: FontWeight.bold,
       color: AppColors.primaryLight,
     ),
-    labelLarge: const TextStyle(
+    labelLarge: TextStyle(
       fontSize: 16,
-      color: Colors.black,
+      color: AppColors.lightText,
       fontWeight: FontWeight.bold,
     ),
-    labelMedium: const TextStyle(fontSize: 14, color: Colors.black),
-    labelSmall: const TextStyle(
+    labelMedium: TextStyle(fontSize: 14, color: AppColors.lightText),
+    labelSmall: TextStyle(
       fontSize: 14,
       color: AppColors.primaryLight,
       fontWeight: FontWeight.bold,
     ),
-    titleMedium: const TextStyle(fontSize: 16, color: Colors.white),
+    titleMedium: TextStyle(fontSize: 16, color: AppColors.lightText),
   ),
-  cardColor: Colors.white,
+  cardColor: AppColors.lightCard,
   elevatedButtonTheme: ElevatedButtonThemeData(
     style: ElevatedButton.styleFrom(
       backgroundColor: AppColors.primaryLight,
       foregroundColor: Colors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: 4,
     ),
   ),
   floatingActionButtonTheme: const FloatingActionButtonThemeData(
     backgroundColor: AppColors.primaryLight,
+    foregroundColor: Colors.white,
   ),
-  cardTheme: const CardThemeData(color: Colors.white, elevation: 5),
+  cardTheme: CardThemeData(
+    color: AppColors.lightCard,
+    elevation: 6,
+    shadowColor: AppColors.primaryLight.withOpacity(0.2),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+  ),
+  // Container theme for better visual hierarchy
+  dividerColor: AppColors.lightAccent,
 );
 
 ThemeData darkTheme = ThemeData(
@@ -78,12 +98,12 @@ ThemeData darkTheme = ThemeData(
   primaryColor: AppColors.primaryDark,
   scaffoldBackgroundColor: AppColors.darkBackground,
   appBarTheme: const AppBarTheme(
-    backgroundColor: AppColors.darkCard,
-    elevation: 1,
+    backgroundColor: AppColors.darkBackground,
+    elevation: 0,
     scrolledUnderElevation: 0,
-    iconTheme: IconThemeData(color: AppColors.primaryDark),
+    iconTheme: IconThemeData(color: AppColors.darkText),
     titleTextStyle: TextStyle(
-      color: AppColors.primaryDark,
+      color: AppColors.darkText,
       fontSize: 22,
       fontWeight: FontWeight.bold,
     ),
@@ -92,50 +112,73 @@ ThemeData darkTheme = ThemeData(
       statusBarIconBrightness: Brightness.light,
     ),
   ),
-  colorScheme: const ColorScheme.dark().copyWith(secondary: AppColors.accentDark),
-  progressIndicatorTheme: const ProgressIndicatorThemeData(color: AppColors.primaryDark,),
+  colorScheme: const ColorScheme.dark().copyWith(
+    secondary: AppColors.accentDark,
+    primary: AppColors.primaryDark,
+    surface: AppColors.darkCard,
+  ),
+  progressIndicatorTheme:
+      const ProgressIndicatorThemeData(color: AppColors.darkText),
 
-  textTheme: TextTheme(
-    bodyLarge: const TextStyle(
+  // Bottom Navigation Bar Theme with creative dark styling
+  bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+    backgroundColor: AppColors.darkNavBackground,
+    selectedItemColor: AppColors.navIconDark,
+    unselectedItemColor: AppColors.darkSecondaryText,
+    type: BottomNavigationBarType.fixed,
+    elevation: 8,
+  ),
+
+  textTheme: const TextTheme(
+    bodyLarge: TextStyle(
       fontSize: 16,
-      color: Color(0xFFE0E0E0),
+      color: AppColors.darkText,
       fontWeight: FontWeight.bold,
     ),
-    bodyMedium: const TextStyle(fontSize: 14, color: AppColors.primaryDark),
-    bodySmall: TextStyle(fontSize: 14, color: Colors.grey[600]),
-    headlineLarge: const TextStyle(
+    bodyMedium: TextStyle(fontSize: 14, color: AppColors.darkText),
+    bodySmall: TextStyle(fontSize: 14, color: AppColors.darkSecondaryText),
+    headlineLarge: TextStyle(
       fontSize: 30,
       fontWeight: FontWeight.bold,
-      color: AppColors.primaryDark,
+      color: AppColors.darkText,
     ),
-    headlineSmall: const TextStyle(
+    headlineSmall: TextStyle(
       fontSize: 22,
       fontWeight: FontWeight.bold,
-      color: AppColors.primaryDark,
+      color: AppColors.darkText,
     ),
-    labelLarge: const TextStyle(
+    labelLarge: TextStyle(
       fontSize: 16,
-      color: Colors.white,
+      color: AppColors.darkText,
       fontWeight: FontWeight.bold,
     ),
-    labelMedium: const TextStyle(fontSize: 14, color: Colors.white),
-    labelSmall: const TextStyle(
+    labelMedium: TextStyle(fontSize: 14, color: AppColors.darkText),
+    labelSmall: TextStyle(
       fontSize: 14,
-      color: AppColors.primaryDark,
+      color: AppColors.darkText,
       fontWeight: FontWeight.bold,
     ),
-    titleMedium: const TextStyle(fontSize: 16, color: Colors.white),
+    titleMedium: TextStyle(fontSize: 16, color: AppColors.darkText),
   ),
   cardColor: AppColors.darkCard,
   elevatedButtonTheme: ElevatedButtonThemeData(
     style: ElevatedButton.styleFrom(
-      backgroundColor: AppColors.primaryDark,
-      foregroundColor: Colors.black,
+      backgroundColor: AppColors.darkText,
+      foregroundColor: AppColors.primaryDark,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: 4,
     ),
   ),
   floatingActionButtonTheme: const FloatingActionButtonThemeData(
-    backgroundColor: AppColors.primaryDark,
+    backgroundColor: AppColors.darkText,
+    foregroundColor: AppColors.primaryDark,
   ),
-  cardTheme: CardThemeData(color: Colors.grey[900], elevation: 5),
+  cardTheme: CardThemeData(
+    color: AppColors.darkCard,
+    elevation: 8,
+    shadowColor: Colors.black.withOpacity(0.3),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+  ),
+  // Container theme for better visual hierarchy in dark mode
+  dividerColor: AppColors.darkAccent,
 );

@@ -6,6 +6,7 @@ import 'package:foodapp/generated/l10n.dart';
 import 'package:foodapp/screens/oredrs/cubit.dart';
 import 'package:foodapp/screens/oredrs/states.dart';
 import 'package:foodapp/shared/auth_helper.dart';
+import 'package:foodapp/shared/colors.dart';
 import 'package:foodapp/widgets/ordercard.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -187,7 +188,7 @@ class _OrdersscreeenState extends State<Ordersscreeen> {
       // Add floating action button
       floatingActionButton: FloatingActionButton(
         onPressed: _openWhatsApp,
-        backgroundColor: Colors.green,
+        backgroundColor: AppColors.primaryLight,
         child: const Icon(
           Icons.chat,
           color: Colors.white,

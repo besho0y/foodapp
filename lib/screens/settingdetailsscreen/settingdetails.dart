@@ -82,7 +82,10 @@ class Settingdetails extends StatelessWidget {
                             iconBuilder: (value, size) {
                               return Icon(
                                 value ? Icons.dark_mode : Icons.light_mode,
-                                color: Colors.black,
+                                color: Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Colors.white
+                                    : Colors.black,
                                 size: 20.sp,
                               );
                             },
@@ -119,7 +122,10 @@ class Settingdetails extends StatelessWidget {
                                   style: TextStyle(
                                     fontSize: 16.sp,
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.black,
+                                    color: Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? Colors.white
+                                        : Colors.black,
                                   ),
                                 ),
                               );
@@ -170,7 +176,7 @@ class Settingdetails extends StatelessWidget {
             ),
             child: Icon(
               icon,
-              color: isDark ? AppColors.primaryDark : AppColors.primaryLight,
+              color: isDark ? Colors.white : AppColors.primaryLight,
               size: 24.sp,
             ),
           ),
