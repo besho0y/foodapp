@@ -154,19 +154,18 @@ class _ResturantscreenState extends State<Resturantscreen> {
                                   width: 60.w,
                                   padding: EdgeInsets.all(6.w),
                                   decoration: BoxDecoration(
-                                    color: Theme.of(context).brightness ==
-                                            Brightness.dark
-                                        ? AppColors.darkCard
-                                        : AppColors.lightBackground,
-                                    borderRadius: BorderRadius.circular(10.r),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.grey.shade300,
-                                        blurRadius: 10,
-                                        offset: Offset(0, 10),
-                                      )
-                                    ]
-                                  ),
+                                      color: Theme.of(context).brightness ==
+                                              Brightness.dark
+                                          ? AppColors.darkCard
+                                          : AppColors.lightBackground,
+                                      borderRadius: BorderRadius.circular(10.r),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.grey.shade500,
+                                          blurRadius: 2,
+                                          offset: const Offset(2, 1),
+                                        )
+                                      ]),
                                   child: _buildCategoryImage(category.img),
                                 ),
                                 SizedBox(height: 6.h),

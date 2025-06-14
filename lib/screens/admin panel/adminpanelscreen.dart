@@ -926,6 +926,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                           onPressed: () => _submitRestaurantForm(cubit),
                           child: Text(S.of(context).add_restaurant),
                         ),
+                  SizedBox(height: 20.h),
                 ],
               ),
             ),
@@ -2190,6 +2191,20 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
         return;
       }
 
+      // Convert area IDs to area names
+      List<String> areaNames = _selectedRestaurantAreas.map((areaId) {
+        final area = cubit.areas.firstWhere(
+          (area) => area.id == areaId,
+          orElse: () => cubit.areas.first,
+        );
+        return area.name; // Use area name instead of ID
+      }).toList();
+
+      print("Converting area IDs to names:");
+      for (int i = 0; i < _selectedRestaurantAreas.length; i++) {
+        print("  ID: ${_selectedRestaurantAreas[i]} -> Name: ${areaNames[i]}");
+      }
+
       // Let the cubit handle the image upload
       await cubit.addRestaurant(
         name: _restaurantNameController.text.trim(),
@@ -2201,7 +2216,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
         imageFile:
             _restaurantImageFile, // Pass the file, let cubit handle upload
         categories: [],
-        areas: _selectedRestaurantAreas, // Pass selected areas
+        areas: areaNames, // Pass area names instead of IDs
       );
 
       // Close loading dialog

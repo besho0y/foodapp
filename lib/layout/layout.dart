@@ -915,9 +915,43 @@ class _LayoutState extends State<Layout> {
 
                     return DropdownButtonFormField<String>(
                       value: selectedCityId,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Select City',
-                        border: OutlineInputBorder(),
+                        labelStyle: TextStyle(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : Colors.black,
+                        ),
+                        hintStyle: TextStyle(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white70
+                              : Colors.black54,
+                        ),
+                        border: OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.white
+                                    : Colors.black,
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.white
+                                    : Colors.black,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.white
+                                    : Colors.black,
+                            width: 2.0,
+                          ),
+                        ),
                       ),
                       items: adminCubit.cities.map((city) {
                         return DropdownMenuItem<String>(
@@ -964,9 +998,45 @@ class _LayoutState extends State<Layout> {
 
                       return DropdownButtonFormField<String>(
                         value: selectedAreaId,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'Select Area',
-                          border: OutlineInputBorder(),
+                          labelStyle: TextStyle(
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.white
+                                    : Colors.black,
+                          ),
+                          hintStyle: TextStyle(
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.white70
+                                    : Colors.black54,
+                          ),
+                          border: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.white
+                                  : Colors.black,
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.white
+                                  : Colors.black,
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.white
+                                  : Colors.black,
+                              width: 2.0,
+                            ),
+                          ),
                         ),
                         items: adminCubit.areas.map((area) {
                           return DropdownMenuItem<String>(
@@ -996,7 +1066,14 @@ class _LayoutState extends State<Layout> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Cancel'),
+              child: Text(
+                'Cancel',
+                style: TextStyle(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white
+                      : Colors.black,
+                ),
+              ),
             ),
             ElevatedButton(
               onPressed: selectedAreaId != null
@@ -1008,18 +1085,29 @@ class _LayoutState extends State<Layout> {
                         orElse: () => adminCubit.areas.first,
                       );
 
+                      // Debug: Print area information
+                      print(
+                          "Selected area: ${selectedArea.name} (ID: ${selectedArea.id})");
+
                       // Update the restaurant cubit with the selected area
                       final restCubit = Restuarantscubit.get(context);
+                      print(
+                          "Current restaurants before filtering: ${restCubit.restaurants.length}");
+
                       restCubit.updateSelectedArea(selectedArea.name);
+
+                      print(
+                          "Restaurants after filtering: ${restCubit.restaurants.length}");
 
                       Navigator.pop(dialogContext);
 
-                      // Show success message
+                      // Show success message with more details
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content:
-                              Text('Location updated to ${selectedArea.name}'),
+                          content: Text(
+                              'Location updated to ${selectedArea.name}\n${restCubit.restaurants.length} restaurants found'),
                           backgroundColor: Colors.green,
+                          duration: const Duration(seconds: 3),
                         ),
                       );
                     }

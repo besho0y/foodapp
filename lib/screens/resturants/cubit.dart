@@ -42,14 +42,18 @@ class Restuarantscubit extends Cubit<ResturantsStates> {
 
   // Apply all filters (area and search)
   void _applyFilters() {
-    print("Applying filters for area: $_selectedArea, search: '$_searchQuery'");
+    print("=== APPLYING FILTERS ===");
+    print("Selected area: '$_selectedArea'");
+    print("Search query: '$_searchQuery'");
     print("Total restaurants before filtering: ${_allRestuarants.length}");
 
     List<Restuarants> filtered = List.from(_allRestuarants);
 
     // Debug: Show all restaurant areas
+    print("--- Restaurant Areas Debug ---");
     for (var restaurant in _allRestuarants) {
-      print("Restaurant: ${restaurant.name}, Area: ${restaurant.area}");
+      print(
+          "Restaurant: '${restaurant.name}' | Area: '${restaurant.area}' | Areas: ${restaurant.areas}");
     }
 
     // Filter by area - check both single area and areas array
@@ -57,10 +61,18 @@ class Restuarantscubit extends Cubit<ResturantsStates> {
       // Check if restaurant serves the selected area
       bool servesArea = restaurant.area == _selectedArea ||
           restaurant.areas.contains(_selectedArea);
+
+      if (servesArea) {
+        print("✓ Restaurant '${restaurant.name}' serves area '$_selectedArea'");
+      } else {
+        print(
+            "✗ Restaurant '${restaurant.name}' does NOT serve area '$_selectedArea' (has: '${restaurant.area}', areas: ${restaurant.areas})");
+      }
+
       return servesArea;
     }).toList();
 
-    print("After area filtering: ${filtered.length} restaurants");
+    print("After area filtering: ${filtered.length} restaurants found");
 
     // Filter by search query if exists
     if (_searchQuery.isNotEmpty) {
@@ -79,7 +91,8 @@ class Restuarantscubit extends Cubit<ResturantsStates> {
 
     // Always set filtered restaurants to show area-specific results
     _filteredRestaurants = filtered;
-    print("Final filtered restaurants count: ${_filteredRestaurants!.length}");
+    print(
+        "=== FILTERING COMPLETE: ${_filteredRestaurants!.length} restaurants ===");
   }
 
   // Synchronize favorite status for all items

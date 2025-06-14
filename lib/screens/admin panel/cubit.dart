@@ -1316,4 +1316,103 @@ class AdminPanelCubit extends Cubit<AdminPanelStates> {
       emit(ErrorDeletingAreaState(e.toString()));
     }
   }
+
+  // Method to fix existing restaurants with area IDs instead of area names
+  Future<void> fixRestaurantAreas() async {
+    emit(LoadingRestaurantsState());
+
+    try {
+      print("🔧 Starting to fix restaurant areas...");
+
+      // Get all restaurants
+      final restaurantsSnapshot =
+          await FirebaseFirestore.instance.collection("restaurants").get();
+
+      // Get all cities and areas for mapping
+      await fetchCities();
+
+      int fixedCount = 0;
+
+      for (var doc in restaurantsSnapshot.docs) {
+        try {
+          final data = doc.data();
+          final areas = data['areas'] as List<dynamic>?;
+
+          if (areas != null && areas.isNotEmpty) {
+            List<String> areaNames = [];
+            bool needsUpdate = false;
+
+            for (String areaIdOrName in areas.cast<String>()) {
+              // Check if this looks like an area ID (long random string)
+              if (areaIdOrName.length > 10 && !areaIdOrName.contains(' ')) {
+                // This looks like an ID, try to find the corresponding area name
+                String? areaName = await _findAreaNameById(areaIdOrName);
+                if (areaName != null) {
+                  areaNames.add(areaName);
+                  needsUpdate = true;
+                  print("  Fixed: ID '$areaIdOrName' -> Name '$areaName'");
+                } else {
+                  // Keep the original if we can't find a match
+                  areaNames.add(areaIdOrName);
+                  print(
+                      "  Warning: Could not find area name for ID '$areaIdOrName'");
+                }
+              } else {
+                // This already looks like a name, keep it
+                areaNames.add(areaIdOrName);
+              }
+            }
+
+            // Update the restaurant if needed
+            if (needsUpdate) {
+              await FirebaseFirestore.instance
+                  .collection("restaurants")
+                  .doc(doc.id)
+                  .update({'areas': areaNames});
+
+              fixedCount++;
+              print(
+                  "✅ Fixed restaurant '${data['resname']}' areas: $areaNames");
+            }
+          }
+        } catch (e) {
+          print("❌ Error fixing restaurant ${doc.id}: $e");
+        }
+      }
+
+      print("🎉 Fixed $fixedCount restaurants");
+
+      // Refresh restaurants list
+      await getRestaurants();
+
+      emit(SuccessLoadingRestaurantsState());
+    } catch (e) {
+      print("💥 Error fixing restaurant areas: $e");
+      emit(ErrorLoadingRestaurantsState(e.toString()));
+    }
+  }
+
+  // Helper method to find area name by ID
+  Future<String?> _findAreaNameById(String areaId) async {
+    try {
+      // Search through all cities for this area ID
+      for (var city in cities) {
+        final areasSnapshot = await FirebaseFirestore.instance
+            .collection("cities")
+            .doc(city.id)
+            .collection("areas")
+            .doc(areaId)
+            .get();
+
+        if (areasSnapshot.exists) {
+          final areaData = areasSnapshot.data();
+          return areaData?['name'] as String?;
+        }
+      }
+      return null;
+    } catch (e) {
+      print("Error finding area name for ID $areaId: $e");
+      return null;
+    }
+  }
 }
