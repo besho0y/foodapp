@@ -232,4 +232,61 @@ class OrderCubit extends Cubit<OrdersStates> {
       print('DEBUG: Firestore test failed: $e');
     }
   }
+
+  // Method to clear user's order history
+  Future<void> clearUserOrderHistory() async {
+    emit(OrdersClearingState());
+
+    try {
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) {
+        print('Error: User not authenticated when clearing orders');
+        emit(OrderErrorState('User not authenticated'));
+        return;
+      }
+
+      print('Clearing order history for user: ${currentUser.uid}');
+
+      // Get all user's orders from Firestore
+      final userOrdersSnapshot = await FirebaseFirestore.instance
+          .collection('orders')
+          .where('userId', isEqualTo: currentUser.uid)
+          .get();
+
+      print('Found ${userOrdersSnapshot.docs.length} orders to delete');
+
+      // Delete each order document
+      final batch = FirebaseFirestore.instance.batch();
+      for (var doc in userOrdersSnapshot.docs) {
+        batch.delete(doc.reference);
+      }
+
+      // Execute batch delete
+      await batch.commit();
+
+      // Clear local orders list
+      orders.clear();
+
+      // Also remove order IDs from user's profile if they exist
+      try {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(currentUser.uid)
+            .update({
+          'orderIds': [],
+        });
+        print('✅ Cleared order IDs from user profile');
+      } catch (userUpdateError) {
+        print('⚠️ Warning - Could not clear user orderIds: $userUpdateError');
+        // Continue - orders are still deleted from main collection
+      }
+
+      print('Successfully cleared ${userOrdersSnapshot.docs.length} orders');
+      emit(OrdersClearedSuccessState());
+    } catch (error) {
+      print('Error clearing order history: $error');
+      emit(OrderErrorState(
+          'Failed to clear order history: ${error.toString()}'));
+    }
+  }
 }

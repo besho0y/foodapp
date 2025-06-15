@@ -95,6 +95,20 @@ class _OrdersscreeenState extends State<Ordersscreeen> {
 
     var cubit = OrderCubit.get(context);
     return Scaffold(
+      appBar: AppBar(
+        title: Text(S.of(context).yourorders),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        actions: [
+          // Only show clear button if user has orders
+          if (cubit.orders.isNotEmpty)
+            IconButton(
+              onPressed: () => _showClearHistoryDialog(context),
+              icon: const Icon(Icons.clear_all),
+              tooltip: 'Clear Order History',
+            ),
+        ],
+      ),
       body: BlocConsumer<OrderCubit, OrdersStates>(
         listener: (context, state) {
           if (state is OrderErrorState) {
@@ -104,10 +118,17 @@ class _OrdersscreeenState extends State<Ordersscreeen> {
                 backgroundColor: Colors.red,
               ),
             );
+          } else if (state is OrdersClearedSuccessState) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Order history cleared successfully'),
+                backgroundColor: Colors.green,
+              ),
+            );
           }
         },
         builder: (context, state) {
-          if (state is OrderLoadingState) {
+          if (state is OrderLoadingState || state is OrdersClearingState) {
             return const Center(child: CircularProgressIndicator());
           }
 
@@ -207,5 +228,31 @@ class _OrdersscreeenState extends State<Ordersscreeen> {
     }
 
     return uniqueOrdersMap.values.toList();
+  }
+
+  void _showClearHistoryDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Clear Order History'),
+          content: const Text(
+              'Are you sure you want to clear your entire order history? This action cannot be undone.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(S.of(context).cancel),
+            ),
+            TextButton(
+              onPressed: () {
+                OrderCubit.get(context).clearUserOrderHistory();
+                Navigator.of(context).pop();
+              },
+              child: const Text('Clear'),
+            ),
+          ],
+        );
+      },
+    );
   }
 }

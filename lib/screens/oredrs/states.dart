@@ -10,3 +10,7 @@ class OrderErrorState extends OrdersStates {
   final String error;
   OrderErrorState(this.error);
 }
+
+class OrdersClearingState extends OrdersStates {}
+
+class OrdersClearedSuccessState extends OrdersStates {}
