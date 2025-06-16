@@ -6,7 +6,6 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:foodapp/firebase_options.dart';
 import 'package:foodapp/layout/cubit.dart';
-import 'package:foodapp/layout/layout.dart';
 import 'package:foodapp/layout/states.dart';
 import 'package:foodapp/screens/admin%20panel/cubit.dart';
 import 'package:foodapp/screens/favourits/cubit.dart';
@@ -17,7 +16,6 @@ import 'package:foodapp/screens/profile/cubit.dart';
 import 'package:foodapp/screens/resturants/cubit.dart';
 import 'package:foodapp/screens/signup/cubit.dart';
 import 'package:foodapp/screens/splash/splash_screen.dart';
-import 'package:foodapp/screens/startup/location_selection_screen.dart';
 import 'package:foodapp/shared/blocObserver.dart';
 import 'package:foodapp/shared/paymob_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -132,7 +130,7 @@ class MyApp extends StatelessWidget {
                 theme: cubit.isdark,
                 navigatorKey:
                     navigatorKey, // Add navigator key for global access
-                home: SplashScreen(),
+                home: const SplashScreen(),
                 routes: {
                   '/login': (context) => const Loginscreen(),
                 },

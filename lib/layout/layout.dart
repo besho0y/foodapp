@@ -923,11 +923,63 @@ class _LayoutState extends State<Layout> {
                   builder: (context, state) {
                     final adminCubit = AdminPanelCubit.get(context);
 
-                    // Load cities if not already loaded
-                    if (adminCubit.cities.isEmpty) {
-                      adminCubit.fetchCities();
+                    // Load cities if not already loaded and not currently loading
+                    if (adminCubit.cities.isEmpty &&
+                        state is! LoadingCitiesState) {
+                      // Use post frame callback to avoid building during build
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        adminCubit.fetchCities();
+                      });
                     }
 
+                    // Show loading indicator while cities are being fetched
+                    if (state is LoadingCitiesState &&
+                        adminCubit.cities.isEmpty) {
+                      return Container(
+                        height: 56.h,
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.white
+                                    : Colors.black,
+                          ),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: const Center(
+                          child: CircularProgressIndicator(),
+                        ),
+                      );
+                    }
+
+                    // Show error state if there was an error loading cities
+                    if (state is ErrorLoadingCitiesState) {
+                      return Column(
+                        children: [
+                          Container(
+                            height: 56.h,
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.red),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Center(
+                              child: Text(
+                                'Error loading cities',
+                                style: TextStyle(
+                                    color: Colors.red, fontSize: 14.sp),
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 8.h),
+                          ElevatedButton(
+                            onPressed: () => adminCubit.fetchCities(),
+                            child: const Text('Retry'),
+                          ),
+                        ],
+                      );
+                    }
+
+                    // Show dropdown with cities
                     return DropdownButtonFormField<String>(
                       value: selectedCityId,
                       decoration: InputDecoration(

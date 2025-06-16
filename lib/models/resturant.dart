@@ -20,6 +20,13 @@ class Restuarants {
   String area; // Keep for backward compatibility
   List<String> areas; // New field for multiple areas
 
+  // New fields for restaurant location
+  String? locationCityId; // City where restaurant is located
+  String? locationCityName; // City name for display
+  String? locationAreaId; // Specific area where restaurant is located
+  String? locationAreaName; // Area name for display
+  String? outOfAreaFee; // Fee for delivery outside main area
+
   Restuarants({
     required this.name,
     required this.nameAr,
@@ -37,6 +44,11 @@ class Restuarants {
     this.menuCategoriesAr,
     this.area = 'Cairo',
     this.areas = const [], // Default to empty list
+    this.locationCityId,
+    this.locationCityName,
+    this.locationAreaId,
+    this.locationAreaName,
+    this.outOfAreaFee = '0',
   }) {
     // Ensure categories is not null
     categories = categories.isEmpty ? ['Uncategorized'] : categories;
@@ -63,7 +75,12 @@ class Restuarants {
         menuCategories = _parseMenuCategories(json['menuCategories']),
         menuCategoriesAr = _parseMenuCategories(json['menuCategoriesAr']),
         area = json['area']?.toString() ?? 'Cairo',
-        areas = _parseAreas(json['areas']) {
+        areas = _parseAreas(json['areas']),
+        locationCityId = json['locationCityId']?.toString(),
+        locationCityName = json['locationCityName']?.toString(),
+        locationAreaId = json['locationAreaId']?.toString(),
+        locationAreaName = json['locationAreaName']?.toString(),
+        outOfAreaFee = json['outOfAreaFee']?.toString() ?? '0' {
     try {
       // Parse menu items with error handling
       if (json['items'] is List) {
@@ -230,6 +247,11 @@ class Restuarants {
         'menuCategoriesAr': menuCategoriesAr,
         'area': area,
         'areas': areas, // Include areas array
+        'locationCityId': locationCityId,
+        'locationCityName': locationCityName,
+        'locationAreaId': locationAreaId,
+        'locationAreaName': locationAreaName,
+        'outOfAreaFee': outOfAreaFee,
         'items': menuItems.map((item) => item.toJson()).toList(),
       };
     } catch (e) {
@@ -262,6 +284,11 @@ class Restuarants {
       menuCategoriesAr: [],
       area: 'Cairo',
       areas: [],
+      locationCityId: null,
+      locationCityName: null,
+      locationAreaId: null,
+      locationAreaName: null,
+      outOfAreaFee: '0',
     );
   }
 }

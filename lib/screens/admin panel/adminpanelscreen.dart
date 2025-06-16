@@ -79,6 +79,11 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
   final List<String> _selectedRestaurantAreas =
       []; // Selected areas for restaurant
 
+  // Restaurant location fields
+  String? _selectedLocationCityId; // City where restaurant is located
+  String? _selectedLocationAreaId; // Specific area where restaurant is located
+  final TextEditingController _outOfAreaFeeController = TextEditingController();
+
   // Add flag to prevent multiple refresh operations
   bool _isRefreshing = false;
 
@@ -157,6 +162,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
       _categoryNameArController.dispose();
       _areaNameController.dispose();
       _areaNameArController.dispose();
+      _outOfAreaFeeController.dispose();
     } catch (e) {
       print('Error in dispose: $e');
     }
@@ -755,9 +761,228 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                     },
                   ),
                   SizedBox(height: 12.h),
-                  // City dropdown
+                  defaultTextField(
+                    controller: _outOfAreaFeeController,
+                    type: TextInputType.number,
+                    label: 'Out of Area Delivery Fee',
+                    validate: (value) {
+                      if (value == null || value.isEmpty) {
+                        return S.of(context).please_fill_all_fields;
+                      }
+                      return null;
+                    },
+                  ),
+                  SizedBox(height: 24.h),
+                  Text(
+                    'Restaurant Location',
+                    style: TextStyle(
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).primaryColor,
+                    ),
+                  ),
+                  SizedBox(height: 12.h),
+                  // Location City dropdown
                   BlocBuilder<AdminPanelCubit, AdminPanelStates>(
                     builder: (context, state) {
+                      // Ensure the selected value exists in the current cities list
+                      if (_selectedLocationCityId != null &&
+                          !cubit.cities.any(
+                              (city) => city.id == _selectedLocationCityId)) {
+                        _selectedLocationCityId = null;
+                      }
+
+                      return DropdownButtonFormField<String>(
+                        value: _selectedLocationCityId,
+                        items: cubit.cities.map((city) {
+                          return DropdownMenuItem<String>(
+                            value: city.id,
+                            child: Text(
+                              '${city.name} - ${city.nameAr}',
+                              style: TextStyle(
+                                color: Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Colors.white
+                                    : Colors.black,
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (String? newValue) {
+                          if (newValue != null && mounted) {
+                            setState(() {
+                              _selectedLocationCityId = newValue;
+                              _selectedLocationAreaId =
+                                  null; // Reset area when city changes
+                            });
+                            // Fetch areas for the selected location city
+                            cubit.fetchAreas(newValue);
+                          }
+                        },
+                        decoration: InputDecoration(
+                          labelText: 'Restaurant Location City',
+                          border: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? AppColors.primaryDark
+                                  : AppColors.primaryLight,
+                              width: 1.5,
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? AppColors.primaryDark
+                                  : AppColors.primaryLight,
+                              width: 1.5,
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? AppColors.primaryDark
+                                  : AppColors.primaryLight,
+                              width: 2.0,
+                            ),
+                          ),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please select restaurant location city';
+                          }
+                          return null;
+                        },
+                      );
+                    },
+                  ),
+                  SizedBox(height: 12.h),
+                  // Location Area dropdown
+                  if (_selectedLocationCityId != null)
+                    BlocBuilder<AdminPanelCubit, AdminPanelStates>(
+                      builder: (context, state) {
+                        if (cubit.areas.isEmpty) {
+                          // Reset area selection when no areas available
+                          if (_selectedLocationAreaId != null) {
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              if (mounted) {
+                                setState(() {
+                                  _selectedLocationAreaId = null;
+                                });
+                              }
+                            });
+                          }
+                          return Container(
+                            padding: EdgeInsets.all(16.r),
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.grey.shade300),
+                              borderRadius: BorderRadius.circular(8.r),
+                            ),
+                            child: Text(
+                              'No areas found for selected city',
+                              style: TextStyle(
+                                  color: Colors.grey, fontSize: 14.sp),
+                            ),
+                          );
+                        }
+
+                        // Ensure the selected area exists in the current areas list
+                        if (_selectedLocationAreaId != null &&
+                            !cubit.areas.any(
+                                (area) => area.id == _selectedLocationAreaId)) {
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            if (mounted) {
+                              setState(() {
+                                _selectedLocationAreaId = null;
+                              });
+                            }
+                          });
+                        }
+
+                        return DropdownButtonFormField<String>(
+                          value: _selectedLocationAreaId,
+                          items: cubit.areas.map((area) {
+                            return DropdownMenuItem<String>(
+                              value: area.id,
+                              child: Text(
+                                '${area.name} - ${area.nameAr}',
+                                style: TextStyle(
+                                  color: Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? Colors.white
+                                      : Colors.black,
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                          onChanged: (String? newValue) {
+                            if (mounted) {
+                              setState(() {
+                                _selectedLocationAreaId = newValue;
+                              });
+                            }
+                          },
+                          decoration: InputDecoration(
+                            labelText: 'Restaurant Location Area',
+                            border: OutlineInputBorder(
+                              borderSide: BorderSide(
+                                color: Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? AppColors.primaryDark
+                                    : AppColors.primaryLight,
+                                width: 1.5,
+                              ),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide(
+                                color: Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? AppColors.primaryDark
+                                    : AppColors.primaryLight,
+                                width: 1.5,
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: BorderSide(
+                                color: Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? AppColors.primaryDark
+                                    : AppColors.primaryLight,
+                                width: 2.0,
+                              ),
+                            ),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please select restaurant location area';
+                            }
+                            return null;
+                          },
+                        );
+                      },
+                    ),
+                  SizedBox(height: 24.h),
+                  Text(
+                    'Delivery Coverage Areas',
+                    style: TextStyle(
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).primaryColor,
+                    ),
+                  ),
+                  SizedBox(height: 12.h),
+                  // City dropdown for delivery areas
+                  BlocBuilder<AdminPanelCubit, AdminPanelStates>(
+                    builder: (context, state) {
+                      // Ensure the selected value exists in the current cities list
+                      if (_selectedRestaurantCityId != null &&
+                          !cubit.cities.any(
+                              (city) => city.id == _selectedRestaurantCityId)) {
+                        _selectedRestaurantCityId = null;
+                      }
+
                       return DropdownButtonFormField<String>(
                         value: _selectedRestaurantCityId,
                         items: cubit.cities.map((city) {
@@ -786,7 +1011,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                           }
                         },
                         decoration: InputDecoration(
-                          labelText: 'City',
+                          labelText: 'Delivery Coverage City',
                           border: OutlineInputBorder(
                             borderSide: BorderSide(
                               color: Theme.of(context).brightness ==
@@ -830,6 +1055,16 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                     BlocBuilder<AdminPanelCubit, AdminPanelStates>(
                       builder: (context, state) {
                         if (cubit.areas.isEmpty) {
+                          // Clear selected areas when no areas available
+                          if (_selectedRestaurantAreas.isNotEmpty) {
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              if (mounted) {
+                                setState(() {
+                                  _selectedRestaurantAreas.clear();
+                                });
+                              }
+                            });
+                          }
                           return Container(
                             padding: EdgeInsets.all(16.r),
                             decoration: BoxDecoration(
@@ -844,6 +1079,23 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                           );
                         }
 
+                        // Remove any selected areas that no longer exist in the current areas list
+                        final currentAreaIds =
+                            cubit.areas.map((area) => area.id).toSet();
+                        final invalidAreas = _selectedRestaurantAreas
+                            .where((areaId) => !currentAreaIds.contains(areaId))
+                            .toList();
+                        if (invalidAreas.isNotEmpty) {
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            if (mounted) {
+                              setState(() {
+                                _selectedRestaurantAreas.removeWhere((areaId) =>
+                                    !currentAreaIds.contains(areaId));
+                              });
+                            }
+                          });
+                        }
+
                         return Container(
                           padding: EdgeInsets.all(16.r),
                           decoration: BoxDecoration(
@@ -854,7 +1106,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Select Areas',
+                                'Select Delivery Coverage Areas',
                                 style: TextStyle(
                                   fontSize: 16.sp,
                                   fontWeight: FontWeight.bold,
@@ -2203,7 +2455,15 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
       // Validate that areas are selected
       if (_selectedRestaurantAreas.isEmpty) {
         _safeNavigatorPop(context);
-        _showSnackBar("Please select at least one area for the restaurant",
+        _showSnackBar("Please select at least one delivery coverage area",
+            backgroundColor: Colors.red);
+        return;
+      }
+
+      // Validate restaurant location
+      if (_selectedLocationCityId == null || _selectedLocationAreaId == null) {
+        _safeNavigatorPop(context);
+        _showSnackBar("Please select restaurant location (city and area)",
             backgroundColor: Colors.red);
         return;
       }
@@ -2222,6 +2482,21 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
         print("  ID: ${_selectedRestaurantAreas[i]} -> Name: ${areaNames[i]}");
       }
 
+      // Get location city and area names
+      String locationCityName = cubit.cities
+          .firstWhere(
+            (city) => city.id == _selectedLocationCityId,
+            orElse: () => cubit.cities.first,
+          )
+          .name;
+
+      String locationAreaName = cubit.areas
+          .firstWhere(
+            (area) => area.id == _selectedLocationAreaId,
+            orElse: () => cubit.areas.first,
+          )
+          .name;
+
       // Let the cubit handle the image upload
       await cubit.addRestaurant(
         name: _restaurantNameController.text.trim(),
@@ -2234,6 +2509,11 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
             _restaurantImageFile, // Pass the file, let cubit handle upload
         categories: [],
         areas: areaNames, // Pass area names instead of IDs
+        locationCityId: _selectedLocationCityId,
+        locationCityName: locationCityName,
+        locationAreaId: _selectedLocationAreaId,
+        locationAreaName: locationAreaName,
+        outOfAreaFee: _outOfAreaFeeController.text.trim(),
       );
 
       // Close loading dialog
@@ -2418,11 +2698,14 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
       _restaurantCategoryArController.clear();
       _deliveryFeeController.clear();
       _deliveryTimeController.clear();
+      _outOfAreaFeeController.clear();
       if (mounted) {
         setState(() {
           _restaurantImageFile = null;
           _selectedRestaurantCityId = null;
           _selectedRestaurantAreas.clear();
+          _selectedLocationCityId = null;
+          _selectedLocationAreaId = null;
         });
       }
     } catch (e) {
@@ -4582,11 +4865,15 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
         TextEditingController(text: restaurant.deliveryFee);
     final TextEditingController editDeliveryTimeController =
         TextEditingController(text: restaurant.deliveryTime);
+    final TextEditingController editOutOfAreaFeeController =
+        TextEditingController(text: restaurant.outOfAreaFee ?? '0');
 
     File? editRestaurantImageFile;
     Category? editSelectedRestaurantCategory;
     String? editSelectedRestaurantCityId;
     List<String> editSelectedRestaurantAreas = List.from(restaurant.areas);
+    String? editSelectedLocationCityId = restaurant.locationCityId;
+    String? editSelectedLocationAreaId = restaurant.locationAreaId;
 
     // Find the current category
     try {
@@ -4702,6 +4989,243 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                       ),
                     ),
                   ),
+                  SizedBox(height: 12.h),
+
+                  // Out of Area Fee
+                  TextFormField(
+                    controller: editOutOfAreaFeeController,
+                    decoration: InputDecoration(
+                      labelText: 'Out of Area Delivery Fee',
+                      labelStyle: TextStyle(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white
+                            : Colors.black,
+                      ),
+                      hintStyle: TextStyle(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white70
+                            : Colors.black54,
+                      ),
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : Colors.black,
+                          width: 1.5,
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : Colors.black,
+                          width: 1.5,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : Colors.black,
+                          width: 2.0,
+                        ),
+                      ),
+                    ),
+                    keyboardType: TextInputType.number,
+                  ),
+                  SizedBox(height: 12.h),
+
+                  // Restaurant Location Section
+                  Text(
+                    'Restaurant Location',
+                    style: TextStyle(
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).primaryColor,
+                    ),
+                  ),
+                  SizedBox(height: 12.h),
+
+                  // Location City Dropdown
+                  BlocBuilder<AdminPanelCubit, AdminPanelStates>(
+                    builder: (context, state) {
+                      // Ensure the selected value exists in the current cities list
+                      if (editSelectedLocationCityId != null &&
+                          !cubit.cities.any((city) =>
+                              city.id == editSelectedLocationCityId)) {
+                        editSelectedLocationCityId = null;
+                      }
+
+                      return DropdownButtonFormField<String>(
+                        value: editSelectedLocationCityId,
+                        decoration: InputDecoration(
+                          labelText: 'Restaurant Location City',
+                          labelStyle: TextStyle(
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.white
+                                    : Colors.black,
+                          ),
+                          hintStyle: TextStyle(
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.white70
+                                    : Colors.black54,
+                          ),
+                          border: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.white
+                                  : Colors.black,
+                              width: 1.5,
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.white
+                                  : Colors.black,
+                              width: 1.5,
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.white
+                                  : Colors.black,
+                              width: 2.0,
+                            ),
+                          ),
+                        ),
+                        items: cubit.cities.map((city) {
+                          return DropdownMenuItem<String>(
+                            value: city.id,
+                            child: Text(
+                              '${city.name} - ${city.nameAr}',
+                              style: TextStyle(
+                                color: Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Colors.white
+                                    : Colors.black,
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (String? newValue) {
+                          setState(() {
+                            editSelectedLocationCityId = newValue;
+                            editSelectedLocationAreaId = null;
+                          });
+                          if (newValue != null) {
+                            cubit.fetchAreas(newValue);
+                          }
+                        },
+                      );
+                    },
+                  ),
+                  SizedBox(height: 12.h),
+
+                  // Location Area Dropdown
+                  if (editSelectedLocationCityId != null)
+                    BlocBuilder<AdminPanelCubit, AdminPanelStates>(
+                      builder: (context, state) {
+                        if (cubit.areas.isEmpty) {
+                          // Reset area selection when no areas available
+                          if (editSelectedLocationAreaId != null) {
+                            editSelectedLocationAreaId = null;
+                          }
+                          return Container(
+                            padding: EdgeInsets.all(16.r),
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Colors.white
+                                    : Colors.black,
+                              ),
+                              borderRadius: BorderRadius.circular(8.r),
+                            ),
+                            child:
+                                const Text('No areas found for selected city'),
+                          );
+                        }
+
+                        // Ensure the selected area exists in the current areas list
+                        if (editSelectedLocationAreaId != null &&
+                            !cubit.areas.any((area) =>
+                                area.id == editSelectedLocationAreaId)) {
+                          editSelectedLocationAreaId = null;
+                        }
+
+                        return DropdownButtonFormField<String>(
+                          value: editSelectedLocationAreaId,
+                          decoration: InputDecoration(
+                            labelText: 'Restaurant Location Area',
+                            labelStyle: TextStyle(
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.white
+                                  : Colors.black,
+                            ),
+                            hintStyle: TextStyle(
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.white70
+                                  : Colors.black54,
+                            ),
+                            border: OutlineInputBorder(
+                              borderSide: BorderSide(
+                                color: Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Colors.white
+                                    : Colors.black,
+                                width: 1.5,
+                              ),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide(
+                                color: Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Colors.white
+                                    : Colors.black,
+                                width: 1.5,
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: BorderSide(
+                                color: Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Colors.white
+                                    : Colors.black,
+                                width: 2.0,
+                              ),
+                            ),
+                          ),
+                          items: cubit.areas.map((area) {
+                            return DropdownMenuItem<String>(
+                              value: area.id,
+                              child: Text(
+                                '${area.name} - ${area.nameAr}',
+                                style: TextStyle(
+                                  color: Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? Colors.white
+                                      : Colors.black,
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                          onChanged: (String? newValue) {
+                            setState(() {
+                              editSelectedLocationAreaId = newValue;
+                            });
+                          },
+                        );
+                      },
+                    ),
                   SizedBox(height: 12.h),
 
                   // Category Dropdown
@@ -4870,6 +5394,13 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                   // City Dropdown
                   BlocBuilder<AdminPanelCubit, AdminPanelStates>(
                     builder: (context, state) {
+                      // Ensure the selected value exists in the current cities list
+                      if (editSelectedRestaurantCityId != null &&
+                          !cubit.cities.any((city) =>
+                              city.id == editSelectedRestaurantCityId)) {
+                        editSelectedRestaurantCityId = null;
+                      }
+
                       return DropdownButtonFormField<String>(
                         value: editSelectedRestaurantCityId,
                         decoration: InputDecoration(
@@ -4947,6 +5478,10 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                     BlocBuilder<AdminPanelCubit, AdminPanelStates>(
                       builder: (context, state) {
                         if (cubit.areas.isEmpty) {
+                          // Clear selected areas when no areas available
+                          if (editSelectedRestaurantAreas.isNotEmpty) {
+                            editSelectedRestaurantAreas.clear();
+                          }
                           return Container(
                             padding: EdgeInsets.all(16.r),
                             decoration: BoxDecoration(
@@ -4962,6 +5497,12 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                                 const Text('No areas found for selected city'),
                           );
                         }
+
+                        // Remove any selected areas that no longer exist in the current areas list
+                        final currentAreaNames =
+                            cubit.areas.map((area) => area.name).toSet();
+                        editSelectedRestaurantAreas.removeWhere(
+                            (areaName) => !currentAreaNames.contains(areaName));
 
                         return Container(
                           padding: EdgeInsets.all(16.r),
@@ -5071,6 +5612,26 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                     ),
                   );
 
+                  // Get location city and area names for edit
+                  String? editLocationCityName;
+                  String? editLocationAreaName;
+
+                  if (editSelectedLocationCityId != null) {
+                    final city = cubit.cities.firstWhere(
+                      (city) => city.id == editSelectedLocationCityId,
+                      orElse: () => cubit.cities.first,
+                    );
+                    editLocationCityName = city.name;
+                  }
+
+                  if (editSelectedLocationAreaId != null) {
+                    final area = cubit.areas.firstWhere(
+                      (area) => area.id == editSelectedLocationAreaId,
+                      orElse: () => cubit.areas.first,
+                    );
+                    editLocationAreaName = area.name;
+                  }
+
                   await cubit.editRestaurant(
                     restaurantId: restaurant.id,
                     name: editRestaurantNameController.text.trim(),
@@ -5084,6 +5645,11 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                     imageFile: editRestaurantImageFile,
                     categories: [],
                     areas: editSelectedRestaurantAreas,
+                    locationCityId: editSelectedLocationCityId,
+                    locationCityName: editLocationCityName,
+                    locationAreaId: editSelectedLocationAreaId,
+                    locationAreaName: editLocationAreaName,
+                    outOfAreaFee: editOutOfAreaFeeController.text.trim(),
                   );
 
                   // Close loading dialog
@@ -5403,8 +5969,20 @@ class RestaurantListItem extends StatelessWidget {
             ),
             if (restaurant.areas.isNotEmpty)
               Text(
-                'Areas: ${restaurant.areas.length}',
+                'Delivery Areas: ${restaurant.areas.length}',
                 style: TextStyle(fontSize: 12.sp, color: Colors.blue),
+              ),
+            if (restaurant.locationCityName != null &&
+                restaurant.locationAreaName != null)
+              Text(
+                'Location: ${restaurant.locationCityName}, ${restaurant.locationAreaName}',
+                style: TextStyle(fontSize: 12.sp, color: Colors.green),
+              ),
+            if (restaurant.outOfAreaFee != null &&
+                restaurant.outOfAreaFee != '0')
+              Text(
+                'Out-of-area fee: ${restaurant.outOfAreaFee}',
+                style: TextStyle(fontSize: 12.sp, color: Colors.orange),
               ),
           ],
         ),

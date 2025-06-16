@@ -351,6 +351,11 @@ class AdminPanelCubit extends Cubit<AdminPanelStates> {
     required List<String> categories,
     String area = 'Cairo', // Keep for backward compatibility
     List<String> areas = const [], // Add areas array parameter
+    String? locationCityId,
+    String? locationCityName,
+    String? locationAreaId,
+    String? locationAreaName,
+    String? outOfAreaFee,
   }) async {
     emit(AddingRestaurantState());
     try {
@@ -427,6 +432,11 @@ class AdminPanelCubit extends Cubit<AdminPanelStates> {
         'areas': areas.isNotEmpty
             ? areas
             : [area], // Use areas array or fallback to single area
+        'locationCityId': locationCityId,
+        'locationCityName': locationCityName,
+        'locationAreaId': locationAreaId,
+        'locationAreaName': locationAreaName,
+        'outOfAreaFee': outOfAreaFee ?? '0',
         'createdAt': FieldValue.serverTimestamp(),
       };
 
@@ -1429,6 +1439,11 @@ class AdminPanelCubit extends Cubit<AdminPanelStates> {
     required List<String> categories,
     String area = 'Cairo',
     List<String> areas = const [],
+    String? locationCityId,
+    String? locationCityName,
+    String? locationAreaId,
+    String? locationAreaName,
+    String? outOfAreaFee,
   }) async {
     emit(AddingRestaurantState()); // Reuse the same loading state
 
@@ -1480,6 +1495,11 @@ class AdminPanelCubit extends Cubit<AdminPanelStates> {
         'categories': categories,
         'area': area,
         'areas': areas.isNotEmpty ? areas : [area],
+        'locationCityId': locationCityId,
+        'locationCityName': locationCityName,
+        'locationAreaId': locationAreaId,
+        'locationAreaName': locationAreaName,
+        'outOfAreaFee': outOfAreaFee ?? '0',
         'updatedAt': FieldValue.serverTimestamp(),
       };
 
