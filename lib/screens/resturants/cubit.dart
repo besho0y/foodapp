@@ -4,6 +4,7 @@ import 'package:foodapp/models/banner.dart' as BannerModel;
 import 'package:foodapp/models/category.dart';
 import 'package:foodapp/models/item.dart';
 import 'package:foodapp/models/resturant.dart';
+import 'package:foodapp/screens/profile/cubit.dart';
 import 'package:foodapp/screens/resturants/states.dart';
 
 class Restuarantscubit extends Cubit<ResturantsStates> {
@@ -31,9 +32,22 @@ class Restuarantscubit extends Cubit<ResturantsStates> {
   String get selectedArea => _selectedArea;
 
   // Method to update selected area and filter restaurants
-  void updateSelectedArea(String area) {
+  void updateSelectedArea(String area, [context]) async {
     print("Updating selected area from $_selectedArea to $area");
     _selectedArea = area;
+
+    // Update user's profile selectedArea if context is provided
+    if (context != null) {
+      try {
+        final profileCubit = ProfileCubit.get(context);
+        await profileCubit.updateSelectedArea(area);
+        print("✅ Updated user profile selectedArea to: $area");
+      } catch (e) {
+        print("⚠️ Warning: Could not update user profile selectedArea: $e");
+        // Continue anyway - filtering will still work
+      }
+    }
+
     _applyFilters();
     print(
         "After filtering: ${_filteredRestaurants?.length ?? 0} restaurants found for area $area");
@@ -233,6 +247,7 @@ class Restuarantscubit extends Cubit<ResturantsStates> {
                 : [
                     data['area']?.toString() ?? 'Cairo'
                   ], // Use areas array or fallback to single area
+            outOfAreaFee: data['outOfAreaFee']?.toString() ?? '0',
           );
 
           _allRestuarants.add(restaurant);

@@ -224,7 +224,11 @@ class Layoutcubit extends Cubit<Layoutstates> {
     print("Restaurant: $restaurantName");
     print("Restaurant ID: $restaurantId");
     print("Item: $name");
+    print("Quantity to add: $quantity");
     print("Original Delivery Fee: $deliveryFee");
+
+    // Clean and trim restaurant ID
+    String cleanRestaurantId = restaurantId.trim();
 
     // Clean delivery fee before creating cart item
     String cleanFee = deliveryFee.replaceAll(RegExp(r'[^0-9.]'), '');
@@ -244,25 +248,46 @@ class Layoutcubit extends Cubit<Layoutstates> {
       sanitizedImg = 'assets/images/items/default.jpg';
     }
 
-    CartItem newItem = CartItem(
-      id: DateTime.now().toString(),
+    // Check if the same item from the same restaurant already exists in cart
+    int existingItemIndex = findExistingCartItemIndex(
       name: name,
-      nameAr: nameAr,
+      restaurantId: cleanRestaurantId,
       price: price,
-      quantity: quantity,
-      img: sanitizedImg,
       comment: comment,
-      restaurantId: restaurantId.trim(), // Ensure ID is trimmed
-      restaurantName: restaurantName,
-      restaurantNameAr: restaurantNameAr,
-      deliveryFee: deliveryFee,
     );
 
-    print("Created CartItem with delivery fee: ${newItem.deliveryFee}");
-    print("Parsed fee from CartItem: ${newItem.getDeliveryFeeAsDouble()}");
-    print("Restaurant ID in CartItem: ${newItem.restaurantId}");
+    if (existingItemIndex != -1) {
+      print(
+          "🔄 Found existing item at index $existingItemIndex with quantity ${cartitems[existingItemIndex].quantity}");
+    }
 
-    cartitems.add(newItem);
+    if (existingItemIndex != -1) {
+      // Item already exists - increase quantity instead of adding duplicate
+      cartitems[existingItemIndex].quantity += quantity;
+      print(
+          "✅ Updated existing item quantity to ${cartitems[existingItemIndex].quantity}");
+    } else {
+      // Item doesn't exist - create new cart item
+      CartItem newItem = CartItem(
+        id: DateTime.now().toString(),
+        name: name,
+        nameAr: nameAr,
+        price: price,
+        quantity: quantity,
+        img: sanitizedImg,
+        comment: comment,
+        restaurantId: cleanRestaurantId,
+        restaurantName: restaurantName,
+        restaurantNameAr: restaurantNameAr,
+        deliveryFee: deliveryFee,
+      );
+
+      print("✅ Created new CartItem with delivery fee: ${newItem.deliveryFee}");
+      print("Restaurant ID in CartItem: ${newItem.restaurantId}");
+
+      cartitems.add(newItem);
+    }
+
     LocalStorageService.saveCartItems(cartitems);
     emit(LayoutCartUpdatedState());
 
@@ -439,26 +464,52 @@ class Layoutcubit extends Cubit<Layoutstates> {
           'Restaurant group "$resId": ${items.length} items from ${items.first.restaurantName}');
     });
 
-    // Calculate delivery fees (one fee per restaurant)
+    // Calculate delivery fees (one fee per restaurant) using the breakdown logic
     double totalDeliveryFees = 0.0;
-    print('\nCalculating Delivery Fees:');
+    double totalOutOfAreaFees = 0.0;
+    print('\nCalculating Delivery Fees with Out-of-Area Logic:');
 
     itemsByRestaurant.forEach((restaurantId, items) {
       if (items.isNotEmpty) {
-        // Use the delivery fee from the first item of each restaurant
+        // Use the delivery fee breakdown logic from layout.dart
         try {
-          double fee = double.parse(items.first.deliveryFee);
-          totalDeliveryFees += fee;
-          print(
-              '- ${items.first.restaurantName} (ID: "$restaurantId"): $fee EGP');
+          // Get the context from the navigator key
+          BuildContext? context = navigatorKey.currentContext;
+          if (context != null) {
+            // Import the helper function from layout.dart and use it
+            // For now, we'll use a simplified version here
+            String baseFee = items.first.deliveryFee;
+            String cleanFee = baseFee.replaceAll(RegExp(r'[^0-9.]'), '');
+            double fee = double.parse(cleanFee.isEmpty ? '0' : cleanFee);
+
+            totalDeliveryFees += fee;
+            print(
+                '- ${items.first.restaurantName} (ID: "$restaurantId"): Base Fee $fee EGP');
+
+            // Note: Out-of-area fee calculation would require access to the
+            // calculateDeliveryFeeBreakdown function from layout.dart
+            // For now, we'll keep the simple calculation here and let the UI handle the breakdown
+          } else {
+            // Fallback to simple parsing
+            double fee = double.parse(items.first.deliveryFee);
+            totalDeliveryFees += fee;
+            print(
+                '- ${items.first.restaurantName} (ID: "$restaurantId"): $fee EGP (fallback)');
+          }
         } catch (e) {
           print(
               'Error parsing delivery fee for ${items.first.restaurantName}: $e');
+          // Use default fee on error
+          totalDeliveryFees += 50.0;
         }
       }
     });
 
-    print('Total delivery fees from all restaurants: $totalDeliveryFees EGP');
+    print(
+        'Total base delivery fees from all restaurants: $totalDeliveryFees EGP');
+    if (totalOutOfAreaFees > 0) {
+      print('Total out-of-area fees: $totalOutOfAreaFees EGP');
+    }
 
     // Calculate final total
     double total = subtotal + totalDeliveryFees;
@@ -517,5 +568,26 @@ class Layoutcubit extends Cubit<Layoutstates> {
       S.load(isArabic ? const Locale('ar') : const Locale('en'));
       emit(LoadSavedLanguageState());
     });
+  }
+
+  // Helper method to find existing cart item
+  int findExistingCartItemIndex({
+    required String name,
+    required String restaurantId,
+    required double price,
+    String? comment,
+  }) {
+    String cleanRestaurantId = restaurantId.trim();
+
+    for (int i = 0; i < cartitems.length; i++) {
+      CartItem item = cartitems[i];
+      if (item.name == name &&
+          item.restaurantId.trim() == cleanRestaurantId &&
+          item.price == price &&
+          item.comment == comment) {
+        return i;
+      }
+    }
+    return -1;
   }
 }

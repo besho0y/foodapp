@@ -7,6 +7,7 @@ import 'package:foodapp/generated/l10n.dart';
 import 'package:foodapp/screens/favourits/cubit.dart';
 import 'package:foodapp/screens/favourits/states.dart';
 import 'package:foodapp/shared/auth_helper.dart';
+import 'package:foodapp/shared/colors.dart';
 import 'package:foodapp/widgets/itemcard.dart';
 
 class FavouritsScreen extends StatelessWidget {
@@ -16,46 +17,10 @@ class FavouritsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     // Check if user is authenticated
     if (!AuthHelper.isUserLoggedIn()) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.favorite_border,
-              size: 100.sp,
-              color: Colors.grey,
-            ),
-            SizedBox(height: 20.h),
-            Text(
-              'Please login to view your favorites',
-              style: Theme.of(context).textTheme.bodyLarge,
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: 20.h),
-            ElevatedButton(
-              onPressed: () =>
-                  AuthHelper.requireAuthenticationForFavorites(context),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange,
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('Login'),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return BlocBuilder<Favouritecubit, FavouriteState>(
-      builder: (context, state) {
-        var cubit = Favouritecubit.get(context);
-
-        if (state is FavouriteLoadingState) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        if (cubit.favourites.isEmpty) {
-          return Center(
+      return ThemeBasedBackground(
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          body: Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -66,29 +31,85 @@ class FavouritsScreen extends StatelessWidget {
                 ),
                 SizedBox(height: 20.h),
                 Text(
-                  S.of(context).no_favorites,
+                  'Please login to view your favorites',
                   style: Theme.of(context).textTheme.bodyLarge,
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 20.h),
+                ElevatedButton(
+                  onPressed: () =>
+                      AuthHelper.requireAuthenticationForFavorites(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text('Login'),
                 ),
               ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    return BlocBuilder<Favouritecubit, FavouriteState>(
+      builder: (context, state) {
+        var cubit = Favouritecubit.get(context);
+
+        if (state is FavouriteLoadingState) {
+          return const ThemeBasedBackground(
+            child: Scaffold(
+              backgroundColor: Colors.transparent,
+              body: Center(child: CircularProgressIndicator()),
             ),
           );
         }
 
-        return RefreshIndicator(
-          onRefresh: () async {
-            await cubit.loadFavourites();
-          },
-          child: ListView.builder(
-            physics: const AlwaysScrollableScrollPhysics(),
-            itemCount: cubit.favourites.length,
-            itemBuilder: (context, index) {
-              return itemcard(
-                context,
-                true,
-                cubit.favourites[index],
-                null,
-              );
-            },
+        if (cubit.favourites.isEmpty) {
+          return ThemeBasedBackground(
+            child: Scaffold(
+              backgroundColor: Colors.transparent,
+              body: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.favorite_border,
+                      size: 100.sp,
+                      color: Colors.grey,
+                    ),
+                    SizedBox(height: 20.h),
+                    Text(
+                      S.of(context).no_favorites,
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }
+
+        return ThemeBasedBackground(
+          child: Scaffold(
+            backgroundColor: Colors.transparent,
+            body: RefreshIndicator(
+              onRefresh: () async {
+                await cubit.loadFavourites();
+              },
+              child: ListView.builder(
+                physics: const AlwaysScrollableScrollPhysics(),
+                itemCount: cubit.favourites.length,
+                itemBuilder: (context, index) {
+                  return itemcard(
+                    context,
+                    true,
+                    cubit.favourites[index],
+                    null,
+                  );
+                },
+              ),
+            ),
           ),
         );
       },

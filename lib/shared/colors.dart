@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 
 class AppColors {
   // Primary brown color
@@ -55,4 +54,42 @@ class AppColors {
   static const Color darkAccent = Color(0xFF5D4037); // Dark brown accent
   static const Color highlight =
       Color(0xFFBCAAA4); // Medium brown for highlights
+}
+
+/// A reusable widget that provides theme-based background images
+class ThemeBasedBackground extends StatelessWidget {
+  final Widget child;
+  final double opacity;
+  final BoxFit fit;
+
+  const ThemeBasedBackground({
+    Key? key,
+    required this.child,
+    this.opacity = 0.3,
+    this.fit = BoxFit.cover,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final imagePath =
+        isDarkMode ? 'assets/images/dark.PNG' : 'assets/images/light.PNG';
+
+    return Stack(
+      children: [
+        // Background image
+        Container(
+          decoration: BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage(imagePath),
+              fit: fit,
+              opacity: opacity,
+            ),
+          ),
+        ),
+        // Content
+        child,
+      ],
+    );
+  }
 }
