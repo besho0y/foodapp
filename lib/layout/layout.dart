@@ -884,50 +884,53 @@ class _LayoutState extends State<Layout> {
                                                                 ),
                                                               ],
                                                             ),
+                                                            SizedBox(
+                                                                height: 10.h),
+                                                            Padding(
+                                                              padding: EdgeInsets
+                                                                  .symmetric(
+                                                                      horizontal:
+                                                                          16.w),
+                                                              child: SizedBox(
+                                                                width: double
+                                                                    .infinity,
+                                                                child:
+                                                                    ElevatedButton(
+                                                                  onPressed:
+                                                                      () {
+                                                                    Navigator.pop(
+                                                                        context); // Close the cart sheet
+                                                                    Navigator
+                                                                        .push(
+                                                                      context,
+                                                                      MaterialPageRoute(
+                                                                        builder:
+                                                                            (_) =>
+                                                                                const CheckoutScreen(),
+                                                                      ),
+                                                                    );
+                                                                  },
+                                                                  style: ElevatedButton
+                                                                      .styleFrom(
+                                                                    padding: EdgeInsets.symmetric(
+                                                                        vertical:
+                                                                            12.h),
+                                                                  ),
+                                                                  child: Text(
+                                                                    S
+                                                                        .of(context)
+                                                                        .checkout,
+                                                                    style: TextStyle(
+                                                                        fontSize:
+                                                                            16.sp),
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                            ),
                                                           ],
                                                         ),
                                                       ),
                                                       SizedBox(height: 10.h),
-                                                      Padding(
-                                                        padding: EdgeInsets
-                                                            .symmetric(
-                                                                horizontal:
-                                                                    16.w),
-                                                        child: SizedBox(
-                                                          width:
-                                                              double.infinity,
-                                                          child: ElevatedButton(
-                                                            onPressed: () {
-                                                              Navigator.pop(
-                                                                  context); // Close the cart sheet
-                                                              Navigator.push(
-                                                                context,
-                                                                MaterialPageRoute(
-                                                                  builder: (_) =>
-                                                                      const CheckoutScreen(),
-                                                                ),
-                                                              );
-                                                            },
-                                                            style:
-                                                                ElevatedButton
-                                                                    .styleFrom(
-                                                              padding: EdgeInsets
-                                                                  .symmetric(
-                                                                      vertical:
-                                                                          12.h),
-                                                            ),
-                                                            child: Text(
-                                                              S
-                                                                  .of(context)
-                                                                  .checkout,
-                                                              style: TextStyle(
-                                                                fontSize: 16.sp,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                      SizedBox(height: 20.h),
                                                     ],
                                                   ),
                                               ],

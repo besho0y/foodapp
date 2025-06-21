@@ -226,6 +226,8 @@ class Layoutcubit extends Cubit<Layoutstates> {
     print("Item: $name");
     print("Quantity to add: $quantity");
     print("Original Delivery Fee: $deliveryFee");
+    print("Comment: '${comment ?? 'null'}'");
+    print("Current cart has ${cartitems.length} items");
 
     // Clean and trim restaurant ID
     String cleanRestaurantId = restaurantId.trim();
@@ -579,15 +581,43 @@ class Layoutcubit extends Cubit<Layoutstates> {
   }) {
     String cleanRestaurantId = restaurantId.trim();
 
+    print("\n🔍 === SEARCHING FOR EXISTING CART ITEM ===");
+    print("Looking for:");
+    print("- Name: '$name'");
+    print("- Restaurant ID: '$cleanRestaurantId'");
+    print("- Price: $price");
+    print("- Comment: '${(comment ?? '').trim()}'");
+    print("\nChecking against ${cartitems.length} existing cart items:");
+
     for (int i = 0; i < cartitems.length; i++) {
       CartItem item = cartitems[i];
-      if (item.name == name &&
-          item.restaurantId.trim() == cleanRestaurantId &&
-          item.price == price &&
-          item.comment == comment) {
+      print("\nItem #$i:");
+      print("- Name: '${item.name}' (match: ${item.name == name})");
+      print(
+          "- Restaurant ID: '${item.restaurantId.trim()}' (match: ${item.restaurantId.trim() == cleanRestaurantId})");
+      print(
+          "- Price: ${item.price} (match: ${(item.price - price).abs() < 0.01})");
+      print(
+          "- Comment: '${(item.comment ?? '').trim()}' (match: ${(item.comment ?? '').trim() == (comment ?? '').trim()})");
+
+      bool nameMatch = item.name == name;
+      bool restaurantMatch = item.restaurantId.trim() == cleanRestaurantId;
+      bool priceMatch = (item.price - price).abs() <
+          0.01; // Use epsilon comparison for doubles
+      bool commentMatch = (item.comment ?? '').trim() ==
+          (comment ?? '').trim(); // Normalize comment comparison
+
+      print(
+          "- Overall match: ${nameMatch && restaurantMatch && priceMatch && commentMatch}");
+
+      if (nameMatch && restaurantMatch && priceMatch && commentMatch) {
+        print("✅ FOUND EXISTING ITEM AT INDEX $i");
         return i;
       }
     }
+
+    print("❌ NO EXISTING ITEM FOUND");
+    print("=== END SEARCH ===\n");
     return -1;
   }
 }
