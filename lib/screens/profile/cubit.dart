@@ -226,6 +226,10 @@ class ProfileCubit extends Cubit<ProfileState> {
               // Log user out and redirect to login screen
               logout(context);
             },
+            style: TextButton.styleFrom(
+              backgroundColor: const Color.fromARGB(255, 74, 26, 15),
+              foregroundColor: Colors.white,
+            ),
             child: const Text("OK"),
           ),
         ],

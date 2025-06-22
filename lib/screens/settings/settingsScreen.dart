@@ -40,7 +40,7 @@ class Settingsscreen extends StatelessWidget {
               ElevatedButton(
                 onPressed: () => Navigator.pop(context, true),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
+                  backgroundColor: const Color.fromARGB(255, 74, 26, 15),
                   foregroundColor: Colors.white,
                 ),
                 child: Text(S.of(context).logout),

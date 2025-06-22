@@ -31,7 +31,7 @@ class _SignupscreenState extends State<Signupscreen> {
     var cubit = Signupcubit.get(context);
 
     // Light theme colors - same as login screen
-    const primaryColor = Color(0xFFFF5722); // Orange
+    const primaryColor = Color.fromARGB(255, 74, 26, 15); // Brown
     const backgroundColor = Color(0xFFFFFBF5); // Light cream
     const cardColor = Colors.white;
     const textColor = Color(0xFF333333); // Dark gray

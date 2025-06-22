@@ -586,7 +586,7 @@ class _MenuscreenState extends State<Menuscreen> {
                                       horizontal: 16.w, vertical: 8.h),
                                   decoration: BoxDecoration(
                                     color: isSelected
-                                        ? Theme.of(context).primaryColor
+                                        ? const Color.fromARGB(255, 74, 26, 15)
                                         : Theme.of(context).cardColor,
                                     borderRadius: BorderRadius.circular(25.r),
                                     boxShadow: isSelected

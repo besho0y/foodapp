@@ -186,7 +186,7 @@ class Layoutcubit extends Cubit<Layoutstates> {
                 );
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
+                backgroundColor: const Color.fromARGB(255, 74, 26, 15),
                 foregroundColor: Colors.white,
               ),
               child: Text(S.of(context).log_in),

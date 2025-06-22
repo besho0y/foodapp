@@ -101,9 +101,9 @@ ThemeData darkTheme = ThemeData(
     backgroundColor: AppColors.darkBackground,
     elevation: 0,
     scrolledUnderElevation: 0,
-    iconTheme: IconThemeData(color: AppColors.darkText),
+    iconTheme: IconThemeData(color: AppColors.primaryDark),
     titleTextStyle: TextStyle(
-      color: AppColors.darkText,
+      color: AppColors.primaryDark,
       fontSize: 22,
       fontWeight: FontWeight.bold,
     ),
@@ -118,9 +118,9 @@ ThemeData darkTheme = ThemeData(
     surface: AppColors.darkCard,
   ),
   progressIndicatorTheme:
-      const ProgressIndicatorThemeData(color: AppColors.darkText),
+      const ProgressIndicatorThemeData(color: AppColors.primaryDark),
 
-  // Bottom Navigation Bar Theme with creative dark styling
+  // Bottom Navigation Bar Theme with brown background
   bottomNavigationBarTheme: const BottomNavigationBarThemeData(
     backgroundColor: AppColors.darkNavBackground,
     selectedItemColor: AppColors.navIconDark,
@@ -135,17 +135,21 @@ ThemeData darkTheme = ThemeData(
       color: AppColors.darkText,
       fontWeight: FontWeight.bold,
     ),
-    bodyMedium: TextStyle(fontSize: 14, color: AppColors.darkText),
+    bodyMedium: TextStyle(
+      fontSize: 20,
+      color: AppColors.primaryDark,
+      fontWeight: FontWeight.bold,
+    ),
     bodySmall: TextStyle(fontSize: 14, color: AppColors.darkSecondaryText),
     headlineLarge: TextStyle(
       fontSize: 30,
       fontWeight: FontWeight.bold,
-      color: AppColors.darkText,
+      color: AppColors.primaryDark,
     ),
     headlineSmall: TextStyle(
       fontSize: 22,
       fontWeight: FontWeight.bold,
-      color: AppColors.darkText,
+      color: AppColors.primaryDark,
     ),
     labelLarge: TextStyle(
       fontSize: 16,
@@ -155,7 +159,7 @@ ThemeData darkTheme = ThemeData(
     labelMedium: TextStyle(fontSize: 14, color: AppColors.darkText),
     labelSmall: TextStyle(
       fontSize: 14,
-      color: AppColors.darkText,
+      color: AppColors.primaryDark,
       fontWeight: FontWeight.bold,
     ),
     titleMedium: TextStyle(fontSize: 16, color: AppColors.darkText),
@@ -163,15 +167,15 @@ ThemeData darkTheme = ThemeData(
   cardColor: AppColors.darkCard,
   elevatedButtonTheme: ElevatedButtonThemeData(
     style: ElevatedButton.styleFrom(
-      backgroundColor: AppColors.darkText,
-      foregroundColor: AppColors.primaryDark,
+      backgroundColor: AppColors.darkCard,
+      foregroundColor: Colors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 4,
     ),
   ),
   floatingActionButtonTheme: const FloatingActionButtonThemeData(
-    backgroundColor: AppColors.darkText,
-    foregroundColor: AppColors.primaryDark,
+    backgroundColor: AppColors.darkCard,
+    foregroundColor: Colors.white,
   ),
   cardTheme: CardThemeData(
     color: AppColors.darkCard,

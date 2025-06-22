@@ -516,7 +516,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                 ElevatedButton(
                   onPressed: () => Navigator.pop(dialogContext, true),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
+                    backgroundColor: const Color.fromARGB(255, 74, 26, 15),
                     foregroundColor: Colors.white,
                   ),
                   child: const Text('Logout'),

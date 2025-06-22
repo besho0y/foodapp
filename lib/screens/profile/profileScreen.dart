@@ -5,6 +5,7 @@ import 'package:foodapp/generated/l10n.dart';
 import 'package:foodapp/models/user.dart';
 import 'package:foodapp/screens/profile/cubit.dart';
 import 'package:foodapp/screens/profile/states.dart';
+import 'package:foodapp/shared/colors.dart';
 
 class Profilescreen extends StatefulWidget {
   const Profilescreen({super.key});
@@ -81,7 +82,7 @@ class _ProfilescreenState extends State<Profilescreen> {
                     height: 200.h,
                     width: double.infinity,
                     decoration: BoxDecoration(
-                      color: Theme.of(context).primaryColor,
+                      color: const Color.fromARGB(255, 74, 26, 15),
                       borderRadius: BorderRadius.only(
                         bottomLeft: Radius.circular(30.r),
                         bottomRight: Radius.circular(30.r),
@@ -124,7 +125,7 @@ class _ProfilescreenState extends State<Profilescreen> {
                                 child: Icon(
                                   Icons.person,
                                   size: 50.sp,
-                                  color: Theme.of(context).primaryColor,
+                                  color: const Color.fromARGB(255, 74, 26, 15),
                                 ),
                               ),
                               SizedBox(height: 10.h),
@@ -440,7 +441,7 @@ class _ProfilescreenState extends State<Profilescreen> {
             TextField(
               controller: titleController,
               style: TextStyle(
-                color: isDarkMode ? Colors.white : Colors.black,
+                color: isDarkMode ? AppColors.darkText : Colors.black,
               ),
               decoration: InputDecoration(
                 labelText: S.of(context).AddressTitle,
@@ -467,7 +468,7 @@ class _ProfilescreenState extends State<Profilescreen> {
             TextField(
               controller: addressController,
               style: TextStyle(
-                color: isDarkMode ? Colors.white : Colors.black,
+                color: isDarkMode ? AppColors.darkText : Colors.black,
               ),
               decoration: InputDecoration(
                 labelText: S.of(context).FullAddress,
@@ -574,7 +575,7 @@ class _ProfilescreenState extends State<Profilescreen> {
             TextField(
               controller: titleController,
               style: TextStyle(
-                color: isDarkMode ? Colors.white : Colors.black,
+                color: isDarkMode ? AppColors.darkText : Colors.black,
               ),
               decoration: InputDecoration(
                 labelText: S.of(context).AddressTitle,
@@ -601,7 +602,7 @@ class _ProfilescreenState extends State<Profilescreen> {
             TextField(
               controller: addressController,
               style: TextStyle(
-                color: isDarkMode ? Colors.white : Colors.black,
+                color: isDarkMode ? AppColors.darkText : Colors.black,
               ),
               decoration: InputDecoration(
                 labelText: S.of(context).FullAddress,
@@ -730,7 +731,7 @@ class _ProfilescreenState extends State<Profilescreen> {
             TextField(
               controller: nameController,
               style: TextStyle(
-                color: isDarkMode ? Colors.white : Colors.black,
+                color: isDarkMode ? AppColors.darkText : Colors.black,
               ),
               decoration: InputDecoration(
                 labelText: S.of(context).Name,
@@ -757,7 +758,7 @@ class _ProfilescreenState extends State<Profilescreen> {
             TextField(
               controller: emailController,
               style: TextStyle(
-                color: isDarkMode ? Colors.white : Colors.black,
+                color: isDarkMode ? AppColors.darkText : Colors.black,
               ),
               decoration: InputDecoration(
                 labelText: S.of(context).Email,
@@ -785,7 +786,7 @@ class _ProfilescreenState extends State<Profilescreen> {
             TextField(
               controller: phoneController,
               style: TextStyle(
-                color: isDarkMode ? Colors.white : Colors.black,
+                color: isDarkMode ? AppColors.darkText : Colors.black,
               ),
               decoration: InputDecoration(
                 labelText: S.of(context).Phone,

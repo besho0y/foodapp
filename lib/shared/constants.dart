@@ -19,36 +19,41 @@ Widget defaultTextFormField({
 
   return TextFormField(
     style: TextStyle(
-      color: isDarkMode ? Colors.white : Colors.black,
+      color: isDarkMode ? AppColors.darkText : Colors.black,
     ),
-    cursorColor: AppColors.primaryLight,
+    cursorColor: isDarkMode ? Colors.white : AppColors.primaryLight,
     decoration: InputDecoration(
       labelText: label,
       hintText: hintText,
-      labelStyle: TextStyle(color: AppColors.primaryLight),
-      prefixIcon: Icon(prefix, color: AppColors.primaryLight),
+      labelStyle:
+          TextStyle(color: isDarkMode ? Colors.white : AppColors.primaryLight),
+      prefixIcon: Icon(prefix,
+          color: isDarkMode ? Colors.white : AppColors.primaryLight),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey, width: 1.0),
+        borderSide: const BorderSide(color: Colors.grey, width: 1.0),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(
+        borderSide: const BorderSide(
           color: Colors.grey,
           width: 1.0,
         ),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: AppColors.primaryLight, width: 2.0),
+        borderSide: BorderSide(
+            color: isDarkMode ? Colors.white : AppColors.primaryLight,
+            width: 2.0),
       ),
       filled: true,
-      fillColor: isDarkMode ? Colors.black : Colors.grey.shade50,
-      contentPadding: EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+      fillColor: isDarkMode ? AppColors.darkCard : Colors.grey.shade50,
+      contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
       suffixIcon: suffix != null
           ? IconButton(
               onPressed: suffixPressed,
-              icon: Icon(suffix, color: AppColors.primaryLight),
+              icon: Icon(suffix,
+                  color: isDarkMode ? Colors.white : AppColors.primaryLight),
             )
           : null,
     ),

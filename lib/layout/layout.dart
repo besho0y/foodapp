@@ -324,14 +324,48 @@ class _LayoutState extends State<Layout> {
                                 ),
                                 SizedBox(height: 10.h),
                                 TextFormField(
-                                  cursorColor: Colors.black,
+                                  cursorColor: Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? Colors.white
+                                      : Colors.black,
+                                  style: TextStyle(
+                                    color: Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? Colors.white
+                                        : Colors.black,
+                                  ),
                                   decoration: InputDecoration(
                                     hintText: S.of(context).Search,
-                                    prefixIcon: const Icon(Icons.search),
+                                    hintStyle: TextStyle(
+                                      color: Theme.of(context).brightness ==
+                                              Brightness.dark
+                                          ? Colors.white70
+                                          : Colors.grey,
+                                    ),
+                                    prefixIcon: Icon(
+                                      Icons.search,
+                                      color: Theme.of(context).brightness ==
+                                              Brightness.dark
+                                          ? Colors.white
+                                          : Colors.grey,
+                                    ),
                                     focusedBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(10),
                                       borderSide: BorderSide(
-                                        color: Colors.black,
+                                        color: Theme.of(context).brightness ==
+                                                Brightness.dark
+                                            ? Colors.white
+                                            : Colors.black,
+                                        width: 1.0.w,
+                                      ),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(20.r),
+                                      borderSide: BorderSide(
+                                        color: Theme.of(context).brightness ==
+                                                Brightness.dark
+                                            ? Colors.white
+                                            : Colors.grey,
                                         width: 1.0.w,
                                       ),
                                     ),
@@ -339,6 +373,11 @@ class _LayoutState extends State<Layout> {
                                       borderRadius: BorderRadius.circular(20.r),
                                     ),
                                     filled: true,
+                                    fillColor: Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? AppColors.darkCard
+                                        : Colors.grey
+                                            .shade50, // Brown fill in dark mode
                                   ),
                                   onChanged: (value) {
                                     Restuarantscubit.get(context).search(value);
@@ -1006,7 +1045,7 @@ class _LayoutState extends State<Layout> {
               );
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
+              backgroundColor: const Color.fromARGB(255, 74, 26, 15),
               foregroundColor: Colors.white,
             ),
             child: Text(S.of(context).log_in),

@@ -21,12 +21,13 @@ class Settingdetails extends StatelessWidget {
           backgroundColor:
               isDark ? AppColors.darkBackground : AppColors.lightBackground,
           appBar: AppBar(
-            backgroundColor: isDark ? AppColors.darkCard : Colors.white,
+            backgroundColor: isDark ? AppColors.darkBackground : Colors.white,
             title: Text(
               S.of(context).settings,
               style: TextStyle(
                 fontSize: 24.sp,
                 fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : Colors.black,
               ),
             ),
             centerTitle: true,
@@ -35,6 +36,7 @@ class Settingdetails extends StatelessWidget {
               icon: Icon(
                 Icons.arrow_back_ios,
                 size: 20.sp,
+                color: isDark ? Colors.white : Colors.black,
               ),
               onPressed: () => Navigator.pop(context),
             ),
@@ -50,9 +52,7 @@ class Settingdetails extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 20.sp,
                       fontWeight: FontWeight.w600,
-                      color: isDark
-                          ? AppColors.primaryDark
-                          : AppColors.primaryLight,
+                      color: isDark ? Colors.white : AppColors.primaryLight,
                     ),
                   ),
                   SizedBox(height: 16.h),
@@ -82,10 +82,7 @@ class Settingdetails extends StatelessWidget {
                             iconBuilder: (value, size) {
                               return Icon(
                                 value ? Icons.dark_mode : Icons.light_mode,
-                                color: Theme.of(context).brightness ==
-                                        Brightness.dark
-                                    ? Colors.white
-                                    : Colors.black,
+                                color: const Color.fromARGB(255, 74, 26, 15),
                                 size: 20.sp,
                               );
                             },
@@ -122,10 +119,8 @@ class Settingdetails extends StatelessWidget {
                                   style: TextStyle(
                                     fontSize: 16.sp,
                                     fontWeight: FontWeight.bold,
-                                    color: Theme.of(context).brightness ==
-                                            Brightness.dark
-                                        ? Colors.white
-                                        : Colors.black,
+                                    color:
+                                        const Color.fromARGB(255, 74, 26, 15),
                                   ),
                                 ),
                               );

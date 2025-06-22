@@ -40,7 +40,7 @@ class FavouritsScreen extends StatelessWidget {
                   onPressed: () =>
                       AuthHelper.requireAuthenticationForFavorites(context),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange,
+                    backgroundColor: const Color.fromARGB(255, 74, 26, 15),
                     foregroundColor: Colors.white,
                   ),
                   child: const Text('Login'),

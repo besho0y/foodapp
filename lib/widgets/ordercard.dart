@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:foodapp/generated/l10n.dart';
+import 'package:foodapp/shared/colors.dart';
 
 class OrderCard extends StatefulWidget {
   final dynamic model; // Order model
@@ -495,8 +496,8 @@ class _OrderCardState extends State<OrderCard> {
       case 'cancelled':
         return Colors.red;
       default:
-        // Use white for dark mode and black for light mode for other statuses
-        return isDarkMode ? Colors.white : Colors.black;
+        // Use brown for both dark and light mode for other statuses
+        return isDarkMode ? AppColors.darkText : Colors.black;
     }
   }
 
