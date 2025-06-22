@@ -173,7 +173,7 @@ class _ResturantscreenState extends State<Resturantscreen> {
                                   children: [
                                     Container(
                                       height: 60.h,
-                                      width: 60.w,
+                                      width: 65.w,
                                       padding: EdgeInsets.all(6.w),
                                       decoration: BoxDecoration(
                                           color: Theme.of(context).brightness ==
@@ -268,7 +268,7 @@ class _ResturantscreenState extends State<Resturantscreen> {
         return ClipOval(
           child: Image.network(
             imageUrl,
-            fit: BoxFit.contain,
+            fit: BoxFit.cover,
             width: 50.w,
             height: 50.h,
             loadingBuilder: (context, child, loadingProgress) {
