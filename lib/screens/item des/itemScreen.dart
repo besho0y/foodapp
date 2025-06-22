@@ -634,43 +634,47 @@ class _ItemscreenState extends State<Itemscreen> {
             bottom: 0,
             left: 0,
             right: 0,
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 15.w, vertical: 10.h),
-              decoration: BoxDecoration(
-                color: Theme.of(context).cardColor,
-                boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10.r)],
-              ),
-              child: Row(
-                children: [
-                  Card(
-                    child: TextButton(
-                      onPressed: () => addToCart(cubit),
-                      child: Text(
-                        S.of(context).add_to_cart,
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                    ),
-                  ),
-                  const Spacer(),
-                  Card(
-                    child: Row(
-                      children: [
-                        IconButton(
-                          onPressed: decrementQuantity,
-                          icon: Icon(Icons.remove, size: 30.sp),
-                        ),
-                        Text(
-                          "$quantity",
+            child: SafeArea(
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 15.w, vertical: 10.h),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  boxShadow: [
+                    BoxShadow(color: Colors.black12, blurRadius: 10.r)
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Card(
+                      child: TextButton(
+                        onPressed: () => addToCart(cubit),
+                        child: Text(
+                          S.of(context).add_to_cart,
                           style: Theme.of(context).textTheme.bodyMedium,
                         ),
-                        IconButton(
-                          onPressed: incrementQuantity,
-                          icon: Icon(Icons.add, size: 30.sp),
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
-                ],
+                    const Spacer(),
+                    Card(
+                      child: Row(
+                        children: [
+                          IconButton(
+                            onPressed: decrementQuantity,
+                            icon: Icon(Icons.remove, size: 30.sp),
+                          ),
+                          Text(
+                            "$quantity",
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                          IconButton(
+                            onPressed: incrementQuantity,
+                            icon: Icon(Icons.add, size: 30.sp),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

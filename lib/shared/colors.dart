@@ -31,13 +31,13 @@ class AppColors {
   static const Color darkContainer = Color.fromARGB(
       255, 95, 35, 20); // Slightly lighter brown for dark containers
 
-  // Navigation Colors - Updated to use brown in dark mode
+  // Navigation Colors - Updated to use brown in both modes with white icons
   static const Color lightNavBackground =
-      Color(0xFFFFFFFF); // White nav in light mode
+      Color.fromARGB(255, 74, 26, 15); // Brown nav in light mode (same as dark)
   static const Color darkNavBackground =
       Color.fromARGB(255, 74, 26, 15); // Brown nav in dark mode
   static const Color navIconLight =
-      Color.fromARGB(255, 74, 26, 15); // Brown icons in light mode
+      Color(0xFFFFFFFF); // White icons in light mode (same as dark)
   static const Color navIconDark =
       Color(0xFFFFFFFF); // White icons in dark mode
 

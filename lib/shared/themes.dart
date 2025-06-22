@@ -30,11 +30,11 @@ ThemeData lightTheme = ThemeData(
   progressIndicatorTheme:
       const ProgressIndicatorThemeData(color: AppColors.primaryLight),
 
-  // Bottom Navigation Bar Theme with creative styling
+  // Bottom Navigation Bar Theme with brown background and white icons
   bottomNavigationBarTheme: const BottomNavigationBarThemeData(
     backgroundColor: AppColors.lightNavBackground,
     selectedItemColor: AppColors.navIconLight,
-    unselectedItemColor: AppColors.lightSecondaryText,
+    unselectedItemColor: Colors.white70,
     type: BottomNavigationBarType.fixed,
     elevation: 8,
   ),

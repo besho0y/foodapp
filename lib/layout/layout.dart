@@ -390,7 +390,26 @@ class _LayoutState extends State<Layout> {
                                   child: ElevatedButton.icon(
                                     onPressed: () =>
                                         _showLocationSelectionDialog(context),
-                                    icon: const Icon(Icons.location_on),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor:
+                                          const Color.fromARGB(255, 74, 26, 15),
+                                      foregroundColor: Colors.white,
+                                      elevation: 0,
+                                      padding: EdgeInsets.symmetric(
+                                          vertical: 12.h, horizontal: 16.w),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(12.r),
+                                        side: BorderSide(
+                                          color: const Color.fromARGB(
+                                                  255, 74, 26, 15)
+                                              .withOpacity(0.3),
+                                          width: 1,
+                                        ),
+                                      ),
+                                    ),
+                                    icon: const Icon(Icons.location_on,
+                                        color: Colors.white),
                                     label: BlocBuilder<Restuarantscubit,
                                         ResturantsStates>(
                                       builder: (context, state) {
@@ -403,34 +422,11 @@ class _LayoutState extends State<Layout> {
                                           isRTL
                                               ? 'الموقع: ${restCubit.selectedArea}'
                                               : 'Location: ${restCubit.selectedArea}',
-                                          style: TextStyle(fontSize: 14.sp),
+                                          style: TextStyle(
+                                              fontSize: 14.sp,
+                                              color: Colors.white),
                                         );
                                       },
-                                    ),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor:
-                                          Theme.of(context).brightness ==
-                                                  Brightness.dark
-                                              ? AppColors.darkCard
-                                              : AppColors.lightBackground,
-                                      foregroundColor:
-                                          Theme.of(context).brightness ==
-                                                  Brightness.dark
-                                              ? Colors.white
-                                              : Colors.black,
-                                      elevation: 0,
-                                      padding: EdgeInsets.symmetric(
-                                          vertical: 12.h, horizontal: 16.w),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(12.r),
-                                        side: BorderSide(
-                                          color: Theme.of(context)
-                                              .primaryColor
-                                              .withOpacity(0.3),
-                                          width: 1,
-                                        ),
-                                      ),
                                     ),
                                   ),
                                 ),
@@ -993,15 +989,10 @@ class _LayoutState extends State<Layout> {
                   bottomNavigationBar: AnimatedBottomNavigationBar(
                     icons: cubit.bottomnav,
                     activeIndex: cubit.currentindex,
-                    backgroundColor:
-                        Theme.of(context).brightness == Brightness.dark
-                            ? AppColors.darkCard
-                            : Colors.white,
-                    activeColor: Theme.of(context).brightness == Brightness.dark
-                        ? AppColors.primaryDark
-                        : AppColors.primaryLight,
+                    backgroundColor: const Color.fromARGB(255, 74, 26, 15),
+                    activeColor: Colors.white,
                     gapLocation: GapLocation.center,
-                    inactiveColor: Colors.grey.shade600,
+                    inactiveColor: Colors.white70,
                     notchSmoothness: NotchSmoothness.verySmoothEdge,
                     leftCornerRadius: 32,
                     rightCornerRadius: 32,
