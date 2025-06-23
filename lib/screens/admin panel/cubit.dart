@@ -1240,8 +1240,10 @@ class AdminPanelCubit extends Cubit<AdminPanelStates> {
 
   // Areas methods
   List<Area> _areas = [];
+  final List<Area> _allAreas = []; // All areas from all cities
 
   List<Area> get areas => _areas;
+  List<Area> get allAreas => _allAreas;
 
   // Fetch all areas for a specific city
   Future<void> fetchAreas(String cityId) async {
@@ -1273,6 +1275,67 @@ class AdminPanelCubit extends Cubit<AdminPanelStates> {
       emit(SuccessLoadingAreasState());
     } catch (e) {
       print('Error fetching areas: $e');
+      emit(ErrorLoadingAreasState(e.toString()));
+    }
+  }
+
+  // Fetch ALL areas from ALL cities for restaurant delivery coverage
+  Future<void> fetchAllAreas() async {
+    emit(LoadingAreasState());
+
+    try {
+      print('🔄 Fetching all areas from all cities...');
+      _allAreas.clear();
+
+      // Get all cities first
+      if (cities.isEmpty) {
+        await fetchCities();
+      }
+
+      // Fetch areas from each city
+      for (var city in cities) {
+        try {
+          final snapshot = await FirebaseFirestore.instance
+              .collection('cities')
+              .doc(city.id)
+              .collection('areas')
+              .orderBy('createdAt', descending: true)
+              .get();
+
+          final List<Area> cityAreas = snapshot.docs.map((doc) {
+            Map<String, dynamic> data = doc.data();
+            data['id'] = doc.id;
+            data['cityId'] = city.id;
+
+            // Convert Firestore timestamp to string for the model
+            if (data['createdAt'] != null && data['createdAt'] is Timestamp) {
+              data['createdAt'] =
+                  (data['createdAt'] as Timestamp).toDate().toIso8601String();
+            }
+
+            return Area.fromJson(data);
+          }).toList();
+
+          _allAreas.addAll(cityAreas);
+          print('✅ Loaded ${cityAreas.length} areas from ${city.name}');
+        } catch (e) {
+          print('❌ Error fetching areas from city ${city.name}: $e');
+        }
+      }
+
+      // Sort all areas by city name then area name
+      _allAreas.sort((a, b) {
+        final cityA = cities.firstWhere((city) => city.id == a.cityId).name;
+        final cityB = cities.firstWhere((city) => city.id == b.cityId).name;
+        final cityComparison = cityA.compareTo(cityB);
+        if (cityComparison != 0) return cityComparison;
+        return a.name.compareTo(b.name);
+      });
+
+      print('🎉 Successfully loaded ${_allAreas.length} areas from all cities');
+      emit(SuccessLoadingAreasState());
+    } catch (e) {
+      print('❌ Error fetching all areas: $e');
       emit(ErrorLoadingAreasState(e.toString()));
     }
   }
