@@ -238,6 +238,10 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
                                 "${model.userName}",
                                 style: TextStyle(
                                   fontSize: smallScreen ? 11.sp : 12.sp,
+                                  color: Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? AppColors.primaryBrown
+                                      : null,
                                 ),
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -280,6 +284,10 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
                                         style: TextStyle(
                                           fontSize: smallScreen ? 11.sp : 12.sp,
                                           fontStyle: FontStyle.italic,
+                                          color: Theme.of(context).brightness ==
+                                                  Brightness.dark
+                                              ? AppColors.primaryBrown
+                                              : null,
                                         ),
                                       )
                                     ],
@@ -288,6 +296,10 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
                                     userPhoneNumber ?? 'No phone number',
                                     style: TextStyle(
                                       fontSize: smallScreen ? 11.sp : 12.sp,
+                                      color: Theme.of(context).brightness ==
+                                              Brightness.dark
+                                          ? AppColors.primaryBrown
+                                          : null,
                                     ),
                                     overflow: TextOverflow.ellipsis,
                                   ),
@@ -317,6 +329,10 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
                                 _truncateUserId(model.userId),
                                 style: TextStyle(
                                   fontSize: smallScreen ? 10.sp : 11.sp,
+                                  color: Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? AppColors.primaryBrown
+                                      : null,
                                 ),
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -496,6 +512,10 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: smallScreen ? 13.sp : 14.sp,
+                                  color: Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? AppColors.primaryBrown
+                                      : null,
                                 ),
                               ),
                               const Spacer(),
@@ -563,6 +583,10 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: smallScreen ? 13.sp : 14.sp,
+                                      color: Theme.of(context).brightness ==
+                                              Brightness.dark
+                                          ? AppColors.primaryBrown
+                                          : null,
                                     ),
                                   ),
                                 ],
@@ -710,6 +734,12 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
                                                           : 12.sp,
                                                       fontWeight:
                                                           FontWeight.w500,
+                                                      color: Theme.of(context)
+                                                                  .brightness ==
+                                                              Brightness.dark
+                                                          ? AppColors
+                                                              .primaryBrown
+                                                          : null,
                                                     ),
                                                     overflow:
                                                         TextOverflow.ellipsis,
@@ -737,6 +767,13 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
                                                               : 11.sp,
                                                           fontWeight:
                                                               FontWeight.w500,
+                                                          color: Theme.of(context)
+                                                                      .brightness ==
+                                                                  Brightness
+                                                                      .dark
+                                                              ? AppColors
+                                                                  .primaryBrown
+                                                              : null,
                                                         ),
                                                         textAlign:
                                                             TextAlign.center,
@@ -754,6 +791,12 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
                                                           : 11.sp,
                                                       fontWeight:
                                                           FontWeight.w500,
+                                                      color: Theme.of(context)
+                                                                  .brightness ==
+                                                              Brightness.dark
+                                                          ? AppColors
+                                                              .primaryBrown
+                                                          : null,
                                                     ),
                                                     textAlign: TextAlign.end,
                                                   ),
@@ -906,6 +949,9 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: smallScreen ? 11.sp : 12.sp,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.primaryBrown
+                      : null,
                 ),
               ),
             ],
@@ -918,6 +964,9 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: smallScreen ? 11.sp : 12.sp,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.primaryBrown
+                      : null,
                 ),
                 overflow: TextOverflow.ellipsis,
               ),
@@ -926,6 +975,9 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
               model.address['address'] ?? 'No address',
               style: TextStyle(
                 fontSize: smallScreen ? 10.sp : 11.sp,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.primaryBrown
+                    : null,
               ),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
@@ -974,6 +1026,9 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: smallScreen ? 11.sp : 12.sp,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.primaryBrown
+                      : null,
                 ),
               ),
             ],
@@ -986,6 +1041,9 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
             style: TextStyle(
               fontSize: smallScreen ? 11.sp : 12.sp,
               fontWeight: FontWeight.w600,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? AppColors.primaryBrown
+                  : null,
             ),
           ),
         ],

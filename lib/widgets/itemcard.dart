@@ -42,7 +42,7 @@ Widget itemcard(context, bool fromFavourites, Item model, dynamic items) {
             descriptionAr: model.descriptionAr,
             price: model.price,
             img: model.img,
-            items: items,
+            items: restaurant?.menuItems ?? [],
             category: model.category,
             restaurantId: restaurant?.id ?? '',
             restaurantName: restaurant?.name ?? '',
@@ -63,7 +63,7 @@ Widget itemcard(context, bool fromFavourites, Item model, dynamic items) {
             right: isRTL ? null : 0,
             left: isRTL ? 0 : null,
             child: SizedBox(
-              width: 320.w,
+              width: MediaQuery.of(context).size.width - 20.w,
               height: 120.h,
               child: Card(
                 margin: EdgeInsets.zero,
@@ -128,11 +128,17 @@ Widget itemcard(context, bool fromFavourites, Item model, dynamic items) {
                               textDirection:
                                   isRTL ? TextDirection.rtl : TextDirection.ltr,
                               children: [
-                                Text(
-                                  "${model.price} ${S.of(context).egp}",
-                                  style:
-                                      Theme.of(context).textTheme.labelMedium,
+                                Expanded(
+                                  flex: 2,
+                                  child: Text(
+                                    "${model.price} ${S.of(context).egp}",
+                                    style:
+                                        Theme.of(context).textTheme.labelMedium,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
+                                SizedBox(width: 4.w),
                                 BlocBuilder<Favouritecubit, FavouriteState>(
                                   builder: (context, state) {
                                     // Update the model's favorite status based on cubit's cache
@@ -150,12 +156,14 @@ Widget itemcard(context, bool fromFavourites, Item model, dynamic items) {
                                         color: model.isfavourite
                                             ? Colors.red
                                             : null,
-                                        size: 20.sp,
+                                        size: 18.sp,
                                       ),
                                       padding: EdgeInsets.zero,
                                       constraints: BoxConstraints(
-                                        minWidth: 24.w,
-                                        minHeight: 24.h,
+                                        minWidth: 20.w,
+                                        minHeight: 20.h,
+                                        maxWidth: 30.w,
+                                        maxHeight: 30.h,
                                       ),
                                     );
                                   },
@@ -176,8 +184,8 @@ Widget itemcard(context, bool fromFavourites, Item model, dynamic items) {
             left: isRTL ? null : 0,
             right: isRTL ? 0 : null,
             child: Container(
-              width: 100,
-              height: 100,
+              width: 90.w,
+              height: 90.h,
               decoration: BoxDecoration(
                 image: DecorationImage(
                   fit: BoxFit.cover,
@@ -202,10 +210,10 @@ ImageProvider _getImageProvider(String imageUrl) {
       return AssetImage(imageUrl);
     } else {
       // Default fallback image
-      return const AssetImage('assets/images/items/default.jpg');
+      return const AssetImage('assets/images/light.PNG');
     }
   } catch (e) {
     print("Error creating image provider: $e");
-    return const AssetImage('assets/images/items/default.jpg');
+    return const AssetImage('assets/images/light.PNG');
   }
 }

@@ -99,7 +99,7 @@ class RestaurantBox extends StatelessWidget {
           errorBuilder: (context, error, stackTrace) {
             print("Error loading network image: $error");
             return Image.asset(
-              'assets/images/restuarants/store.jpg',
+              'assets/images/light.PNG',
               fit: BoxFit.cover,
               height: 85.h,
               width: double.infinity,
@@ -126,7 +126,7 @@ class RestaurantBox extends StatelessWidget {
         );
       } else {
         return Image.asset(
-          'assets/images/restuarants/store.jpg',
+          'assets/images/light.PNG',
           fit: BoxFit.cover,
           height: 85.h,
           width: double.infinity,
@@ -135,7 +135,7 @@ class RestaurantBox extends StatelessWidget {
     } catch (e) {
       print("Error handling image: $e");
       return Image.asset(
-        'assets/images/restuarants/store.jpg',
+        'assets/images/light.PNG',
         fit: BoxFit.cover,
         height: 85.h,
         width: double.infinity,

@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:foodapp/generated/l10n.dart';
 import 'package:foodapp/models/item.dart';
+import 'package:foodapp/models/resturant.dart';
 import 'package:foodapp/screens/favourits/cubit.dart';
 import 'package:foodapp/screens/favourits/states.dart';
 import 'package:foodapp/screens/resturants/cubit.dart';
@@ -642,8 +643,25 @@ class _MenuscreenState extends State<Menuscreen> {
                           padding: EdgeInsets.symmetric(horizontal: 10.w),
                           itemCount: filteredItems.length,
                           itemBuilder: (context, index) {
+                            // Create a simple restaurant object with the data we have
+                            final simpleRestaurant = Restuarants(
+                              id: widget.restaurantId,
+                              name: widget.name ?? '',
+                              nameAr:
+                                  widget.name ?? '', // Using same name for now
+                              menuItems: widget.items,
+                              img: widget.img,
+                              rating: 0.0,
+                              category: 'restaurant',
+                              categoryAr: 'مطعم',
+                              deliveryFee: widget.deliveryprice,
+                              ordersnum: 0,
+                              deliveryTime: widget.deliverytime,
+                              categories: ['restaurant'],
+                            );
+
                             return itemcard(context, false,
-                                filteredItems[index], widget.items);
+                                filteredItems[index], [simpleRestaurant]);
                           },
                         ),
                 ),

@@ -22,9 +22,7 @@ class TermsScreen extends StatelessWidget {
             _buildSection(
               context,
               isArabic ? '📜 الشروط والأحكام' : '📜 Terms & Conditions',
-              isArabic
-                  ? 'تاريخ السريان: [أدخل التاريخ]'
-                  : 'Effective Date: [Insert Date]',
+              '',
               isArabic,
             ),
             _buildSection(

@@ -78,12 +78,35 @@ Map<String, double> calculateDeliveryFeeBreakdown(
 
     print(
         "🔍 Available restaurant IDs in cubit: ${restaurantCubit.restaurants.map((r) => "'${r.id}'").toList()}");
+    print("🔍 Looking for restaurant ID: '$restaurantId'");
+    print("🔍 Restaurant ID length: ${restaurantId.length}");
+    print("🔍 Restaurant ID bytes: ${restaurantId.codeUnits}");
+
+    // Debug: Print all restaurants with their details
+    print("🔍 === ALL RESTAURANTS IN CUBIT (LAYOUT) ===");
+    for (int i = 0; i < restaurantCubit.restaurants.length; i++) {
+      final r = restaurantCubit.restaurants[i];
+      print("  Restaurant #$i:");
+      print("    ID: '${r.id}' (length: ${r.id.length})");
+      print("    Name: '${r.name}'");
+      print("    Area: '${r.area}'");
+      print("    Areas: ${r.areas}");
+      print("    Delivery Fee: '${r.deliveryFee}'");
+      print("    Out-of-Area Fee: '${r.outOfAreaFee ?? 'null'}'");
+    }
+    print("🔍 === END RESTAURANT LIST (LAYOUT) ===");
 
     // Try exact match first
     try {
       final restaurant =
           restaurantCubit.restaurants.firstWhere((r) => r.id == restaurantId);
       print("✅ Found restaurant in cubit (exact match): ${restaurant.name}");
+      print("🏪 Restaurant area: '${restaurant.area}'");
+      print("🏪 Restaurant areas: ${restaurant.areas}");
+      print("🏪 Restaurant delivery fee: ${restaurant.deliveryFee}");
+      print(
+          "🏪 Restaurant out-of-area fee: '${restaurant.outOfAreaFee ?? 'null'}'");
+
       return _calculateFeeBreakdownForRestaurant(
           restaurant.area,
           restaurant.areas,
@@ -99,6 +122,16 @@ Map<String, double> calculateDeliveryFeeBreakdown(
       final restaurant = restaurantCubit.restaurants
           .firstWhere((r) => r.id.trim() == restaurantId.trim());
       print("✅ Found restaurant in cubit (trimmed match): ${restaurant.name}");
+      print("🏪 Restaurant area: '${restaurant.area}'");
+      print("🏪 Restaurant areas: ${restaurant.areas}");
+      print("🏪 Restaurant delivery fee: ${restaurant.deliveryFee}");
+      print(
+          "🏪 Restaurant out-of-area fee: '${restaurant.outOfAreaFee ?? 'null'}'");
+
+      // Debug: Print both IDs for comparison
+      print("🔍 Cart restaurant ID (trimmed): '${restaurantId.trim()}'");
+      print("🔍 Cubit restaurant ID (trimmed): '${restaurant.id.trim()}'");
+
       return _calculateFeeBreakdownForRestaurant(
           restaurant.area,
           restaurant.areas,
@@ -107,6 +140,31 @@ Map<String, double> calculateDeliveryFeeBreakdown(
           baseDeliveryFee);
     } catch (e) {
       print("❌ Trimmed match failed");
+    }
+
+    // Try partial match (in case of whitespace or encoding issues)
+    try {
+      final restaurant = restaurantCubit.restaurants.firstWhere((r) {
+        // Remove all whitespace and compare
+        String cleanCubitId = r.id.replaceAll(RegExp(r'\s+'), '');
+        String cleanSearchId = restaurantId.replaceAll(RegExp(r'\s+'), '');
+        return cleanCubitId == cleanSearchId;
+      });
+      print("✅ Found restaurant in cubit (clean match): ${restaurant.name}");
+      print("🏪 Restaurant area: '${restaurant.area}'");
+      print("🏪 Restaurant areas: ${restaurant.areas}");
+      print("🏪 Restaurant delivery fee: ${restaurant.deliveryFee}");
+      print(
+          "🏪 Restaurant out-of-area fee: '${restaurant.outOfAreaFee ?? 'null'}'");
+
+      return _calculateFeeBreakdownForRestaurant(
+          restaurant.area,
+          restaurant.areas,
+          restaurant.outOfAreaFee ?? '0',
+          userArea,
+          baseDeliveryFee);
+    } catch (e) {
+      print("❌ Clean match failed");
     }
 
     // For now, if restaurant not found, assume it's an out-of-area delivery and add default fee
@@ -149,15 +207,54 @@ Map<String, double> _calculateFeeBreakdownForRestaurant(
     String outOfAreaFee,
     String userArea,
     double baseDeliveryFee) {
+  print("🔍 === CALCULATING FEE BREAKDOWN (LAYOUT) ===");
+  print(
+      "Restaurant Area: '$restaurantArea' (length: ${restaurantArea.length})");
+  print(
+      "Restaurant Areas: $restaurantAreas (count: ${restaurantAreas.length})");
+  print("User Area: '$userArea' (length: ${userArea.length})");
+  print("Out-of-Area Fee String: '$outOfAreaFee'");
+  print("Base Delivery Fee: $baseDeliveryFee");
+
+  // Debug: Print character codes to detect invisible characters
+  print("🔍 Character analysis:");
+  print("   Restaurant area chars: ${restaurantArea.codeUnits}");
+  print("   User area chars: ${userArea.codeUnits}");
+  print("   Areas list details:");
+  for (int i = 0; i < restaurantAreas.length; i++) {
+    print(
+        "     [$i]: '${restaurantAreas[i]}' (chars: ${restaurantAreas[i].codeUnits})");
+  }
+
   // Check if restaurant serves user's area
-  bool restaurantServesUserArea =
-      restaurantArea == userArea || restaurantAreas.contains(userArea);
-  print("🔍 Area match check:");
+  bool primaryAreaMatch =
+      restaurantArea.trim().toLowerCase() == userArea.trim().toLowerCase();
+  bool areasListMatch = restaurantAreas.any(
+      (area) => area.trim().toLowerCase() == userArea.trim().toLowerCase());
+  bool restaurantServesUserArea = primaryAreaMatch || areasListMatch;
+
+  print("🔍 Area match check (with trim + lowercase):");
   print(
-      "   Restaurant area '$restaurantArea' == User area '$userArea': ${restaurantArea == userArea}");
+      "   Restaurant primary area: '$restaurantArea' -> '${restaurantArea.trim().toLowerCase()}'");
+  print("   User area: '$userArea' -> '${userArea.trim().toLowerCase()}'");
+  print("   Primary area match: $primaryAreaMatch");
+  print("   Restaurant areas list: $restaurantAreas");
+  print("   Areas list contains user area: $areasListMatch");
   print(
-      "   Restaurant areas $restaurantAreas contains '$userArea': ${restaurantAreas.contains(userArea)}");
-  print("   Result: Restaurant serves user area = $restaurantServesUserArea");
+      "   FINAL RESULT: Restaurant serves user area = $restaurantServesUserArea");
+
+  // Force debug for specific cases
+  if (outOfAreaFee != '0' && restaurantServesUserArea) {
+    print(
+        "🚨 ALERT: Out-of-area fee is '$outOfAreaFee' but restaurant appears to serve user area!");
+    print("🚨 This might be incorrect - let's see the exact matching:");
+    print(
+        "🚨 Primary match: '$restaurantArea' == '$userArea' = ${restaurantArea == userArea}");
+    print("🚨 Areas list match: ${restaurantAreas.contains(userArea)}");
+    print("🚨 Forcing out-of-area calculation for debugging...");
+    restaurantServesUserArea =
+        false; // TEMPORARY: Force out-of-area calculation
+  }
 
   if (restaurantServesUserArea) {
     print(
@@ -168,20 +265,30 @@ Map<String, double> _calculateFeeBreakdownForRestaurant(
   } else {
     // Restaurant doesn't serve user's area - add out of area fee
     print("❌ Restaurant does NOT serve user area '$userArea'");
+    print("🔄 Parsing out-of-area fee: '$outOfAreaFee'");
+
     double outOfAreaFeeAmount = 0.0;
     try {
       String cleanOutOfAreaFee =
           outOfAreaFee.replaceAll(RegExp(r'[^0-9.]'), '');
+      print("🧹 Cleaned out-of-area fee: '$cleanOutOfAreaFee'");
+
       if (cleanOutOfAreaFee.isNotEmpty) {
         outOfAreaFeeAmount = double.parse(cleanOutOfAreaFee);
+        print(
+            "💰 Successfully parsed out-of-area fee: $outOfAreaFeeAmount EGP");
+      } else {
+        print("⚠️ Clean out-of-area fee is empty, using default");
+        outOfAreaFeeAmount = 20.0; // Default out of area fee
       }
-      print("💰 Parsed out-of-area fee: $outOfAreaFeeAmount EGP");
     } catch (e) {
+      print("❌ Error parsing out-of-area fee: $e");
       outOfAreaFeeAmount = 20.0; // Default out of area fee
       print("💰 Using default out-of-area fee: $outOfAreaFeeAmount EGP");
     }
 
-    print("💰 BREAKDOWN: Base=$baseDeliveryFee, OutOfArea=$outOfAreaFeeAmount");
+    print(
+        "💰 FINAL BREAKDOWN: Base=$baseDeliveryFee, OutOfArea=$outOfAreaFeeAmount");
     print(
         "🛒 === CALCULATION COMPLETE: Base=$baseDeliveryFee, OutOfArea=$outOfAreaFeeAmount ===\n");
     return {'baseFee': baseDeliveryFee, 'outOfAreaFee': outOfAreaFeeAmount};
@@ -1424,20 +1531,7 @@ class _LayoutState extends State<Layout> {
 
                       restCubit.updateSelectedArea(selectedArea.name, context);
 
-                      print(
-                          "Restaurants after filtering: ${restCubit.restaurants.length}");
-
                       Navigator.pop(dialogContext);
-
-                      // Show success message with more details
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                              '${S.of(context).location_updated_to} ${selectedArea.name}\n${restCubit.restaurants.length} ${S.of(context).restaurants_found}'),
-                          backgroundColor: Colors.green,
-                          duration: const Duration(seconds: 3),
-                        ),
-                      );
                     }
                   : null,
               child: Text(S.of(context).select_location),

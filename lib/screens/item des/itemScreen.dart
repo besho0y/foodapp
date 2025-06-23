@@ -119,6 +119,12 @@ class _ItemscreenState extends State<Itemscreen> {
   }
 
   void addToCart(Layoutcubit cubit) {
+    // Debug: Print restaurant ID being passed to cart
+    print(
+        "🛒 ITEM SCREEN: Adding to cart with restaurant ID: '${widget.restaurantId}'");
+    print("🛒 ITEM SCREEN: Restaurant name: '${widget.restaurantName}'");
+    print("🛒 ITEM SCREEN: Delivery fee: '${widget.deliveryFee}'");
+
     // Add item to cart with comment
     cubit.addToCart(
       context: context,

@@ -10,6 +10,7 @@ import 'package:foodapp/screens/oredrs/cubit.dart';
 import 'package:foodapp/screens/profile/cubit.dart';
 import 'package:foodapp/screens/profile/states.dart';
 import 'package:foodapp/screens/resturants/cubit.dart';
+import 'package:foodapp/shared/colors.dart';
 import 'package:foodapp/shared/paymob_service.dart';
 import 'package:uuid/uuid.dart';
 
@@ -111,11 +112,30 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       print(
           "🔍 Available restaurant IDs in cubit: ${restaurantCubit.restaurants.map((r) => "'${r.id}'").toList()}");
 
+      // Debug: Print all restaurants with their details
+      print("🔍 === ALL RESTAURANTS IN CUBIT (CHECKOUT) ===");
+      for (int i = 0; i < restaurantCubit.restaurants.length; i++) {
+        final r = restaurantCubit.restaurants[i];
+        print("  Restaurant #$i:");
+        print("    ID: '${r.id}' (length: ${r.id.length})");
+        print("    Name: '${r.name}'");
+        print("    Area: '${r.area}'");
+        print("    Areas: ${r.areas}");
+        print("    Delivery Fee: '${r.deliveryFee}'");
+        print("    Out-of-Area Fee: '${r.outOfAreaFee ?? 'null'}'");
+      }
+      print("🔍 === END RESTAURANT LIST (CHECKOUT) ===");
+
       // Try exact match first
       try {
         final restaurant =
             restaurantCubit.restaurants.firstWhere((r) => r.id == restaurantId);
         print("✅ Found restaurant in cubit (exact match): ${restaurant.name}");
+        print("🏪 Restaurant area: '${restaurant.area}'");
+        print("🏪 Restaurant areas: ${restaurant.areas}");
+        print(
+            "🏪 Restaurant out-of-area fee: '${restaurant.outOfAreaFee ?? 'null'}'");
+
         return _calculateFeeBreakdownForRestaurant(
             restaurant.area,
             restaurant.areas,
@@ -132,6 +152,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             .firstWhere((r) => r.id.trim() == restaurantId.trim());
         print(
             "✅ Found restaurant in cubit (trimmed match): ${restaurant.name}");
+        print("🏪 Restaurant area: '${restaurant.area}'");
+        print("🏪 Restaurant areas: ${restaurant.areas}");
+        print(
+            "🏪 Restaurant out-of-area fee: '${restaurant.outOfAreaFee ?? 'null'}'");
+
         return _calculateFeeBreakdownForRestaurant(
             restaurant.area,
             restaurant.areas,
@@ -142,11 +167,49 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         print("❌ Trimmed match failed");
       }
 
-      // For now, if restaurant not found, assume it's an out-of-area delivery and add default fee
+      // Try partial match (in case of whitespace or encoding issues)
+      try {
+        final restaurant = restaurantCubit.restaurants.firstWhere((r) {
+          // Remove all whitespace and compare
+          String cleanCubitId = r.id.replaceAll(RegExp(r'\s+'), '');
+          String cleanSearchId = restaurantId.replaceAll(RegExp(r'\s+'), '');
+          return cleanCubitId == cleanSearchId;
+        });
+        print("✅ Found restaurant in cubit (clean match): ${restaurant.name}");
+        print("🏪 Restaurant area: '${restaurant.area}'");
+        print("🏪 Restaurant areas: ${restaurant.areas}");
+        print(
+            "🏪 Restaurant out-of-area fee: '${restaurant.outOfAreaFee ?? 'null'}'");
+
+        return _calculateFeeBreakdownForRestaurant(
+            restaurant.area,
+            restaurant.areas,
+            restaurant.outOfAreaFee ?? '0',
+            userArea,
+            baseDeliveryFee);
+      } catch (e) {
+        print("❌ Clean match failed");
+      }
+
+      // If restaurant not found in cubit, try to get it from cart item data
+      print(
+          "⚠️ Restaurant not found in cubit, checking cart for restaurant data...");
+
+      // Try to find restaurant info from cart items
+      final layoutCubit = Layoutcubit.get(context);
+      final cartItem = layoutCubit.cartitems.firstWhere(
+        (item) => item.restaurantId == restaurantId,
+        orElse: () => layoutCubit.cartitems.first,
+      );
+
+      print("🛒 Found cart item from restaurant: ${cartItem.restaurantName}");
+
+      // For now, if restaurant not found in cubit, assume it's an out-of-area delivery and add default fee
       if (userArea != 'Cairo' && userArea != 'All' && userArea.isNotEmpty) {
         double defaultOutOfAreaFee =
             20.0; // Default out of area fee when restaurant not found
-        print("⚠️ Restaurant not found - applying default out-of-area fee");
+        print(
+            "⚠️ Restaurant not found in cubit - applying default out-of-area fee");
         print(
             "💰 BREAKDOWN: Base=$baseDeliveryFee, OutOfArea=$defaultOutOfAreaFee");
         print(
@@ -185,15 +248,54 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       String outOfAreaFee,
       String userArea,
       double baseDeliveryFee) {
+    print("🔍 === CALCULATING FEE BREAKDOWN ===");
+    print(
+        "Restaurant Area: '$restaurantArea' (length: ${restaurantArea.length})");
+    print(
+        "Restaurant Areas: $restaurantAreas (count: ${restaurantAreas.length})");
+    print("User Area: '$userArea' (length: ${userArea.length})");
+    print("Out-of-Area Fee String: '$outOfAreaFee'");
+    print("Base Delivery Fee: $baseDeliveryFee");
+
+    // Debug: Print character codes to detect invisible characters
+    print("🔍 Character analysis:");
+    print("   Restaurant area chars: ${restaurantArea.codeUnits}");
+    print("   User area chars: ${userArea.codeUnits}");
+    print("   Areas list details:");
+    for (int i = 0; i < restaurantAreas.length; i++) {
+      print(
+          "     [$i]: '${restaurantAreas[i]}' (chars: ${restaurantAreas[i].codeUnits})");
+    }
+
     // Check if restaurant serves user's area
-    bool restaurantServesUserArea =
-        restaurantArea == userArea || restaurantAreas.contains(userArea);
-    print("🔍 Area match check:");
+    bool primaryAreaMatch =
+        restaurantArea.trim().toLowerCase() == userArea.trim().toLowerCase();
+    bool areasListMatch = restaurantAreas.any(
+        (area) => area.trim().toLowerCase() == userArea.trim().toLowerCase());
+    bool restaurantServesUserArea = primaryAreaMatch || areasListMatch;
+
+    print("🔍 Area match check (with trim + lowercase):");
     print(
-        "   Restaurant area '$restaurantArea' == User area '$userArea': ${restaurantArea == userArea}");
+        "   Restaurant primary area: '$restaurantArea' -> '${restaurantArea.trim().toLowerCase()}'");
+    print("   User area: '$userArea' -> '${userArea.trim().toLowerCase()}'");
+    print("   Primary area match: $primaryAreaMatch");
+    print("   Restaurant areas list: $restaurantAreas");
+    print("   Areas list contains user area: $areasListMatch");
     print(
-        "   Restaurant areas $restaurantAreas contains '$userArea': ${restaurantAreas.contains(userArea)}");
-    print("   Result: Restaurant serves user area = $restaurantServesUserArea");
+        "   FINAL RESULT: Restaurant serves user area = $restaurantServesUserArea");
+
+    // Force debug for specific cases
+    if (outOfAreaFee != '0' && restaurantServesUserArea) {
+      print(
+          "🚨 ALERT: Out-of-area fee is '$outOfAreaFee' but restaurant appears to serve user area!");
+      print("🚨 This might be incorrect - let's see the exact matching:");
+      print(
+          "🚨 Primary match: '$restaurantArea' == '$userArea' = ${restaurantArea == userArea}");
+      print("🚨 Areas list match: ${restaurantAreas.contains(userArea)}");
+      print("🚨 Forcing out-of-area calculation for debugging...");
+      restaurantServesUserArea =
+          false; // TEMPORARY: Force out-of-area calculation
+    }
 
     if (restaurantServesUserArea) {
       print(
@@ -204,21 +306,30 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     } else {
       // Restaurant doesn't serve user's area - add out of area fee
       print("❌ Restaurant does NOT serve user area '$userArea'");
+      print("🔄 Parsing out-of-area fee: '$outOfAreaFee'");
+
       double outOfAreaFeeAmount = 0.0;
       try {
         String cleanOutOfAreaFee =
             outOfAreaFee.replaceAll(RegExp(r'[^0-9.]'), '');
+        print("🧹 Cleaned out-of-area fee: '$cleanOutOfAreaFee'");
+
         if (cleanOutOfAreaFee.isNotEmpty) {
           outOfAreaFeeAmount = double.parse(cleanOutOfAreaFee);
+          print(
+              "💰 Successfully parsed out-of-area fee: $outOfAreaFeeAmount EGP");
+        } else {
+          print("⚠️ Clean out-of-area fee is empty, using default");
+          outOfAreaFeeAmount = 20.0; // Default out of area fee
         }
-        print("💰 Parsed out-of-area fee: $outOfAreaFeeAmount EGP");
       } catch (e) {
+        print("❌ Error parsing out-of-area fee: $e");
         outOfAreaFeeAmount = 20.0; // Default out of area fee
         print("💰 Using default out-of-area fee: $outOfAreaFeeAmount EGP");
       }
 
       print(
-          "💰 BREAKDOWN: Base=$baseDeliveryFee, OutOfArea=$outOfAreaFeeAmount");
+          "💰 FINAL BREAKDOWN: Base=$baseDeliveryFee, OutOfArea=$outOfAreaFeeAmount");
       print(
           "💳 === CALCULATION COMPLETE: Base=$baseDeliveryFee, OutOfArea=$outOfAreaFeeAmount ===\n");
       return {'baseFee': baseDeliveryFee, 'outOfAreaFee': outOfAreaFeeAmount};
@@ -382,7 +493,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                     : Text(
                                         "1",
                                         style: TextStyle(
-                                          color: Colors.white,
+                                          color: Theme.of(context).brightness ==
+                                                  Brightness.dark
+                                              ? Colors.black
+                                              : Colors.white,
                                           fontWeight: FontWeight.bold,
                                           fontSize: 14.sp,
                                         ),
@@ -442,7 +556,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                     : Text(
                                         "2",
                                         style: TextStyle(
-                                          color: Colors.white,
+                                          color: Theme.of(context).brightness ==
+                                                  Brightness.dark
+                                              ? Colors.black
+                                              : Colors.white,
                                           fontWeight: FontWeight.bold,
                                           fontSize: 14.sp,
                                         ),
@@ -516,7 +633,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               ),
                             ),
                             child: Text(S.of(context).back,
-                                style: const TextStyle(color: Colors.white)),
+                                style: TextStyle(
+                                    color: Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? Colors.white
+                                        : AppColors.primaryBrown)),
                           ),
                         ),
                       if (_currentStep > 0) SizedBox(width: 12.w),
@@ -562,9 +683,17 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               borderRadius: BorderRadius.circular(8.r),
                             ),
                           ),
-                          child: Text(_currentStep == 1
-                              ? S.of(context).place_order
-                              : S.of(context).next),
+                          child: Text(
+                            _currentStep == 1
+                                ? S.of(context).place_order
+                                : S.of(context).next,
+                            style: TextStyle(
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.black
+                                  : Colors.white,
+                            ),
+                          ),
                         ),
                       ),
                     ],
@@ -1322,7 +1451,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         color: Colors.white,
                       ),
                       label: Text(S.of(context).add_address,
-                          style: const TextStyle(color: Colors.white)),
+                          style: TextStyle(
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.white
+                                  : AppColors.primaryBrown)),
                       style: OutlinedButton.styleFrom(
                         padding: EdgeInsets.symmetric(vertical: 12.h),
                         side: BorderSide(color: Theme.of(context).primaryColor),

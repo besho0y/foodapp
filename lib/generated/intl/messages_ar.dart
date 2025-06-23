@@ -420,7 +420,7 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("جاري التحقق من الدفع..."),
         "welcome_back": MessageLookupByLibrary.simpleMessage("مرحباً بعودتك"),
         "what_do_you_want_to_eat_today":
-            MessageLookupByLibrary.simpleMessage("ماذا تريد أكله اليوم؟"),
+            MessageLookupByLibrary.simpleMessage("تحب تاكل اي النهاردة؟"),
         "write_review": MessageLookupByLibrary.simpleMessage("اكتب تقييماً"),
         "yes": MessageLookupByLibrary.simpleMessage("نعم"),
         "youhave": MessageLookupByLibrary.simpleMessage("لديك"),
