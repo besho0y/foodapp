@@ -133,6 +133,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "already_have_account":
             MessageLookupByLibrary.simpleMessage("Already have an account?"),
         "apple": MessageLookupByLibrary.simpleMessage("Apple"),
+        "apply": MessageLookupByLibrary.simpleMessage("Apply"),
         "arabic": MessageLookupByLibrary.simpleMessage("Arabic"),
         "average_rating":
             MessageLookupByLibrary.simpleMessage("Average Rating"),
@@ -213,6 +214,8 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("Enter your password"),
         "enter_phone":
             MessageLookupByLibrary.simpleMessage("Enter your phone number"),
+        "enter_promocode":
+            MessageLookupByLibrary.simpleMessage("Enter promocode"),
         "enter_reference_number": MessageLookupByLibrary.simpleMessage(
             "Please enter the transfer reference number"),
         "error": MessageLookupByLibrary.simpleMessage("Error"),
@@ -220,7 +223,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "existing_categories":
             MessageLookupByLibrary.simpleMessage("Existing Categories"),
         "fastfood": MessageLookupByLibrary.simpleMessage("fast food"),
-        "favourits": MessageLookupByLibrary.simpleMessage("favourits"),
+        "favourits": MessageLookupByLibrary.simpleMessage("favourites"),
         "forgot_password":
             MessageLookupByLibrary.simpleMessage("Forgot Password?"),
         "google": MessageLookupByLibrary.simpleMessage("Google"),
@@ -356,6 +359,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "preferences": MessageLookupByLibrary.simpleMessage("Preferences"),
         "processing": MessageLookupByLibrary.simpleMessage("Processing"),
         "profile": MessageLookupByLibrary.simpleMessage("profile"),
+        "promocode": MessageLookupByLibrary.simpleMessage("Promocode"),
         "qty": MessageLookupByLibrary.simpleMessage("Qty"),
         "rate_your_experience":
             MessageLookupByLibrary.simpleMessage("Rate your experience"),

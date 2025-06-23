@@ -8,7 +8,7 @@
     "seafood": "seafood",
     "sweets": "sweets",
     "drinks": "drinks",
-    "favourits": "favourits",
+    "favourits": "favourites",
     "orders": "orders",
     "settings": "settings",
     "admin_panel": "admin panel",
@@ -268,5 +268,8 @@
     "select_location": "Select Location",
     "select_area": "Select Area",
     "location_updated_to": "Location updated to",
-    "restaurants_found": "restaurants found"
+    "restaurants_found": "restaurants found",
+    "apply": "Apply",
+    "enter_promocode": "Enter promocode",
+    "promocode": "Promocode"
 }

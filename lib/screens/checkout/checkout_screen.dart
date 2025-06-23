@@ -550,7 +550,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                 child: _currentStep > 1
                                     ? Icon(
                                         Icons.check,
-                                        color: Colors.white,
+                                        color: Theme.of(context).brightness ==
+                                                Brightness.dark
+                                            ? AppColors.primaryBrown
+                                            : Colors.white,
                                         size: 18.sp,
                                       )
                                     : Text(
@@ -890,6 +893,21 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         layoutCubit.calculateTotalPrice(promoDiscount: _promoDiscount);
     print('Total price: $totalPrice');
 
+    // Calculate total out-of-area fee for the order
+    double totalOutOfAreaFee = 0.0;
+    final restaurantGroups = groupItemsByRestaurant(layoutCubit.cartitems);
+    restaurantGroups.forEach((restaurantId, items) {
+      try {
+        Map<String, double> feeBreakdown =
+            _calculateDeliveryFeeBreakdownForRestaurant(
+                context, restaurantId, items.first.deliveryFee);
+        totalOutOfAreaFee += feeBreakdown['outOfAreaFee'] ?? 0.0;
+      } catch (e) {
+        print('Error calculating out-of-area fee for order: $e');
+      }
+    });
+    print('Total out-of-area fee for order: $totalOutOfAreaFee');
+
     // Create comprehensive order data
     final orderData = {
       'id': orderId,
@@ -913,6 +931,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       // Include promocode information if a promocode was applied
       'promocode': _appliedPromocode,
       'promoDiscount': _promoDiscount > 0 ? _promoDiscount : null,
+      // Include out-of-area fee if applicable
+      'outOfAreaFee': totalOutOfAreaFee > 0 ? totalOutOfAreaFee : null,
       // Add metadata for tracking
       'platform': 'mobile',
       'version': '1.0',
@@ -1158,7 +1178,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   ),
                   SizedBox(width: 6.w),
                   Text(
-                    'Promocode',
+                    S.of(context).promocode,
                     style: TextStyle(
                       fontSize: 14.sp,
                       fontWeight: FontWeight.w600,
@@ -1189,7 +1209,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         textInputAction: TextInputAction.done,
                         keyboardType: TextInputType.text,
                         decoration: InputDecoration(
-                          hintText: 'Enter promocode',
+                          hintText: S.of(context).enter_promocode,
                           contentPadding:
                               EdgeInsets.symmetric(horizontal: 10.w),
                           border: InputBorder.none,
@@ -1263,8 +1283,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                   child: FittedBox(
                                     fit: BoxFit.scaleDown,
                                     child: Text(
-                                      'Apply',
-                                      style: TextStyle(fontSize: 12.sp),
+                                      S.of(context).apply,
+                                      style: TextStyle(
+                                          fontSize: 12.sp,
+                                          color: Theme.of(context).brightness ==
+                                                  Brightness.dark
+                                              ? AppColors.primaryBrown
+                                              : Colors.white),
                                     ),
                                   ),
                                 ),

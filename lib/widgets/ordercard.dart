@@ -387,14 +387,25 @@ class _OrderCardState extends State<OrderCard> {
                           ),
                         ),
 
-                        // Show delivery fee
+                        // Show delivery fee (calculated as total - items - out of area fee)
                         Text(
-                          "${S.of(context).delivery_fee}: ${(widget.model.total - calculatedTotal).toStringAsFixed(2)} ${S.of(context).egp}",
+                          "${S.of(context).delivery_fee}: ${(widget.model.total - calculatedTotal - (widget.model.outOfAreaFee ?? 0.0)).toStringAsFixed(2)} ${S.of(context).egp}",
                           style: TextStyle(
                             fontSize: 12.sp,
                             color: Colors.grey[700],
                           ),
                         ),
+
+                        // Show out of area fee if available
+                        if (widget.model.outOfAreaFee != null &&
+                            widget.model.outOfAreaFee! > 0)
+                          Text(
+                            "Out of area fee: ${widget.model.outOfAreaFee!.toStringAsFixed(2)} ${S.of(context).egp}",
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              color: Colors.orange[700],
+                            ),
+                          ),
 
                         SizedBox(height: 2.h),
 

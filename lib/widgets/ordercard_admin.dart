@@ -852,7 +852,7 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
                                         children: [
                                           // Items subtotal
                                           Text(
-                                            "${S.of(context).items}: 100.00 ${S.of(context).egp}",
+                                            "${S.of(context).items}: ${calculatedTotal.toStringAsFixed(2)} ${S.of(context).egp}",
                                             style: TextStyle(
                                               fontSize:
                                                   smallScreen ? 10.sp : 11.sp,
@@ -860,15 +860,28 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
                                             ),
                                           ),
                                           SizedBox(height: 2.h),
-                                          // Delivery fee
+                                          // Delivery fee (calculated as total - items - out of area fee)
                                           Text(
-                                            "${S.of(context).delivery_fee}: 30.00 ${S.of(context).egp}",
+                                            "${S.of(context).delivery_fee}: ${(model.total - calculatedTotal - (model.outOfAreaFee ?? 0.0)).toStringAsFixed(2)} ${S.of(context).egp}",
                                             style: TextStyle(
                                               fontSize:
                                                   smallScreen ? 10.sp : 11.sp,
                                               color: Colors.grey[700],
                                             ),
                                           ),
+                                          // Show out of area fee if available
+                                          if (model.outOfAreaFee != null &&
+                                              model.outOfAreaFee! > 0) ...[
+                                            SizedBox(height: 2.h),
+                                            Text(
+                                              "Out of area fee: ${model.outOfAreaFee!.toStringAsFixed(2)} ${S.of(context).egp}",
+                                              style: TextStyle(
+                                                fontSize:
+                                                    smallScreen ? 10.sp : 11.sp,
+                                                color: Colors.orange[700],
+                                              ),
+                                            ),
+                                          ],
                                           SizedBox(height: 2.h),
                                           Container(
                                             padding: EdgeInsets.symmetric(
@@ -881,7 +894,7 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
                                                   color: Colors.green[300]!),
                                             ),
                                             child: Text(
-                                              "${S.of(context).total}: 130.00 ${S.of(context).egp}",
+                                              "${S.of(context).total}: ${model.total.toStringAsFixed(2)} ${S.of(context).egp}",
                                               style: TextStyle(
                                                 fontWeight: FontWeight.bold,
                                                 fontSize:

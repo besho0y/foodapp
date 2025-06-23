@@ -140,10 +140,10 @@ class S {
     );
   }
 
-  /// `favourits`
+  /// `favourites`
   String get favourits {
     return Intl.message(
-      'favourits',
+      'favourites',
       name: 'favourits',
       desc: '',
       args: [],
@@ -2737,6 +2737,36 @@ class S {
     return Intl.message(
       'restaurants found',
       name: 'restaurants_found',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Apply`
+  String get apply {
+    return Intl.message(
+      'Apply',
+      name: 'apply',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Enter promocode`
+  String get enter_promocode {
+    return Intl.message(
+      'Enter promocode',
+      name: 'enter_promocode',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Promocode`
+  String get promocode {
+    return Intl.message(
+      'Promocode',
+      name: 'promocode',
       desc: '',
       args: [],
     );

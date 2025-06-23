@@ -129,6 +129,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "already_have_account":
             MessageLookupByLibrary.simpleMessage("لديك حساب بالفعل؟"),
         "apple": MessageLookupByLibrary.simpleMessage("آبل"),
+        "apply": MessageLookupByLibrary.simpleMessage("تطبيق"),
         "arabic": MessageLookupByLibrary.simpleMessage("العربية"),
         "average_rating": MessageLookupByLibrary.simpleMessage("متوسط التقييم"),
         "back": MessageLookupByLibrary.simpleMessage("رجوع"),
@@ -206,6 +207,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "enter_password":
             MessageLookupByLibrary.simpleMessage("أدخل كلمة المرور"),
         "enter_phone": MessageLookupByLibrary.simpleMessage("أدخل رقم هاتفك"),
+        "enter_promocode":
+            MessageLookupByLibrary.simpleMessage("أدخل الكود الخصمي"),
         "enter_reference_number": MessageLookupByLibrary.simpleMessage(
             "الرجاء إدخال رقم مرجع التحويل"),
         "error": MessageLookupByLibrary.simpleMessage("خطأ"),
@@ -345,6 +348,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "preferences": MessageLookupByLibrary.simpleMessage("التفضيلات"),
         "processing": MessageLookupByLibrary.simpleMessage("قيد المعالجة"),
         "profile": MessageLookupByLibrary.simpleMessage("الحساب"),
+        "promocode": MessageLookupByLibrary.simpleMessage("الكود الخصمي"),
         "qty": MessageLookupByLibrary.simpleMessage("الكمية"),
         "rate_your_experience":
             MessageLookupByLibrary.simpleMessage("قيم تجربتك"),

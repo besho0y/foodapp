@@ -265,5 +265,8 @@
     "select_location": "اختر الموقع",
     "select_area": "اختر المنطقة",
     "location_updated_to": "تم تحديث الموقع إلى",
-    "restaurants_found": "مطعم"
+    "restaurants_found": "مطعم",
+    "apply": "تطبيق",
+    "enter_promocode": "أدخل الكود الخصمي",
+    "promocode": "الكود الخصمي"
 }
