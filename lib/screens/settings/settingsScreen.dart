@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_styled_toast/flutter_styled_toast.dart';
 import 'package:foodapp/generated/l10n.dart';
@@ -13,6 +14,7 @@ import 'package:foodapp/screens/profile/profileScreen.dart';
 import 'package:foodapp/screens/settingdetailsscreen/settingdetails.dart';
 import 'package:foodapp/screens/terms/terms_screen.dart';
 import 'package:foodapp/shared/constants.dart';
+import 'package:foodapp/shared/firebase_messaging_service.dart';
 import 'package:foodapp/shared/local_storage.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -151,6 +153,273 @@ class Settingsscreen extends StatelessWidget {
       return user.email == 'admin@example.com';
     }
     return false;
+  }
+
+  // Show FCM Token Dialog for testing Firebase messaging
+  void _showFCMTokenDialog(BuildContext context) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return const Center(child: CircularProgressIndicator());
+      },
+    );
+
+    try {
+      String? token = await FirebaseMessagingService.getCurrentToken();
+
+      if (!context.mounted) return;
+      Navigator.of(context).pop(); // Close loading dialog
+
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Row(
+              children: [
+                Icon(Icons.notifications_active),
+                SizedBox(width: 8),
+                Text('FCM Token'),
+              ],
+            ),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Firebase Cloud Messaging Token:',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.grey.shade300),
+                    ),
+                    child: SelectableText(
+                      token ?? 'No token available',
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Use this token to send test notifications from Firebase Console or your server.',
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  if (token != null) {
+                    Clipboard.setData(ClipboardData(text: token));
+                    showToast(
+                      'FCM Token copied to clipboard!',
+                      context: context,
+                      duration: const Duration(seconds: 2),
+                      backgroundColor: Colors.green,
+                      textStyle:
+                          const TextStyle(color: Colors.white, fontSize: 16.0),
+                      position: StyledToastPosition.bottom,
+                    );
+                  }
+                },
+                child: const Text('Copy Token'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Close'),
+              ),
+            ],
+          );
+        },
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      Navigator.of(context).pop(); // Close loading dialog
+
+      showToast(
+        'Error getting FCM token: ${e.toString()}',
+        context: context,
+        duration: const Duration(seconds: 3),
+        backgroundColor: Colors.red,
+        textStyle: const TextStyle(color: Colors.white, fontSize: 16.0),
+        position: StyledToastPosition.bottom,
+      );
+    }
+  }
+
+  // Show FCM Debug Dialog
+  void _showFCMDebugDialog(BuildContext context) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return const Center(child: CircularProgressIndicator());
+      },
+    );
+
+    try {
+      String? token = await FirebaseMessagingService.getCurrentToken();
+
+      if (!context.mounted) return;
+      Navigator.of(context).pop(); // Close loading dialog
+
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Row(
+              children: [
+                Icon(Icons.bug_report, color: Colors.orange),
+                SizedBox(width: 8),
+                Text('FCM Debug Info'),
+              ],
+            ),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildDebugItem('🔑 FCM Token Status',
+                      token != null ? 'Generated' : 'Missing'),
+                  const SizedBox(height: 8),
+                  _buildDebugItem(
+                      '📱 Token Length', token?.length.toString() ?? 'N/A'),
+                  const SizedBox(height: 8),
+                  _buildDebugItem('🔔 Permissions', 'Check in system settings'),
+                  const SizedBox(height: 8),
+                  _buildDebugItem('📊 App State', 'Foreground'),
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.blue.shade200),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('📝 Troubleshooting Steps:',
+                            style: TextStyle(fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 8),
+                        const Text('1. Check if FCM token is generated'),
+                        const Text('2. Verify notification permissions'),
+                        const Text('3. Test with Firebase Console'),
+                        const Text('4. Check device internet connection'),
+                        const Text('5. Ensure correct Firebase project'),
+                        const Text(
+                            '6. System handles notifications automatically'),
+                        const SizedBox(height: 8),
+                        if (token != null) ...[
+                          const Text('✅ Token generated successfully!',
+                              style: TextStyle(
+                                  color: Colors.green,
+                                  fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 4),
+                          const Text(
+                              'Copy token below and test in Firebase Console'),
+                        ] else ...[
+                          const Text('❌ Token generation failed!',
+                              style: TextStyle(
+                                  color: Colors.red,
+                                  fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 4),
+                          const Text(
+                              'Check app permissions and Firebase setup'),
+                        ],
+                      ],
+                    ),
+                  ),
+                  if (token != null) ...[
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.grey.shade300),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('🔑 FCM Token:',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 12)),
+                          const SizedBox(height: 4),
+                          SelectableText(
+                            token,
+                            style: const TextStyle(
+                                fontSize: 10, fontFamily: 'monospace'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            actions: [
+              if (token != null)
+                TextButton(
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(text: token));
+                    showToast(
+                      'FCM Token copied! Test in Firebase Console',
+                      context: context,
+                      duration: const Duration(seconds: 3),
+                      backgroundColor: Colors.green,
+                      textStyle:
+                          const TextStyle(color: Colors.white, fontSize: 16.0),
+                      position: StyledToastPosition.bottom,
+                    );
+                  },
+                  child: const Text('Copy Token'),
+                ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Close'),
+              ),
+            ],
+          );
+        },
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      Navigator.of(context).pop(); // Close loading dialog
+
+      showToast(
+        'Error getting FCM debug info: ${e.toString()}',
+        context: context,
+        duration: const Duration(seconds: 3),
+        backgroundColor: Colors.red,
+        textStyle: const TextStyle(color: Colors.white, fontSize: 16.0),
+        position: StyledToastPosition.bottom,
+      );
+    }
+  }
+
+  Widget _buildDebugItem(String label, String value) {
+    return Row(
+      children: [
+        Expanded(
+          flex: 2,
+          child: Text(label,
+              style:
+                  const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
+        ),
+        Expanded(
+          flex: 1,
+          child: Text(value,
+              style: const TextStyle(fontSize: 12), textAlign: TextAlign.end),
+        ),
+      ],
+    );
   }
 
   @override
@@ -294,6 +563,26 @@ class Settingsscreen extends StatelessWidget {
                 return const SizedBox.shrink();
               },
             ),
+
+          // Firebase Messaging Debug option
+          GestureDetector(
+            onTap: () => _showFCMDebugDialog(context),
+            child: Card(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 5.w),
+                child: Row(
+                  children: [
+                    const Icon(Icons.bug_report, color: Colors.orange),
+                    SizedBox(width: 5.w),
+                    Text(
+                      'Debug Firebase Messaging',
+                      style: Theme.of(context).textTheme.labelLarge,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
 
           // Show Login or Logout based on authentication state
           GestureDetector(

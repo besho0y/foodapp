@@ -44,6 +44,9 @@ dependencies {
 
     // Firebase Analytics
     implementation("com.google.firebase:firebase-analytics")
+    
+    // Firebase Messaging
+    implementation("com.google.firebase:firebase-messaging")
 
     // TODO: Add the dependencies for other Firebase products you want to use
     // For example:

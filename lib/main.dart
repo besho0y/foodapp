@@ -1,4 +1,5 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -17,6 +18,7 @@ import 'package:foodapp/screens/resturants/cubit.dart';
 import 'package:foodapp/screens/signup/cubit.dart';
 import 'package:foodapp/screens/splash/splash_screen.dart';
 import 'package:foodapp/shared/blocObserver.dart';
+import 'package:foodapp/shared/firebase_messaging_service.dart';
 import 'package:foodapp/shared/paymob_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -25,6 +27,22 @@ import 'generated/l10n.dart';
 
 // Global navigator key for access across the app
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+// Background message handler - must be a top-level function
+@pragma('vm:entry-point')
+Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  // Initialize Firebase if not already done
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  print('🔔 === BACKGROUND MESSAGE RECEIVED ===');
+  print('📱 Message ID: ${message.messageId}');
+  print('📝 Title: ${message.notification?.title ?? 'No title'}');
+  print('📝 Body: ${message.notification?.body ?? 'No body'}');
+  print('📊 Data: ${message.data}');
+  print('⏰ Sent time: ${message.sentTime}');
+  print('🏷️ From: ${message.from}');
+  print('📱 App in BACKGROUND - Message handled');
+}
 
 void main() async {
   Bloc.observer = MyBlocObserver();
@@ -35,6 +53,18 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  // Set up Firebase messaging background handler AFTER Firebase is initialized
+  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+
+  // Initialize Firebase messaging service with error handling
+  try {
+    await FirebaseMessagingService.initialize();
+  } catch (e) {
+    print('⚠️ Warning: Firebase Messaging initialization failed: $e');
+    print('⚠️ App will continue without push notifications');
+    // Don't prevent app from starting if messaging fails
+  }
 
   // Initialize PayMob payment gateway with correct credentials
   PayMobService.initialize();
@@ -133,6 +163,11 @@ class MyApp extends StatelessWidget {
                 home: const SplashScreen(),
                 routes: {
                   '/login': (context) => const Loginscreen(),
+                },
+                builder: (context, child) {
+                  // Set context for Firebase messaging service
+                  FirebaseMessagingService.setContext(context);
+                  return child!;
                 },
               );
             },
