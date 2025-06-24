@@ -717,17 +717,48 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
                                                 Expanded(
                                                   flex: 4,
                                                   child: Text(
-                                                    Directionality.of(
-                                                                context) ==
-                                                            TextDirection.rtl
-                                                        ? (item is Map
+                                                    () {
+                                                      String itemName;
+                                                      String restaurantName;
+
+                                                      // Get item name based on direction
+                                                      if (Directionality.of(
+                                                              context) ==
+                                                          TextDirection.rtl) {
+                                                        itemName = item is Map
                                                             ? item['nameAr'] ??
                                                                 item['name']
                                                             : item.nameAr ??
-                                                                item.name)
-                                                        : (item is Map
+                                                                item.name;
+                                                        restaurantName = item
+                                                                is Map
+                                                            ? item['restaurantNameAr'] ??
+                                                                item[
+                                                                    'restaurantName'] ??
+                                                                ''
+                                                            : item.restaurantNameAr ??
+                                                                item.restaurantName ??
+                                                                '';
+                                                      } else {
+                                                        itemName = item is Map
                                                             ? item['name']
-                                                            : item.name),
+                                                            : item.name;
+                                                        restaurantName = item
+                                                                is Map
+                                                            ? item['restaurantName'] ??
+                                                                ''
+                                                            : item.restaurantName ??
+                                                                '';
+                                                      }
+
+                                                      // Combine item name with restaurant name
+                                                      if (restaurantName
+                                                          .isNotEmpty) {
+                                                        return '$itemName ($restaurantName)';
+                                                      } else {
+                                                        return itemName;
+                                                      }
+                                                    }(),
                                                     style: TextStyle(
                                                       fontSize: smallScreen
                                                           ? 11.sp
