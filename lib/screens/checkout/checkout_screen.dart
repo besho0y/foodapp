@@ -1745,15 +1745,22 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             ),
             child: TextField(
               controller: transferReferenceController,
+              style: const TextStyle(
+                color: Colors.black, // Force black text color
+                fontSize: 16,
+              ),
               decoration: InputDecoration(
                 labelText: S.of(context).transfer_reference,
                 hintText: S.of(context).transfer_reference_hint,
                 border: InputBorder.none,
-                prefixIcon: const Icon(Icons.numbers),
+                prefixIcon: const Icon(Icons.numbers, color: Colors.grey),
                 contentPadding:
                     EdgeInsets.symmetric(horizontal: 12.w, vertical: 16.h),
                 labelStyle: TextStyle(
-                  color: paymentVerified ? Colors.green : null,
+                  color: paymentVerified ? Colors.green : Colors.grey.shade600,
+                ),
+                hintStyle: const TextStyle(
+                  color: Colors.grey,
                 ),
               ),
               keyboardType: TextInputType.text,
@@ -1850,6 +1857,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     style: TextStyle(
                       fontSize: 14.sp,
                       height: 1.4,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.black87
+                          : Colors.black87,
                     ),
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
@@ -1857,7 +1867,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 : RichText(
                     text: TextSpan(
                       style: TextStyle(
-                        color: Colors.black87,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.black87
+                            : Colors.black87,
                         fontSize: 14.sp,
                         height: 1.4,
                       ),

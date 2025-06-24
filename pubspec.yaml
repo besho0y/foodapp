@@ -99,7 +99,8 @@ flutter:
     - assets/icon/branding.png
     - assets/images/dark.PNG
     - assets/images/light.PNG
-    - assets/icon/homeicon.jpg 
+    - assets/icon/homeicon.jpg
+    - assets/icon/finalicon.JPG 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
   # For details regarding adding assets from package dependencies, see
@@ -130,15 +131,15 @@ flutter_intl:
 flutter_launcher_icons:
   android: "ic_launcher"
   ios: true
-  image_path: "assets/icon/homeicon2.JPG"
+  image_path: "assets/icon/finalicon.JPG"
   min_sdk_android: 21
   remove_alpha_ios: true
   web:
     generate: true
-    image_path: "assets/icon/homeicon2.JPG"
+    image_path: "assets/icon/finalicon.JPG"
   windows:
     generate: true
-    image_path: "assets/icon/homeicon2.JPG"
+    image_path: "assets/icon/finalicon.JPG"
   macos:
     generate: true
-    image_path: "assets/icon/homeicon2.JPG"
+    image_path: "assets/icon/finalicon.JPG"

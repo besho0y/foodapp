@@ -67,7 +67,7 @@ class Restuarantscubit extends Cubit<ResturantsStates> {
     print("--- Restaurant Areas Debug ---");
     for (var restaurant in _allRestuarants) {
       print(
-          "Restaurant: '${restaurant.name}' | Area: '${restaurant.area}' | Areas: ${restaurant.areas}");
+          "Restaurant: '${restaurant.name}' | Main Areas: ${restaurant.mainAreas} | Secondary Areas: ${restaurant.secondaryAreas}");
     }
 
     // Only filter by area if user has selected a specific location
@@ -75,18 +75,18 @@ class Restuarantscubit extends Cubit<ResturantsStates> {
     if (_selectedArea.isNotEmpty &&
         _selectedArea != 'All' &&
         _selectedArea != 'Cairo') {
-      // Filter by area - check both single area and areas array
+      // Filter by area - check both main areas and secondary areas
       filtered = filtered.where((restaurant) {
-        // Check if restaurant serves the selected area
-        bool servesArea = restaurant.area == _selectedArea ||
-            restaurant.areas.contains(_selectedArea);
+        // Check if restaurant serves the selected area (main areas or secondary areas)
+        bool servesArea = restaurant.mainAreas.contains(_selectedArea) ||
+            restaurant.secondaryAreas.contains(_selectedArea);
 
         if (servesArea) {
           print(
               "✓ Restaurant '${restaurant.name}' serves area '$_selectedArea'");
         } else {
           print(
-              "✗ Restaurant '${restaurant.name}' does NOT serve area '$_selectedArea' (has: '${restaurant.area}', areas: ${restaurant.areas})");
+              "✗ Restaurant '${restaurant.name}' does NOT serve area '$_selectedArea' (main: ${restaurant.mainAreas}, secondary: ${restaurant.secondaryAreas})");
         }
 
         return servesArea;
@@ -240,13 +240,20 @@ class Restuarantscubit extends Cubit<ResturantsStates> {
             menuCategoriesAr: data['menuCategoriesAr'] is List
                 ? List<String>.from(data['menuCategoriesAr'])
                 : null,
-            area: data['area']?.toString() ??
-                'Cairo', // Keep for backward compatibility
+            // New location structure
+            mainAreas: data['mainAreas'] is List
+                ? List<String>.from(data['mainAreas'])
+                : (data['mainArea'] != null
+                    ? [data['mainArea'].toString()]
+                    : [data['area']?.toString() ?? 'Cairo']),
+            secondaryAreas: data['secondaryAreas'] is List
+                ? List<String>.from(data['secondaryAreas'])
+                : [],
+            // Backward compatibility
+            area: data['area']?.toString() ?? 'Cairo',
             areas: data['areas'] is List
                 ? List<String>.from(data['areas'])
-                : [
-                    data['area']?.toString() ?? 'Cairo'
-                  ], // Use areas array or fallback to single area
+                : [data['area']?.toString() ?? 'Cairo'],
             outOfAreaFee: data['outOfAreaFee']?.toString() ?? '0',
           );
 
@@ -357,10 +364,10 @@ class Restuarantscubit extends Cubit<ResturantsStates> {
           print("Showing all restaurants in $_selectedArea");
           // Apply area filter only
           _filteredRestaurants = _allRestuarants.where((restaurant) {
-            bool areaMatches = restaurant.area == _selectedArea ||
-                restaurant.areas.contains(_selectedArea);
+            bool areaMatches = restaurant.mainAreas.contains(_selectedArea) ||
+                restaurant.secondaryAreas.contains(_selectedArea);
             print(
-                "Restaurant ${restaurant.name}: area=${restaurant.area}, areas=${restaurant.areas}, areaMatches=$areaMatches");
+                "Restaurant ${restaurant.name}: mainAreas=${restaurant.mainAreas}, secondaryAreas=${restaurant.secondaryAreas}, areaMatches=$areaMatches");
             return areaMatches;
           }).toList();
         }

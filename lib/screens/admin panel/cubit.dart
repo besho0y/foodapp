@@ -349,12 +349,9 @@ class AdminPanelCubit extends Cubit<AdminPanelStates> {
     required String deliveryTime,
     required File? imageFile,
     required List<String> categories,
-    String area = 'Cairo', // Keep for backward compatibility
-    List<String> areas = const [], // Add areas array parameter
-    String? locationCityId,
-    String? locationCityName,
-    String? locationAreaId,
-    String? locationAreaName,
+    List<String> mainAreas = const [], // Main areas where restaurant is located
+    List<String> secondaryAreas =
+        const [], // Secondary areas with out-of-area fee
     String? outOfAreaFee,
   }) async {
     emit(AddingRestaurantState());
@@ -428,14 +425,12 @@ class AdminPanelCubit extends Cubit<AdminPanelStates> {
           'الكل',
           'غير مصنف'
         ], // Default Arabic menu categories
-        'area': area, // Keep for backward compatibility
-        'areas': areas.isNotEmpty
-            ? areas
-            : [area], // Use areas array or fallback to single area
-        'locationCityId': locationCityId,
-        'locationCityName': locationCityName,
-        'locationAreaId': locationAreaId,
-        'locationAreaName': locationAreaName,
+        // New location structure
+        'mainAreas': mainAreas,
+        'secondaryAreas': secondaryAreas,
+        // Keep old structure for backward compatibility
+        'area': mainAreas.isNotEmpty ? mainAreas.first : 'Cairo',
+        'areas': [...mainAreas, ...secondaryAreas],
         'outOfAreaFee': outOfAreaFee ?? '0',
         'createdAt': FieldValue.serverTimestamp(),
       };
@@ -1289,7 +1284,17 @@ class AdminPanelCubit extends Cubit<AdminPanelStates> {
 
       // Get all cities first
       if (cities.isEmpty) {
+        print('🏙️ No cities loaded, fetching cities first...');
         await fetchCities();
+      }
+
+      print('🏙️ Found ${cities.length} cities to check for areas');
+
+      if (cities.isEmpty) {
+        print('❌ No cities found! Cannot load areas.');
+        emit(ErrorLoadingAreasState(
+            'No cities found. Please add cities first.'));
+        return;
       }
 
       // Fetch areas from each city
@@ -1502,6 +1507,8 @@ class AdminPanelCubit extends Cubit<AdminPanelStates> {
     required List<String> categories,
     String area = 'Cairo',
     List<String> areas = const [],
+    List<String> mainAreas = const [],
+    List<String> secondaryAreas = const [],
     String? locationCityId,
     String? locationCityName,
     String? locationAreaId,
@@ -1558,6 +1565,8 @@ class AdminPanelCubit extends Cubit<AdminPanelStates> {
         'categories': categories,
         'area': area,
         'areas': areas.isNotEmpty ? areas : [area],
+        'mainAreas': mainAreas.isNotEmpty ? mainAreas : [area],
+        'secondaryAreas': secondaryAreas,
         'locationCityId': locationCityId,
         'locationCityName': locationCityName,
         'locationAreaId': locationAreaId,

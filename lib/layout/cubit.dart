@@ -93,11 +93,36 @@ class Layoutcubit extends Cubit<Layoutstates> {
   // Load cart items from local storage
   Future<void> _loadCartItems() async {
     try {
+      print('\n=== CUBIT: Loading cart items on app startup ===');
+
+      // Check if this is a fresh install or if user wants to start clean
+      final prefs = await SharedPreferences.getInstance();
+      bool isFirstRun = prefs.getBool('first_run') ?? true;
+
+      if (isFirstRun) {
+        print('CUBIT: First run detected - clearing any existing cart data');
+        await LocalStorageService.clearCartItems();
+        await prefs.setBool('first_run', false);
+        print('CUBIT: Cart cleared for fresh start');
+        return;
+      }
+
       List<CartItem> savedItems = await LocalStorageService.getCartItems();
+      print('CUBIT: Found ${savedItems.length} saved cart items');
+
       if (savedItems.isNotEmpty) {
         cartitems = savedItems;
+        print('CUBIT: Loaded cart items into cubit');
+        for (int i = 0; i < cartitems.length; i++) {
+          print(
+            'CUBIT: Item #${i + 1}: ${cartitems[i].name} from ${cartitems[i].restaurantName}',
+          );
+        }
         emit(LayoutCartUpdatedState());
+      } else {
+        print('CUBIT: No cart items to load');
       }
+      print('=== END CUBIT CART LOADING ===\n');
     } catch (e) {
       print("Error loading cart items: $e");
       // Continue with empty cart
@@ -120,15 +145,9 @@ class Layoutcubit extends Cubit<Layoutstates> {
 
     if (isAdminUser) {
       // Admin user should only see Home and Admin Panel
-      bottomnav = [
-        Icons.home,
-        Icons.admin_panel_settings,
-      ];
+      bottomnav = [Icons.home, Icons.admin_panel_settings];
 
-      screens = [
-        const Resturantscreen(),
-        const AdminPanelScreen(),
-      ];
+      screens = [const Resturantscreen(), const AdminPanelScreen()];
 
       // If admin is on a screen that's no longer available, reset to home
       if (currentindex > 1) {
@@ -260,14 +279,16 @@ class Layoutcubit extends Cubit<Layoutstates> {
 
     if (existingItemIndex != -1) {
       print(
-          "🔄 Found existing item at index $existingItemIndex with quantity ${cartitems[existingItemIndex].quantity}");
+        "🔄 Found existing item at index $existingItemIndex with quantity ${cartitems[existingItemIndex].quantity}",
+      );
     }
 
     if (existingItemIndex != -1) {
       // Item already exists - increase quantity instead of adding duplicate
       cartitems[existingItemIndex].quantity += quantity;
       print(
-          "✅ Updated existing item quantity to ${cartitems[existingItemIndex].quantity}");
+        "✅ Updated existing item quantity to ${cartitems[existingItemIndex].quantity}",
+      );
     } else {
       // Item doesn't exist - create new cart item
       CartItem newItem = CartItem(
@@ -295,8 +316,9 @@ class Layoutcubit extends Cubit<Layoutstates> {
 
     // Also update the user's cart in the ProfileCubit if available
     try {
-      ProfileCubit profileCubit =
-          ProfileCubit.get(navigatorKey.currentContext!);
+      ProfileCubit profileCubit = ProfileCubit.get(
+        navigatorKey.currentContext!,
+      );
       profileCubit.user.cart = cartitems;
     } catch (e) {
       print("Could not sync cart with ProfileCubit: $e");
@@ -317,16 +339,20 @@ class Layoutcubit extends Cubit<Layoutstates> {
     // If trying to access favorites or orders, check login status
     if (index == 1 && !isAdminUser) {
       // This is the favorites tab for regular users
-      if (!checkUserLoggedIn(navigatorKey.currentContext!,
-          feature: S.of(navigatorKey.currentContext!).login_to_favorites)) {
+      if (!checkUserLoggedIn(
+        navigatorKey.currentContext!,
+        feature: S.of(navigatorKey.currentContext!).login_to_favorites,
+      )) {
         return; // Stay on current tab
       }
     }
 
     if (index == 2 && !isAdminUser) {
       // This is the orders tab for regular users
-      if (!checkUserLoggedIn(navigatorKey.currentContext!,
-          feature: S.of(navigatorKey.currentContext!).login_to_orders)) {
+      if (!checkUserLoggedIn(
+        navigatorKey.currentContext!,
+        feature: S.of(navigatorKey.currentContext!).login_to_orders,
+      )) {
         return; // Stay on current tab
       }
     }
@@ -395,7 +421,8 @@ class Layoutcubit extends Cubit<Layoutstates> {
     print('\nDelivery fees breakdown:');
     restaurantFees.forEach((restaurantId, fee) {
       print(
-          '- ${cartitems.firstWhere((item) => item.restaurantId == restaurantId).restaurantName}: $fee EGP');
+        '- ${cartitems.firstWhere((item) => item.restaurantId == restaurantId).restaurantName}: $fee EGP',
+      );
     });
     print('Total delivery fees: $totalFees EGP\n');
     return totalFees;
@@ -424,7 +451,8 @@ class Layoutcubit extends Cubit<Layoutstates> {
     double subtotal = cartitems.fold(0, (sum, item) {
       double itemTotal = item.price * item.quantity;
       print(
-          '- ${item.name}: ${item.price} × ${item.quantity} = $itemTotal EGP');
+        '- ${item.name}: ${item.price} × ${item.quantity} = $itemTotal EGP',
+      );
       return sum + itemTotal;
     });
     print('Subtotal (items only): $subtotal EGP');
@@ -436,7 +464,8 @@ class Layoutcubit extends Cubit<Layoutstates> {
       print('- Name: ${cartitems[i].name}');
       print('- Restaurant: ${cartitems[i].restaurantName}');
       print(
-          '- Restaurant ID: "${cartitems[i].restaurantId}"'); // Note the quotes to see whitespace
+        '- Restaurant ID: "${cartitems[i].restaurantId}"',
+      ); // Note the quotes to see whitespace
       print('- Delivery Fee: ${cartitems[i].deliveryFee}');
     }
 
@@ -446,24 +475,29 @@ class Layoutcubit extends Cubit<Layoutstates> {
     for (var item in cartitems) {
       String resId = item.restaurantId.trim();
       print(
-          'Processing item ${item.name} from restaurant ${item.restaurantName} with ID "$resId"');
+        'Processing item ${item.name} from restaurant ${item.restaurantName} with ID "$resId"',
+      );
 
       if (!itemsByRestaurant.containsKey(resId)) {
         itemsByRestaurant[resId] = [];
         print(
-            '  - Created new group for restaurant: ${item.restaurantName} (ID: $resId)');
+          '  - Created new group for restaurant: ${item.restaurantName} (ID: $resId)',
+        );
       } else {
         print(
-            '  - Adding to existing group for restaurant: ${item.restaurantName} (ID: $resId)');
+          '  - Adding to existing group for restaurant: ${item.restaurantName} (ID: $resId)',
+        );
       }
       itemsByRestaurant[resId]!.add(item);
     }
 
     print(
-        '\nAfter grouping: Found ${itemsByRestaurant.length} unique restaurants in cart');
+      '\nAfter grouping: Found ${itemsByRestaurant.length} unique restaurants in cart',
+    );
     itemsByRestaurant.forEach((resId, items) {
       print(
-          'Restaurant group "$resId": ${items.length} items from ${items.first.restaurantName}');
+        'Restaurant group "$resId": ${items.length} items from ${items.first.restaurantName}',
+      );
     });
 
     // Calculate delivery fees (one fee per restaurant) using the breakdown logic
@@ -486,7 +520,8 @@ class Layoutcubit extends Cubit<Layoutstates> {
 
             totalDeliveryFees += fee;
             print(
-                '- ${items.first.restaurantName} (ID: "$restaurantId"): Base Fee $fee EGP');
+              '- ${items.first.restaurantName} (ID: "$restaurantId"): Base Fee $fee EGP',
+            );
 
             // Note: Out-of-area fee calculation would require access to the
             // calculateDeliveryFeeBreakdown function from layout.dart
@@ -496,11 +531,13 @@ class Layoutcubit extends Cubit<Layoutstates> {
             double fee = double.parse(items.first.deliveryFee);
             totalDeliveryFees += fee;
             print(
-                '- ${items.first.restaurantName} (ID: "$restaurantId"): $fee EGP (fallback)');
+              '- ${items.first.restaurantName} (ID: "$restaurantId"): $fee EGP (fallback)',
+            );
           }
         } catch (e) {
           print(
-              'Error parsing delivery fee for ${items.first.restaurantName}: $e');
+            'Error parsing delivery fee for ${items.first.restaurantName}: $e',
+          );
           // Use default fee on error
           totalDeliveryFees += 50.0;
         }
@@ -508,7 +545,8 @@ class Layoutcubit extends Cubit<Layoutstates> {
     });
 
     print(
-        'Total base delivery fees from all restaurants: $totalDeliveryFees EGP');
+      'Total base delivery fees from all restaurants: $totalDeliveryFees EGP',
+    );
     if (totalOutOfAreaFees > 0) {
       print('Total out-of-area fees: $totalOutOfAreaFees EGP');
     }
@@ -528,7 +566,8 @@ class Layoutcubit extends Cubit<Layoutstates> {
     print('\nFinal Breakdown:');
     print('- Subtotal (all items): $subtotal EGP');
     print(
-        '- Delivery Fees (${itemsByRestaurant.length} restaurants): $totalDeliveryFees EGP');
+      '- Delivery Fees (${itemsByRestaurant.length} restaurants): $totalDeliveryFees EGP',
+    );
     if (promoDiscount != null && promoDiscount > 0) {
       print('- Promocode Discount: -$promoDiscount EGP');
     }
@@ -594,11 +633,14 @@ class Layoutcubit extends Cubit<Layoutstates> {
       print("\nItem #$i:");
       print("- Name: '${item.name}' (match: ${item.name == name})");
       print(
-          "- Restaurant ID: '${item.restaurantId.trim()}' (match: ${item.restaurantId.trim() == cleanRestaurantId})");
+        "- Restaurant ID: '${item.restaurantId.trim()}' (match: ${item.restaurantId.trim() == cleanRestaurantId})",
+      );
       print(
-          "- Price: ${item.price} (match: ${(item.price - price).abs() < 0.01})");
+        "- Price: ${item.price} (match: ${(item.price - price).abs() < 0.01})",
+      );
       print(
-          "- Comment: '${(item.comment ?? '').trim()}' (match: ${(item.comment ?? '').trim() == (comment ?? '').trim()})");
+        "- Comment: '${(item.comment ?? '').trim()}' (match: ${(item.comment ?? '').trim() == (comment ?? '').trim()})",
+      );
 
       bool nameMatch = item.name == name;
       bool restaurantMatch = item.restaurantId.trim() == cleanRestaurantId;
@@ -608,7 +650,8 @@ class Layoutcubit extends Cubit<Layoutstates> {
           (comment ?? '').trim(); // Normalize comment comparison
 
       print(
-          "- Overall match: ${nameMatch && restaurantMatch && priceMatch && commentMatch}");
+        "- Overall match: ${nameMatch && restaurantMatch && priceMatch && commentMatch}",
+      );
 
       if (nameMatch && restaurantMatch && priceMatch && commentMatch) {
         print("✅ FOUND EXISTING ITEM AT INDEX $i");
@@ -619,5 +662,25 @@ class Layoutcubit extends Cubit<Layoutstates> {
     print("❌ NO EXISTING ITEM FOUND");
     print("=== END SEARCH ===\n");
     return -1;
+  }
+
+  // Debug method to check cart storage
+  Future<void> debugCartStorage() async {
+    print('=== CART STORAGE DEBUG ===');
+    print('Current cart items: ${cartitems.length}');
+    for (int i = 0; i < cartitems.length; i++) {
+      print(
+          'Item $i: ${cartitems[i].name} from ${cartitems[i].restaurantName}');
+    }
+    print('=== END DEBUG ===');
+  }
+
+  // Force clear cart storage (for debugging)
+  Future<void> forceClearCartStorage() async {
+    print('=== FORCE CLEARING CART STORAGE ===');
+    cartitems.clear();
+    await LocalStorageService.clearCartItems();
+    emit(UpdateCartState());
+    print('Cart storage and cubit cart cleared');
   }
 }

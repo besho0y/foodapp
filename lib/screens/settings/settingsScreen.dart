@@ -32,9 +32,10 @@ class Settingsscreen extends StatelessWidget {
                 child: Text(
                   S.of(context).cancel,
                   style: TextStyle(
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? Colors.white
-                          : Colors.black),
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white
+                        : Colors.black,
+                  ),
                 ),
               ),
               ElevatedButton(
@@ -171,8 +172,10 @@ class Settingsscreen extends StatelessWidget {
               onTap: () => navigateTo(context, const Profilescreen()),
               child: Card(
                 child: Padding(
-                  padding:
-                      EdgeInsets.symmetric(vertical: 10.h, horizontal: 5.w),
+                  padding: EdgeInsets.symmetric(
+                    vertical: 10.h,
+                    horizontal: 5.w,
+                  ),
                   child: Row(
                     children: [
                       const Icon(Icons.person),
@@ -276,7 +279,9 @@ class Settingsscreen extends StatelessWidget {
                     child: Card(
                       child: Padding(
                         padding: EdgeInsets.symmetric(
-                            vertical: 10.h, horizontal: 5.w),
+                          vertical: 10.h,
+                          horizontal: 5.w,
+                        ),
                         child: Row(
                           children: [
                             const Icon(Icons.admin_panel_settings),

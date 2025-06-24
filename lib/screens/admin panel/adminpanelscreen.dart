@@ -77,12 +77,11 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
   File? _bannerImageFile;
   Category? _selectedRestaurantCategory;
   String? _selectedRestaurantCityId; // Selected city for restaurant
-  final List<String> _selectedRestaurantAreas =
-      []; // Selected areas for restaurant
+  final List<String> _selectedMainAreas =
+      []; // Selected main areas for restaurant (no out-of-area fee)
+  final List<String> _selectedSecondaryAreas =
+      []; // Selected secondary areas for restaurant (with out-of-area fee)
 
-  // Restaurant location fields
-  String? _selectedLocationCityId; // City where restaurant is located
-  String? _selectedLocationAreaId; // Specific area where restaurant is located
   final TextEditingController _outOfAreaFeeController = TextEditingController();
 
   // Add flag to prevent multiple refresh operations
@@ -775,198 +774,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                   ),
                   SizedBox(height: 24.h),
                   Text(
-                    'Restaurant Location',
-                    style: TextStyle(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).primaryColor,
-                    ),
-                  ),
-                  SizedBox(height: 12.h),
-                  // Location City dropdown
-                  BlocBuilder<AdminPanelCubit, AdminPanelStates>(
-                    builder: (context, state) {
-                      // Ensure the selected value exists in the current cities list
-                      if (_selectedLocationCityId != null &&
-                          !cubit.cities.any(
-                              (city) => city.id == _selectedLocationCityId)) {
-                        _selectedLocationCityId = null;
-                      }
-
-                      return DropdownButtonFormField<String>(
-                        value: _selectedLocationCityId,
-                        items: cubit.cities.map((city) {
-                          return DropdownMenuItem<String>(
-                            value: city.id,
-                            child: Text(
-                              '${city.name} - ${city.nameAr}',
-                              style: TextStyle(
-                                color: Theme.of(context).brightness ==
-                                        Brightness.dark
-                                    ? Colors.white
-                                    : Colors.black,
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                        onChanged: (String? newValue) {
-                          if (newValue != null && mounted) {
-                            setState(() {
-                              _selectedLocationCityId = newValue;
-                              _selectedLocationAreaId =
-                                  null; // Reset area when city changes
-                            });
-                            // Fetch areas for the selected location city
-                            cubit.fetchAreas(newValue);
-                          }
-                        },
-                        decoration: InputDecoration(
-                          labelText: 'Restaurant Location City',
-                          border: OutlineInputBorder(
-                            borderSide: BorderSide(
-                              color: Theme.of(context).brightness ==
-                                      Brightness.dark
-                                  ? AppColors.primaryDark
-                                  : AppColors.primaryLight,
-                              width: 1.5,
-                            ),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderSide: BorderSide(
-                              color: Theme.of(context).brightness ==
-                                      Brightness.dark
-                                  ? AppColors.primaryDark
-                                  : AppColors.primaryLight,
-                              width: 1.5,
-                            ),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderSide: BorderSide(
-                              color: Theme.of(context).brightness ==
-                                      Brightness.dark
-                                  ? AppColors.primaryDark
-                                  : AppColors.primaryLight,
-                              width: 2.0,
-                            ),
-                          ),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please select restaurant location city';
-                          }
-                          return null;
-                        },
-                      );
-                    },
-                  ),
-                  SizedBox(height: 12.h),
-                  // Location Area dropdown
-                  if (_selectedLocationCityId != null)
-                    BlocBuilder<AdminPanelCubit, AdminPanelStates>(
-                      builder: (context, state) {
-                        if (cubit.areas.isEmpty) {
-                          // Reset area selection when no areas available
-                          if (_selectedLocationAreaId != null) {
-                            WidgetsBinding.instance.addPostFrameCallback((_) {
-                              if (mounted) {
-                                setState(() {
-                                  _selectedLocationAreaId = null;
-                                });
-                              }
-                            });
-                          }
-                          return Container(
-                            padding: EdgeInsets.all(16.r),
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.grey.shade300),
-                              borderRadius: BorderRadius.circular(8.r),
-                            ),
-                            child: Text(
-                              'No areas found for selected city',
-                              style: TextStyle(
-                                  color: Colors.grey, fontSize: 14.sp),
-                            ),
-                          );
-                        }
-
-                        // Ensure the selected area exists in the current areas list
-                        if (_selectedLocationAreaId != null &&
-                            !cubit.areas.any(
-                                (area) => area.id == _selectedLocationAreaId)) {
-                          WidgetsBinding.instance.addPostFrameCallback((_) {
-                            if (mounted) {
-                              setState(() {
-                                _selectedLocationAreaId = null;
-                              });
-                            }
-                          });
-                        }
-
-                        return DropdownButtonFormField<String>(
-                          value: _selectedLocationAreaId,
-                          items: cubit.areas.map((area) {
-                            return DropdownMenuItem<String>(
-                              value: area.id,
-                              child: Text(
-                                '${area.name} - ${area.nameAr}',
-                                style: TextStyle(
-                                  color: Theme.of(context).brightness ==
-                                          Brightness.dark
-                                      ? Colors.white
-                                      : Colors.black,
-                                ),
-                              ),
-                            );
-                          }).toList(),
-                          onChanged: (String? newValue) {
-                            if (mounted) {
-                              setState(() {
-                                _selectedLocationAreaId = newValue;
-                              });
-                            }
-                          },
-                          decoration: InputDecoration(
-                            labelText: 'Restaurant Location Area',
-                            border: OutlineInputBorder(
-                              borderSide: BorderSide(
-                                color: Theme.of(context).brightness ==
-                                        Brightness.dark
-                                    ? AppColors.primaryDark
-                                    : AppColors.primaryLight,
-                                width: 1.5,
-                              ),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderSide: BorderSide(
-                                color: Theme.of(context).brightness ==
-                                        Brightness.dark
-                                    ? AppColors.primaryDark
-                                    : AppColors.primaryLight,
-                                width: 1.5,
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderSide: BorderSide(
-                                color: Theme.of(context).brightness ==
-                                        Brightness.dark
-                                    ? AppColors.primaryDark
-                                    : AppColors.primaryLight,
-                                width: 2.0,
-                              ),
-                            ),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please select restaurant location area';
-                            }
-                            return null;
-                          },
-                        );
-                      },
-                    ),
-                  SizedBox(height: 24.h),
-                  Text(
-                    'Delivery Coverage Areas',
+                    'Restaurant Main Areas (No Out-of-Area Fee)',
                     style: TextStyle(
                       fontSize: 16.sp,
                       fontWeight: FontWeight.bold,
@@ -1070,21 +878,21 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Select Delivery Areas (${cubit.allAreas.length} total)',
+                                  'Select Areas (${cubit.allAreas.length})',
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 14.sp,
+                                    fontSize: 12.sp,
                                   ),
                                 ),
-                                SizedBox(height: 8.h),
+                                SizedBox(height: 6.h),
                                 Row(
                                   children: [
                                     Expanded(
                                       child: ElevatedButton(
                                         onPressed: () {
                                           setState(() {
-                                            _selectedRestaurantAreas.clear();
-                                            _selectedRestaurantAreas.addAll(
+                                            _selectedMainAreas.clear();
+                                            _selectedMainAreas.addAll(
                                               cubit.allAreas
                                                   .map((area) => area.name),
                                             );
@@ -1092,26 +900,26 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                                         },
                                         style: ElevatedButton.styleFrom(
                                           padding: EdgeInsets.symmetric(
-                                              vertical: 8.h),
-                                          textStyle: TextStyle(fontSize: 12.sp),
+                                              vertical: 6.h),
+                                          textStyle: TextStyle(fontSize: 10.sp),
                                         ),
-                                        child: const Text('Select All'),
+                                        child: const Text('All Main'),
                                       ),
                                     ),
-                                    SizedBox(width: 8.w),
+                                    SizedBox(width: 4.w),
                                     Expanded(
                                       child: OutlinedButton(
                                         onPressed: () {
                                           setState(() {
-                                            _selectedRestaurantAreas.clear();
+                                            _selectedMainAreas.clear();
                                           });
                                         },
                                         style: OutlinedButton.styleFrom(
                                           padding: EdgeInsets.symmetric(
-                                              vertical: 8.h),
-                                          textStyle: TextStyle(fontSize: 12.sp),
+                                              vertical: 6.h),
+                                          textStyle: TextStyle(fontSize: 10.sp),
                                         ),
-                                        child: const Text('Clear All'),
+                                        child: const Text('Clear'),
                                       ),
                                     ),
                                   ],
@@ -1173,80 +981,173 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                                           ),
                                           // Areas for this city
                                           ...cityAreas.map((area) {
+                                            bool isMainArea = _selectedMainAreas
+                                                .contains(area.name);
+                                            bool isSecondaryArea =
+                                                _selectedSecondaryAreas
+                                                    .contains(area.name);
                                             return Container(
                                               margin:
                                                   EdgeInsets.only(bottom: 2.h),
-                                              child: InkWell(
-                                                onTap: () {
-                                                  setState(() {
-                                                    if (_selectedRestaurantAreas
-                                                        .contains(area.name)) {
-                                                      _selectedRestaurantAreas
-                                                          .remove(area.name);
-                                                    } else {
-                                                      _selectedRestaurantAreas
-                                                          .add(area.name);
-                                                    }
-                                                  });
-                                                },
-                                                child: Container(
-                                                  padding: EdgeInsets.symmetric(
-                                                    vertical: 6.h,
-                                                    horizontal: 8.w,
-                                                  ),
-                                                  decoration: BoxDecoration(
-                                                    color:
-                                                        _selectedRestaurantAreas
-                                                                .contains(
-                                                                    area.name)
-                                                            ? Colors.blue
-                                                                .withOpacity(
-                                                                    0.1)
-                                                            : Colors
-                                                                .transparent,
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            4.r),
-                                                  ),
-                                                  child: Row(
-                                                    children: [
-                                                      Icon(
-                                                        _selectedRestaurantAreas
-                                                                .contains(
-                                                                    area.name)
-                                                            ? Icons.check_box
-                                                            : Icons
-                                                                .check_box_outline_blank,
-                                                        size: 18.sp,
-                                                        color: _selectedRestaurantAreas
-                                                                .contains(
-                                                                    area.name)
-                                                            ? Theme.of(context)
-                                                                .primaryColor
-                                                            : Colors.grey,
-                                                      ),
-                                                      SizedBox(width: 8.w),
-                                                      Expanded(
-                                                        child: Text(
-                                                          '${area.name} - ${area.nameAr}',
-                                                          style: TextStyle(
-                                                            fontSize: 13.sp,
-                                                            fontWeight:
-                                                                _selectedRestaurantAreas
-                                                                        .contains(area
-                                                                            .name)
-                                                                    ? FontWeight
-                                                                        .w500
-                                                                    : FontWeight
-                                                                        .normal,
-                                                          ),
-                                                          overflow: TextOverflow
-                                                              .ellipsis,
+                                              child: Row(
+                                                children: [
+                                                  // Main area checkbox
+                                                  Expanded(
+                                                    child: InkWell(
+                                                      onTap: () {
+                                                        setState(() {
+                                                          if (isMainArea) {
+                                                            _selectedMainAreas
+                                                                .remove(
+                                                                    area.name);
+                                                          } else {
+                                                            _selectedMainAreas
+                                                                .add(area.name);
+                                                            // Remove from secondary if it was there
+                                                            _selectedSecondaryAreas
+                                                                .remove(
+                                                                    area.name);
+                                                          }
+                                                        });
+                                                      },
+                                                      child: Container(
+                                                        padding: EdgeInsets
+                                                            .symmetric(
+                                                          vertical: 6.h,
+                                                          horizontal: 8.w,
+                                                        ),
+                                                        decoration:
+                                                            BoxDecoration(
+                                                          color: isMainArea
+                                                              ? Colors.green
+                                                                  .withOpacity(
+                                                                      0.1)
+                                                              : Colors
+                                                                  .transparent,
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(
+                                                                      4.r),
+                                                        ),
+                                                        child: Row(
+                                                          children: [
+                                                            Icon(
+                                                              isMainArea
+                                                                  ? Icons
+                                                                      .check_box
+                                                                  : Icons
+                                                                      .check_box_outline_blank,
+                                                              size: 18.sp,
+                                                              color: isMainArea
+                                                                  ? Colors.green
+                                                                  : Colors.grey,
+                                                            ),
+                                                            SizedBox(
+                                                                width: 8.w),
+                                                            Expanded(
+                                                              child: Text(
+                                                                '${area.name} (Main)',
+                                                                style:
+                                                                    TextStyle(
+                                                                  fontSize:
+                                                                      13.sp,
+                                                                  fontWeight: isMainArea
+                                                                      ? FontWeight
+                                                                          .w500
+                                                                      : FontWeight
+                                                                          .normal,
+                                                                ),
+                                                                overflow:
+                                                                    TextOverflow
+                                                                        .ellipsis,
+                                                              ),
+                                                            ),
+                                                          ],
                                                         ),
                                                       ),
-                                                    ],
+                                                    ),
                                                   ),
-                                                ),
+                                                  SizedBox(width: 8.w),
+                                                  // Secondary area checkbox
+                                                  Expanded(
+                                                    child: InkWell(
+                                                      onTap: () {
+                                                        setState(() {
+                                                          if (isSecondaryArea) {
+                                                            _selectedSecondaryAreas
+                                                                .remove(
+                                                                    area.name);
+                                                          } else {
+                                                            _selectedSecondaryAreas
+                                                                .add(area.name);
+                                                            // Remove from main if it was there
+                                                            _selectedMainAreas
+                                                                .remove(
+                                                                    area.name);
+                                                          }
+                                                        });
+                                                      },
+                                                      child: Container(
+                                                        padding: EdgeInsets
+                                                            .symmetric(
+                                                          vertical: 6.h,
+                                                          horizontal: 8.w,
+                                                        ),
+                                                        decoration:
+                                                            BoxDecoration(
+                                                          color: isSecondaryArea
+                                                              ? Colors.orange
+                                                                  .withOpacity(
+                                                                      0.1)
+                                                              : Colors
+                                                                  .transparent,
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(
+                                                                      4.r),
+                                                        ),
+                                                        child: Row(
+                                                          children: [
+                                                            Icon(
+                                                              isSecondaryArea
+                                                                  ? Icons
+                                                                      .check_box
+                                                                  : Icons
+                                                                      .check_box_outline_blank,
+                                                              size: 18.sp,
+                                                              color:
+                                                                  isSecondaryArea
+                                                                      ? Colors
+                                                                          .orange
+                                                                      : Colors
+                                                                          .grey,
+                                                            ),
+                                                            SizedBox(
+                                                                width: 8.w),
+                                                            Expanded(
+                                                              child: Text(
+                                                                '${area.name} (Secondary)',
+                                                                style:
+                                                                    TextStyle(
+                                                                  fontSize:
+                                                                      13.sp,
+                                                                  fontWeight: isSecondaryArea
+                                                                      ? FontWeight
+                                                                          .w500
+                                                                      : FontWeight
+                                                                          .normal,
+                                                                ),
+                                                                overflow:
+                                                                    TextOverflow
+                                                                        .ellipsis,
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
                                             );
                                           }).toList(),
@@ -1260,22 +1161,39 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                             ),
                             SizedBox(height: 8.h),
                             // Status message
-                            if (_selectedRestaurantAreas.isEmpty)
+                            if (_selectedMainAreas.isEmpty &&
+                                _selectedSecondaryAreas.isEmpty)
                               Text(
-                                'Please select at least one area',
+                                'Please select at least one main area',
                                 style: TextStyle(
                                   color: Colors.red,
                                   fontSize: 12.sp,
                                 ),
                               ),
-                            if (_selectedRestaurantAreas.isNotEmpty)
-                              Text(
-                                'Selected: ${_selectedRestaurantAreas.length} areas',
-                                style: TextStyle(
-                                  color: Colors.green,
-                                  fontSize: 12.sp,
-                                  fontWeight: FontWeight.w500,
-                                ),
+                            if (_selectedMainAreas.isNotEmpty ||
+                                _selectedSecondaryAreas.isNotEmpty)
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  if (_selectedMainAreas.isNotEmpty)
+                                    Text(
+                                      'Main Areas: ${_selectedMainAreas.length}',
+                                      style: TextStyle(
+                                        color: Colors.green,
+                                        fontSize: 12.sp,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  if (_selectedSecondaryAreas.isNotEmpty)
+                                    Text(
+                                      'Secondary Areas: ${_selectedSecondaryAreas.length}',
+                                      style: TextStyle(
+                                        color: Colors.orange,
+                                        fontSize: 12.sp,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                ],
                               ),
                           ],
                         ),
@@ -2588,44 +2506,16 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
         },
       );
 
-      // Validate that areas are selected
-      if (_selectedRestaurantAreas.isEmpty) {
+      // Validate that at least main areas are selected
+      if (_selectedMainAreas.isEmpty) {
         _safeNavigatorPop(context);
-        _showSnackBar("Please select at least one delivery coverage area",
+        _showSnackBar("Please select at least one main area",
             backgroundColor: Colors.red);
         return;
       }
 
-      // Validate restaurant location
-      if (_selectedLocationCityId == null || _selectedLocationAreaId == null) {
-        _safeNavigatorPop(context);
-        _showSnackBar("Please select restaurant location (city and area)",
-            backgroundColor: Colors.red);
-        return;
-      }
-
-      // Selected areas are already area names, no conversion needed
-      List<String> areaNames = List.from(_selectedRestaurantAreas);
-
-      print("Selected area names:");
-      for (String areaName in areaNames) {
-        print("  Area: $areaName");
-      }
-
-      // Get location city and area names
-      String locationCityName = cubit.cities
-          .firstWhere(
-            (city) => city.id == _selectedLocationCityId,
-            orElse: () => cubit.cities.first,
-          )
-          .name;
-
-      String locationAreaName = cubit.areas
-          .firstWhere(
-            (area) => area.id == _selectedLocationAreaId,
-            orElse: () => cubit.areas.first,
-          )
-          .name;
+      print("Selected main areas: $_selectedMainAreas");
+      print("Selected secondary areas: $_selectedSecondaryAreas");
 
       // Let the cubit handle the image upload
       await cubit.addRestaurant(
@@ -2638,11 +2528,8 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
         imageFile:
             _restaurantImageFile, // Pass the file, let cubit handle upload
         categories: [],
-        areas: areaNames, // Pass area names instead of IDs
-        locationCityId: _selectedLocationCityId,
-        locationCityName: locationCityName,
-        locationAreaId: _selectedLocationAreaId,
-        locationAreaName: locationAreaName,
+        mainAreas: _selectedMainAreas, // Pass main areas
+        secondaryAreas: _selectedSecondaryAreas, // Pass secondary areas
         outOfAreaFee: _outOfAreaFeeController.text.trim(),
       );
 
@@ -2833,9 +2720,8 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
         setState(() {
           _restaurantImageFile = null;
           _selectedRestaurantCityId = null;
-          _selectedRestaurantAreas.clear();
-          _selectedLocationCityId = null;
-          _selectedLocationAreaId = null;
+          _selectedMainAreas.clear();
+          _selectedSecondaryAreas.clear();
         });
       }
     } catch (e) {
@@ -5000,10 +4886,9 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
 
     File? editRestaurantImageFile;
     Category? editSelectedRestaurantCategory;
-    String? editSelectedRestaurantCityId;
-    List<String> editSelectedRestaurantAreas = List.from(restaurant.areas);
-    String? editSelectedLocationCityId = restaurant.locationCityId;
-    String? editSelectedLocationAreaId = restaurant.locationAreaId;
+    List<String> editSelectedMainAreas = List.from(restaurant.mainAreas);
+    List<String> editSelectedSecondaryAreas =
+        List.from(restaurant.secondaryAreas);
 
     // Find the current category
     try {
@@ -5021,6 +4906,10 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
       print('Error finding restaurant category: $e');
     }
 
+    // Load all areas from all cities immediately
+    print('Loading all areas for edit dialog...');
+    cubit.fetchAllAreas();
+
     showDialog(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
@@ -5029,7 +4918,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
               Text('${S.of(context).Edit} ${S.of(context).admin_restaurants}'),
           content: SizedBox(
             width: double.maxFinite,
-            height: 600.h,
+            height: MediaQuery.of(context).size.height * 0.75,
             child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -5163,199 +5052,6 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                     ),
                     keyboardType: TextInputType.number,
                   ),
-                  SizedBox(height: 12.h),
-
-                  // Restaurant Location Section
-                  Text(
-                    'Restaurant Location',
-                    style: TextStyle(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).primaryColor,
-                    ),
-                  ),
-                  SizedBox(height: 12.h),
-
-                  // Location City Dropdown
-                  BlocBuilder<AdminPanelCubit, AdminPanelStates>(
-                    builder: (context, state) {
-                      // Ensure the selected value exists in the current cities list
-                      if (editSelectedLocationCityId != null &&
-                          !cubit.cities.any((city) =>
-                              city.id == editSelectedLocationCityId)) {
-                        editSelectedLocationCityId = null;
-                      }
-
-                      return DropdownButtonFormField<String>(
-                        value: editSelectedLocationCityId,
-                        decoration: InputDecoration(
-                          labelText: 'Restaurant Location City',
-                          labelStyle: TextStyle(
-                            color:
-                                Theme.of(context).brightness == Brightness.dark
-                                    ? Colors.white
-                                    : Colors.black,
-                          ),
-                          hintStyle: TextStyle(
-                            color:
-                                Theme.of(context).brightness == Brightness.dark
-                                    ? Colors.white70
-                                    : Colors.black54,
-                          ),
-                          border: OutlineInputBorder(
-                            borderSide: BorderSide(
-                              color: Theme.of(context).brightness ==
-                                      Brightness.dark
-                                  ? Colors.white
-                                  : Colors.black,
-                              width: 1.5,
-                            ),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderSide: BorderSide(
-                              color: Theme.of(context).brightness ==
-                                      Brightness.dark
-                                  ? Colors.white
-                                  : Colors.black,
-                              width: 1.5,
-                            ),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderSide: BorderSide(
-                              color: Theme.of(context).brightness ==
-                                      Brightness.dark
-                                  ? Colors.white
-                                  : Colors.black,
-                              width: 2.0,
-                            ),
-                          ),
-                        ),
-                        items: cubit.cities.map((city) {
-                          return DropdownMenuItem<String>(
-                            value: city.id,
-                            child: Text(
-                              '${city.name} - ${city.nameAr}',
-                              style: TextStyle(
-                                color: Theme.of(context).brightness ==
-                                        Brightness.dark
-                                    ? Colors.white
-                                    : Colors.black,
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                        onChanged: (String? newValue) {
-                          setState(() {
-                            editSelectedLocationCityId = newValue;
-                            editSelectedLocationAreaId = null;
-                          });
-                          if (newValue != null) {
-                            cubit.fetchAreas(newValue);
-                          }
-                        },
-                      );
-                    },
-                  ),
-                  SizedBox(height: 12.h),
-
-                  // Location Area Dropdown
-                  if (editSelectedLocationCityId != null)
-                    BlocBuilder<AdminPanelCubit, AdminPanelStates>(
-                      builder: (context, state) {
-                        if (cubit.areas.isEmpty) {
-                          // Reset area selection when no areas available
-                          if (editSelectedLocationAreaId != null) {
-                            editSelectedLocationAreaId = null;
-                          }
-                          return Container(
-                            padding: EdgeInsets.all(16.r),
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                color: Theme.of(context).brightness ==
-                                        Brightness.dark
-                                    ? Colors.white
-                                    : Colors.black,
-                              ),
-                              borderRadius: BorderRadius.circular(8.r),
-                            ),
-                            child:
-                                const Text('No areas found for selected city'),
-                          );
-                        }
-
-                        // Ensure the selected area exists in the current areas list
-                        if (editSelectedLocationAreaId != null &&
-                            !cubit.areas.any((area) =>
-                                area.id == editSelectedLocationAreaId)) {
-                          editSelectedLocationAreaId = null;
-                        }
-
-                        return DropdownButtonFormField<String>(
-                          value: editSelectedLocationAreaId,
-                          decoration: InputDecoration(
-                            labelText: 'Restaurant Location Area',
-                            labelStyle: TextStyle(
-                              color: Theme.of(context).brightness ==
-                                      Brightness.dark
-                                  ? Colors.white
-                                  : Colors.black,
-                            ),
-                            hintStyle: TextStyle(
-                              color: Theme.of(context).brightness ==
-                                      Brightness.dark
-                                  ? Colors.white70
-                                  : Colors.black54,
-                            ),
-                            border: OutlineInputBorder(
-                              borderSide: BorderSide(
-                                color: Theme.of(context).brightness ==
-                                        Brightness.dark
-                                    ? Colors.white
-                                    : Colors.black,
-                                width: 1.5,
-                              ),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderSide: BorderSide(
-                                color: Theme.of(context).brightness ==
-                                        Brightness.dark
-                                    ? Colors.white
-                                    : Colors.black,
-                                width: 1.5,
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderSide: BorderSide(
-                                color: Theme.of(context).brightness ==
-                                        Brightness.dark
-                                    ? Colors.white
-                                    : Colors.black,
-                                width: 2.0,
-                              ),
-                            ),
-                          ),
-                          items: cubit.areas.map((area) {
-                            return DropdownMenuItem<String>(
-                              value: area.id,
-                              child: Text(
-                                '${area.name} - ${area.nameAr}',
-                                style: TextStyle(
-                                  color: Theme.of(context).brightness ==
-                                          Brightness.dark
-                                      ? Colors.white
-                                      : Colors.black,
-                                ),
-                              ),
-                            );
-                          }).toList(),
-                          onChanged: (String? newValue) {
-                            setState(() {
-                              editSelectedLocationAreaId = newValue;
-                            });
-                          },
-                        );
-                      },
-                    ),
                   SizedBox(height: 12.h),
 
                   // Category Dropdown
@@ -5521,121 +5217,42 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                   ),
                   SizedBox(height: 12.h),
 
-                  // City Dropdown
+                  // Main and Secondary Areas Selection
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Service Areas',
+                        style: TextStyle(
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).primaryColor,
+                        ),
+                      ),
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          print('Refreshing all areas from edit dialog...');
+                          cubit.fetchAllAreas();
+                        },
+                        icon: const Icon(Icons.refresh, size: 16),
+                        label: const Text('Refresh Areas'),
+                        style: ElevatedButton.styleFrom(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 8.w, vertical: 4.h),
+                          textStyle: TextStyle(fontSize: 12.sp),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 8.h),
                   BlocBuilder<AdminPanelCubit, AdminPanelStates>(
                     builder: (context, state) {
-                      // Ensure the selected value exists in the current cities list
-                      if (editSelectedRestaurantCityId != null &&
-                          !cubit.cities.any((city) =>
-                              city.id == editSelectedRestaurantCityId)) {
-                        editSelectedRestaurantCityId = null;
-                      }
+                      print('Edit dialog areas state: $state');
+                      print('Areas count: ${cubit.allAreas.length}');
 
-                      return DropdownButtonFormField<String>(
-                        value: editSelectedRestaurantCityId,
-                        decoration: InputDecoration(
-                          labelText: 'City',
-                          labelStyle: TextStyle(
-                            color:
-                                Theme.of(context).brightness == Brightness.dark
-                                    ? Colors.white
-                                    : Colors.black,
-                          ),
-                          hintStyle: TextStyle(
-                            color:
-                                Theme.of(context).brightness == Brightness.dark
-                                    ? Colors.white70
-                                    : Colors.black54,
-                          ),
-                          border: OutlineInputBorder(
-                            borderSide: BorderSide(
-                              color: Theme.of(context).brightness ==
-                                      Brightness.dark
-                                  ? Colors.white
-                                  : Colors.black,
-                              width: 1.5,
-                            ),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderSide: BorderSide(
-                              color: Theme.of(context).brightness ==
-                                      Brightness.dark
-                                  ? Colors.white
-                                  : Colors.black,
-                              width: 1.5,
-                            ),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderSide: BorderSide(
-                              color: Theme.of(context).brightness ==
-                                      Brightness.dark
-                                  ? Colors.white
-                                  : Colors.black,
-                              width: 2.0,
-                            ),
-                          ),
-                        ),
-                        items: cubit.cities.map((city) {
-                          return DropdownMenuItem<String>(
-                            value: city.id,
-                            child: Text(
-                              '${city.name} - ${city.nameAr}',
-                              style: TextStyle(
-                                color: Theme.of(context).brightness ==
-                                        Brightness.dark
-                                    ? Colors.white
-                                    : Colors.black,
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                        onChanged: (String? newValue) {
-                          setState(() {
-                            editSelectedRestaurantCityId = newValue;
-                            editSelectedRestaurantAreas.clear();
-                          });
-                          if (newValue != null) {
-                            cubit.fetchAreas(newValue);
-                          }
-                        },
-                      );
-                    },
-                  ),
-                  SizedBox(height: 12.h),
-
-                  // Areas Checkboxes
-                  if (editSelectedRestaurantCityId != null)
-                    BlocBuilder<AdminPanelCubit, AdminPanelStates>(
-                      builder: (context, state) {
-                        if (cubit.areas.isEmpty) {
-                          // Clear selected areas when no areas available
-                          if (editSelectedRestaurantAreas.isNotEmpty) {
-                            editSelectedRestaurantAreas.clear();
-                          }
-                          return Container(
-                            padding: EdgeInsets.all(16.r),
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                color: Theme.of(context).brightness ==
-                                        Brightness.dark
-                                    ? Colors.white
-                                    : Colors.black,
-                              ),
-                              borderRadius: BorderRadius.circular(8.r),
-                            ),
-                            child:
-                                const Text('No areas found for selected city'),
-                          );
-                        }
-
-                        // Remove any selected areas that no longer exist in the current areas list
-                        final currentAreaNames =
-                            cubit.areas.map((area) => area.name).toSet();
-                        editSelectedRestaurantAreas.removeWhere(
-                            (areaName) => !currentAreaNames.contains(areaName));
-
+                      if (state is LoadingAreasState) {
                         return Container(
-                          padding: EdgeInsets.all(12.r),
+                          padding: EdgeInsets.all(16.r),
                           decoration: BoxDecoration(
                             border: Border.all(
                               color: Theme.of(context).brightness ==
@@ -5646,120 +5263,373 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                             borderRadius: BorderRadius.circular(8.r),
                           ),
                           child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  const Text('Select Areas',
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold)),
-                                  Text(
-                                    '${editSelectedRestaurantAreas.length} selected',
-                                    style: TextStyle(
-                                      fontSize: 12.sp,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                              const CircularProgressIndicator(),
                               SizedBox(height: 8.h),
-                              Container(
-                                constraints: BoxConstraints(maxHeight: 200.h),
-                                decoration: BoxDecoration(
-                                  border:
-                                      Border.all(color: Colors.grey.shade200),
-                                  borderRadius: BorderRadius.circular(6.r),
-                                ),
-                                child: Scrollbar(
-                                  child: SingleChildScrollView(
-                                    padding: EdgeInsets.all(8.r),
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: cubit.areas.map((area) {
-                                        return Container(
-                                          margin: EdgeInsets.only(bottom: 2.h),
-                                          child: InkWell(
-                                            onTap: () {
-                                              setState(() {
-                                                if (editSelectedRestaurantAreas
-                                                    .contains(area.name)) {
-                                                  editSelectedRestaurantAreas
-                                                      .remove(area.name);
-                                                } else {
-                                                  editSelectedRestaurantAreas
-                                                      .add(area.name);
-                                                }
-                                              });
-                                            },
-                                            child: Container(
-                                              padding: EdgeInsets.symmetric(
-                                                vertical: 6.h,
-                                                horizontal: 8.w,
-                                              ),
-                                              decoration: BoxDecoration(
-                                                color:
-                                                    editSelectedRestaurantAreas
-                                                            .contains(area.name)
-                                                        ? Colors.blue
-                                                            .withOpacity(0.1)
-                                                        : Colors.transparent,
-                                                borderRadius:
-                                                    BorderRadius.circular(4.r),
-                                              ),
-                                              child: Row(
-                                                children: [
-                                                  Icon(
-                                                    editSelectedRestaurantAreas
-                                                            .contains(area.name)
-                                                        ? Icons.check_box
-                                                        : Icons
-                                                            .check_box_outline_blank,
-                                                    size: 18.sp,
-                                                    color:
-                                                        editSelectedRestaurantAreas
-                                                                .contains(
-                                                                    area.name)
-                                                            ? Theme.of(context)
-                                                                .primaryColor
-                                                            : Colors.grey,
-                                                  ),
-                                                  SizedBox(width: 8.w),
-                                                  Expanded(
-                                                    child: Text(
-                                                      '${area.name} - ${area.nameAr}',
-                                                      style: TextStyle(
-                                                        fontSize: 13.sp,
-                                                        fontWeight:
-                                                            editSelectedRestaurantAreas
-                                                                    .contains(area
-                                                                        .name)
-                                                                ? FontWeight
-                                                                    .w500
-                                                                : FontWeight
-                                                                    .normal,
-                                                      ),
-                                                      overflow:
-                                                          TextOverflow.ellipsis,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                        );
-                                      }).toList(),
-                                    ),
-                                  ),
-                                ),
+                              const Text('Loading areas from all cities...'),
+                            ],
+                          ),
+                        );
+                      }
+
+                      if (cubit.allAreas.isEmpty) {
+                        return Container(
+                          padding: EdgeInsets.all(16.r),
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.white
+                                  : Colors.black,
+                            ),
+                            borderRadius: BorderRadius.circular(8.r),
+                          ),
+                          child: Column(
+                            children: [
+                              const Icon(Icons.info_outline,
+                                  size: 48, color: Colors.orange),
+                              SizedBox(height: 8.h),
+                              const Text('No areas loaded'),
+                              SizedBox(height: 8.h),
+                              ElevatedButton(
+                                onPressed: () {
+                                  print('Manually triggering fetchAllAreas...');
+                                  cubit.fetchAllAreas();
+                                },
+                                child: const Text('Load Areas'),
                               ),
                             ],
                           ),
                         );
-                      },
-                    ),
+                      }
+
+                      // Remove any selected areas that no longer exist in the current areas list
+                      final currentAreaNames =
+                          cubit.allAreas.map((area) => area.name).toSet();
+                      editSelectedMainAreas.removeWhere(
+                          (areaName) => !currentAreaNames.contains(areaName));
+                      editSelectedSecondaryAreas.removeWhere(
+                          (areaName) => !currentAreaNames.contains(areaName));
+
+                      return Container(
+                        padding: EdgeInsets.all(12.r),
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.white
+                                    : Colors.black,
+                          ),
+                          borderRadius: BorderRadius.circular(8.r),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'Service Areas',
+                              style: TextStyle(
+                                fontSize: 16.sp,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            SizedBox(height: 8.h),
+                            Row(
+                              children: [
+                                // Main Areas Column
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Container(
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: 6.w,
+                                          vertical: 3.h,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.green.withOpacity(0.1),
+                                          borderRadius:
+                                              BorderRadius.circular(3.r),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Flexible(
+                                              child: Text(
+                                                'Main (${editSelectedMainAreas.length})',
+                                                style: TextStyle(
+                                                  fontSize: 11.sp,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.green.shade700,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      SizedBox(height: 2.h),
+                                      Text(
+                                        'No extra fee',
+                                        style: TextStyle(
+                                          fontSize: 9.sp,
+                                          color: Colors.grey,
+                                          fontStyle: FontStyle.italic,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                SizedBox(width: 8.w),
+                                // Secondary Areas Column
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Container(
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: 6.w,
+                                          vertical: 3.h,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.orange.withOpacity(0.1),
+                                          borderRadius:
+                                              BorderRadius.circular(3.r),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Flexible(
+                                              child: Text(
+                                                'Secondary (${editSelectedSecondaryAreas.length})',
+                                                style: TextStyle(
+                                                  fontSize: 11.sp,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.orange.shade700,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      SizedBox(height: 2.h),
+                                      Text(
+                                        'With extra fee',
+                                        style: TextStyle(
+                                          fontSize: 9.sp,
+                                          color: Colors.grey,
+                                          fontStyle: FontStyle.italic,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 12.h),
+                            Container(
+                              constraints: BoxConstraints(
+                                maxHeight:
+                                    MediaQuery.of(context).size.height * 0.15,
+                                minHeight: 80.h,
+                              ),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.grey.shade300),
+                                borderRadius: BorderRadius.circular(4.r),
+                              ),
+                              child: Scrollbar(
+                                child: ListView.builder(
+                                  shrinkWrap: true,
+                                  padding: EdgeInsets.all(4.r),
+                                  itemCount: cubit.allAreas.length,
+                                  itemBuilder: (context, index) {
+                                    final area = cubit.allAreas[index];
+                                    bool isMainArea = editSelectedMainAreas
+                                        .contains(area.name);
+                                    bool isSecondaryArea =
+                                        editSelectedSecondaryAreas
+                                            .contains(area.name);
+
+                                    return Container(
+                                      margin: EdgeInsets.only(bottom: 2.h),
+                                      padding: EdgeInsets.symmetric(
+                                          vertical: 2.h, horizontal: 4.w),
+                                      child: Row(
+                                        children: [
+                                          // Area name - compact
+                                          Expanded(
+                                            flex: 4,
+                                            child: Text(
+                                              area.name,
+                                              style: TextStyle(
+                                                fontSize: 11.sp,
+                                                fontWeight: (isMainArea ||
+                                                        isSecondaryArea)
+                                                    ? FontWeight.w500
+                                                    : FontWeight.normal,
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                          SizedBox(width: 4.w),
+                                          // Main button - compact
+                                          Expanded(
+                                            flex: 2,
+                                            child: GestureDetector(
+                                              onTap: () {
+                                                setState(() {
+                                                  if (isMainArea) {
+                                                    editSelectedMainAreas
+                                                        .remove(area.name);
+                                                  } else {
+                                                    editSelectedMainAreas
+                                                        .add(area.name);
+                                                    editSelectedSecondaryAreas
+                                                        .remove(area.name);
+                                                  }
+                                                });
+                                              },
+                                              child: Container(
+                                                padding: EdgeInsets.symmetric(
+                                                    vertical: 3.h,
+                                                    horizontal: 3.w),
+                                                decoration: BoxDecoration(
+                                                  color: isMainArea
+                                                      ? Colors.green
+                                                          .withOpacity(0.2)
+                                                      : Colors.grey
+                                                          .withOpacity(0.1),
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          3.r),
+                                                  border: Border.all(
+                                                    color: isMainArea
+                                                        ? Colors.green
+                                                        : Colors.grey.shade400,
+                                                    width: 0.5,
+                                                  ),
+                                                ),
+                                                child: Row(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  children: [
+                                                    Icon(
+                                                      isMainArea
+                                                          ? Icons.check_circle
+                                                          : Icons
+                                                              .radio_button_unchecked,
+                                                      size: 12.sp,
+                                                      color: isMainArea
+                                                          ? Colors.green
+                                                          : Colors.grey,
+                                                    ),
+                                                    SizedBox(width: 2.w),
+                                                    Flexible(
+                                                      child: Text(
+                                                        'M',
+                                                        style: TextStyle(
+                                                          fontSize: 9.sp,
+                                                          color: isMainArea
+                                                              ? Colors.green
+                                                                  .shade700
+                                                              : Colors.grey,
+                                                          fontWeight:
+                                                              FontWeight.w500,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                          SizedBox(width: 2.w),
+                                          // Secondary button - compact
+                                          Expanded(
+                                            flex: 2,
+                                            child: GestureDetector(
+                                              onTap: () {
+                                                setState(() {
+                                                  if (isSecondaryArea) {
+                                                    editSelectedSecondaryAreas
+                                                        .remove(area.name);
+                                                  } else {
+                                                    editSelectedSecondaryAreas
+                                                        .add(area.name);
+                                                    editSelectedMainAreas
+                                                        .remove(area.name);
+                                                  }
+                                                });
+                                              },
+                                              child: Container(
+                                                padding: EdgeInsets.symmetric(
+                                                    vertical: 3.h,
+                                                    horizontal: 3.w),
+                                                decoration: BoxDecoration(
+                                                  color: isSecondaryArea
+                                                      ? Colors.orange
+                                                          .withOpacity(0.2)
+                                                      : Colors.grey
+                                                          .withOpacity(0.1),
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          3.r),
+                                                  border: Border.all(
+                                                    color: isSecondaryArea
+                                                        ? Colors.orange
+                                                        : Colors.grey.shade400,
+                                                    width: 0.5,
+                                                  ),
+                                                ),
+                                                child: Row(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  children: [
+                                                    Icon(
+                                                      isSecondaryArea
+                                                          ? Icons.check_circle
+                                                          : Icons
+                                                              .radio_button_unchecked,
+                                                      size: 12.sp,
+                                                      color: isSecondaryArea
+                                                          ? Colors.orange
+                                                          : Colors.grey,
+                                                    ),
+                                                    SizedBox(width: 2.w),
+                                                    Flexible(
+                                                      child: Text(
+                                                        'S',
+                                                        style: TextStyle(
+                                                          fontSize: 9.sp,
+                                                          color: isSecondaryArea
+                                                              ? Colors.orange
+                                                                  .shade700
+                                                              : Colors.grey,
+                                                          fontWeight:
+                                                              FontWeight.w500,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
                   SizedBox(height: 12.h),
 
                   // Image Selection
@@ -5826,26 +5696,6 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                     ),
                   );
 
-                  // Get location city and area names for edit
-                  String? editLocationCityName;
-                  String? editLocationAreaName;
-
-                  if (editSelectedLocationCityId != null) {
-                    final city = cubit.cities.firstWhere(
-                      (city) => city.id == editSelectedLocationCityId,
-                      orElse: () => cubit.cities.first,
-                    );
-                    editLocationCityName = city.name;
-                  }
-
-                  if (editSelectedLocationAreaId != null) {
-                    final area = cubit.areas.firstWhere(
-                      (area) => area.id == editSelectedLocationAreaId,
-                      orElse: () => cubit.areas.first,
-                    );
-                    editLocationAreaName = area.name;
-                  }
-
                   await cubit.editRestaurant(
                     restaurantId: restaurant.id,
                     name: editRestaurantNameController.text.trim(),
@@ -5858,11 +5708,8 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                     deliveryTime: editDeliveryTimeController.text.trim(),
                     imageFile: editRestaurantImageFile,
                     categories: [],
-                    areas: editSelectedRestaurantAreas,
-                    locationCityId: editSelectedLocationCityId,
-                    locationCityName: editLocationCityName,
-                    locationAreaId: editSelectedLocationAreaId,
-                    locationAreaName: editLocationAreaName,
+                    mainAreas: editSelectedMainAreas,
+                    secondaryAreas: editSelectedSecondaryAreas,
                     outOfAreaFee: editOutOfAreaFeeController.text.trim(),
                   );
 
@@ -6186,11 +6033,15 @@ class RestaurantListItem extends StatelessWidget {
                 'Delivery Areas: ${restaurant.areas.length}',
                 style: TextStyle(fontSize: 12.sp, color: Colors.blue),
               ),
-            if (restaurant.locationCityName != null &&
-                restaurant.locationAreaName != null)
+            if (restaurant.mainAreas.isNotEmpty)
               Text(
-                'Location: ${restaurant.locationCityName}, ${restaurant.locationAreaName}',
+                'Main Areas: ${restaurant.mainAreas.join(", ")}',
                 style: TextStyle(fontSize: 12.sp, color: Colors.green),
+              ),
+            if (restaurant.secondaryAreas.isNotEmpty)
+              Text(
+                'Secondary Areas: ${restaurant.secondaryAreas.join(", ")}',
+                style: TextStyle(fontSize: 12.sp, color: Colors.orange),
               ),
             if (restaurant.outOfAreaFee != null &&
                 restaurant.outOfAreaFee != '0')

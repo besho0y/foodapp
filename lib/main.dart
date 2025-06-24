@@ -45,55 +45,48 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 }
 
 void main() async {
-  Bloc.observer = MyBlocObserver();
-  WidgetsFlutterBinding
-      .ensureInitialized(); // <--- Important for locking orientation
+  WidgetsFlutterBinding.ensureInitialized();
 
-  // Firebase initialization
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  // Initialize Firebase
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  // Set up Firebase messaging background handler AFTER Firebase is initialized
-  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
-
-  // Initialize Firebase messaging service with error handling
-  try {
-    await FirebaseMessagingService.initialize();
-  } catch (e) {
-    print('⚠️ Warning: Firebase Messaging initialization failed: $e');
-    print('⚠️ App will continue without push notifications');
-    // Don't prevent app from starting if messaging fails
-  }
-
-  // Initialize PayMob payment gateway with correct credentials
-  PayMobService.initialize();
-
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown, // Only portrait modes
-  ]);
-
+  // TEMPORARY: Clear cart storage to fix the two items issue
   final prefs = await SharedPreferences.getInstance();
-  final isArabic = prefs.getBool('isArabic') ?? false;
-  final hasSelectedLocation = prefs.getBool('hasSelectedLocation') ?? false;
-  final selectedArea = prefs.getString('selectedArea') ?? 'Cairo';
+  await prefs.remove('cart_items');
+  print('Cleared cart storage on app startup');
 
-  runApp(MyApp(
+  // Initialize Firebase Messaging Service
+  FirebaseMessagingService.initialize();
+
+  // Initialize Bloc Observer
+  Bloc.observer = MyBlocObserver();
+
+  // Load saved language preference
+  bool isArabic = prefs.getBool('isArabic') ?? false;
+
+  // Check if user has selected location
+  bool hasSelectedLocation = prefs.getBool('hasSelectedLocation') ?? false;
+  String selectedArea = prefs.getString('selectedArea') ?? 'Cairo';
+
+  runApp(
+    MyApp(
       isArabic: isArabic,
       hasSelectedLocation: hasSelectedLocation,
-      selectedArea: selectedArea));
+      selectedArea: selectedArea,
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
   final bool isArabic;
   final bool hasSelectedLocation;
   final String selectedArea;
-  const MyApp(
-      {super.key,
-      required this.isArabic,
-      required this.hasSelectedLocation,
-      required this.selectedArea});
+  const MyApp({
+    super.key,
+    required this.isArabic,
+    required this.hasSelectedLocation,
+    required this.selectedArea,
+  });
 
   // This widget is the root of your application.
   @override
@@ -161,9 +154,7 @@ class MyApp extends StatelessWidget {
                 navigatorKey:
                     navigatorKey, // Add navigator key for global access
                 home: const SplashScreen(),
-                routes: {
-                  '/login': (context) => const Loginscreen(),
-                },
+                routes: {'/login': (context) => const Loginscreen()},
                 builder: (context, child) {
                   // Set context for Firebase messaging service
                   FirebaseMessagingService.setContext(context);

@@ -107,11 +107,21 @@ Map<String, double> calculateDeliveryFeeBreakdown(
       print(
           "🏪 Restaurant out-of-area fee: '${restaurant.outOfAreaFee ?? 'null'}'");
 
+      // Check if user is in the restaurant's main areas (no out-of-area fee)
+      bool userIsInMainAreas = restaurant.mainAreas.any((mainArea) =>
+          mainArea.trim().toLowerCase() == userArea.trim().toLowerCase());
+
+      print("🏪 Restaurant main areas: ${restaurant.mainAreas}");
+      print("🏪 Restaurant secondary areas: ${restaurant.secondaryAreas}");
+      print("👤 User location: '$userArea'");
+      print("📍 User in main areas: $userIsInMainAreas");
+
       return _calculateFeeBreakdownForRestaurant(
-          restaurant.area,
-          restaurant.areas,
+          restaurant.mainAreas,
+          restaurant.secondaryAreas,
           restaurant.outOfAreaFee ?? '0',
           userArea,
+          userIsInMainAreas,
           baseDeliveryFee);
     } catch (e) {
       print("❌ Exact match failed, trying trimmed comparison...");
@@ -132,11 +142,21 @@ Map<String, double> calculateDeliveryFeeBreakdown(
       print("🔍 Cart restaurant ID (trimmed): '${restaurantId.trim()}'");
       print("🔍 Cubit restaurant ID (trimmed): '${restaurant.id.trim()}'");
 
+      // Check if user is in the restaurant's main areas (no out-of-area fee)
+      bool userIsInMainAreas = restaurant.mainAreas.any((mainArea) =>
+          mainArea.trim().toLowerCase() == userArea.trim().toLowerCase());
+
+      print("🏪 Restaurant main areas: ${restaurant.mainAreas}");
+      print("🏪 Restaurant secondary areas: ${restaurant.secondaryAreas}");
+      print("👤 User location: '$userArea'");
+      print("📍 User in main areas: $userIsInMainAreas");
+
       return _calculateFeeBreakdownForRestaurant(
-          restaurant.area,
-          restaurant.areas,
+          restaurant.mainAreas,
+          restaurant.secondaryAreas,
           restaurant.outOfAreaFee ?? '0',
           userArea,
+          userIsInMainAreas,
           baseDeliveryFee);
     } catch (e) {
       print("❌ Trimmed match failed");
@@ -157,11 +177,21 @@ Map<String, double> calculateDeliveryFeeBreakdown(
       print(
           "🏪 Restaurant out-of-area fee: '${restaurant.outOfAreaFee ?? 'null'}'");
 
+      // Check if user is in the restaurant's main areas (no out-of-area fee)
+      bool userIsInMainAreas = restaurant.mainAreas.any((mainArea) =>
+          mainArea.trim().toLowerCase() == userArea.trim().toLowerCase());
+
+      print("🏪 Restaurant main areas: ${restaurant.mainAreas}");
+      print("🏪 Restaurant secondary areas: ${restaurant.secondaryAreas}");
+      print("👤 User location: '$userArea'");
+      print("📍 User in main areas: $userIsInMainAreas");
+
       return _calculateFeeBreakdownForRestaurant(
-          restaurant.area,
-          restaurant.areas,
+          restaurant.mainAreas,
+          restaurant.secondaryAreas,
           restaurant.outOfAreaFee ?? '0',
           userArea,
+          userIsInMainAreas,
           baseDeliveryFee);
     } catch (e) {
       print("❌ Clean match failed");
@@ -202,96 +232,100 @@ Map<String, double> calculateDeliveryFeeBreakdown(
 
 // Helper function to calculate the actual fee breakdown based on area matching
 Map<String, double> _calculateFeeBreakdownForRestaurant(
-    String restaurantArea,
-    List<String> restaurantAreas,
+    List<String> mainAreas,
+    List<String> secondaryAreas,
     String outOfAreaFee,
     String userArea,
+    bool userIsInMainAreas,
     double baseDeliveryFee) {
   print("🔍 === CALCULATING FEE BREAKDOWN (LAYOUT) ===");
-  print(
-      "Restaurant Area: '$restaurantArea' (length: ${restaurantArea.length})");
-  print(
-      "Restaurant Areas: $restaurantAreas (count: ${restaurantAreas.length})");
+  print("Main Areas: $mainAreas (count: ${mainAreas.length})");
+  print("Secondary Areas: $secondaryAreas (count: ${secondaryAreas.length})");
   print("User Area: '$userArea' (length: ${userArea.length})");
   print("Out-of-Area Fee String: '$outOfAreaFee'");
   print("Base Delivery Fee: $baseDeliveryFee");
+  print("User in Main Areas: $userIsInMainAreas");
 
   // Debug: Print character codes to detect invisible characters
   print("🔍 Character analysis:");
-  print("   Restaurant area chars: ${restaurantArea.codeUnits}");
   print("   User area chars: ${userArea.codeUnits}");
-  print("   Areas list details:");
-  for (int i = 0; i < restaurantAreas.length; i++) {
+  print("   Main areas details:");
+  for (int i = 0; i < mainAreas.length; i++) {
+    print("     [$i]: '${mainAreas[i]}' (chars: ${mainAreas[i].codeUnits})");
+  }
+  print("   Secondary areas details:");
+  for (int i = 0; i < secondaryAreas.length; i++) {
     print(
-        "     [$i]: '${restaurantAreas[i]}' (chars: ${restaurantAreas[i].codeUnits})");
+        "     [$i]: '${secondaryAreas[i]}' (chars: ${secondaryAreas[i].codeUnits})");
   }
 
-  // Check if restaurant serves user's area
-  bool primaryAreaMatch =
-      restaurantArea.trim().toLowerCase() == userArea.trim().toLowerCase();
-  bool areasListMatch = restaurantAreas.any(
-      (area) => area.trim().toLowerCase() == userArea.trim().toLowerCase());
-  bool restaurantServesUserArea = primaryAreaMatch || areasListMatch;
-
-  print("🔍 Area match check (with trim + lowercase):");
-  print(
-      "   Restaurant primary area: '$restaurantArea' -> '${restaurantArea.trim().toLowerCase()}'");
-  print("   User area: '$userArea' -> '${userArea.trim().toLowerCase()}'");
-  print("   Primary area match: $primaryAreaMatch");
-  print("   Restaurant areas list: $restaurantAreas");
-  print("   Areas list contains user area: $areasListMatch");
-  print(
-      "   FINAL RESULT: Restaurant serves user area = $restaurantServesUserArea");
-
-  // Force debug for specific cases
-  if (outOfAreaFee != '0' && restaurantServesUserArea) {
-    print(
-        "🚨 ALERT: Out-of-area fee is '$outOfAreaFee' but restaurant appears to serve user area!");
-    print("🚨 This might be incorrect - let's see the exact matching:");
-    print(
-        "🚨 Primary match: '$restaurantArea' == '$userArea' = ${restaurantArea == userArea}");
-    print("🚨 Areas list match: ${restaurantAreas.contains(userArea)}");
-    print("🚨 Forcing out-of-area calculation for debugging...");
-    restaurantServesUserArea =
-        false; // TEMPORARY: Force out-of-area calculation
+  // Check for problematic areas
+  print("   === CHECKING FOR PROBLEMATIC AREAS ===");
+  for (String area in [...mainAreas, ...secondaryAreas]) {
+    if (area.trim().toLowerCase() == 'all' ||
+        area.trim().toLowerCase() == 'cairo' ||
+        area.trim().isEmpty) {
+      print("   ⚠️ Found potentially problematic area: '$area'");
+    }
   }
 
-  if (restaurantServesUserArea) {
-    print(
-        "✅ Restaurant serves user area - using base fee only: $baseDeliveryFee EGP");
+  print("   === FINAL CALCULATION ===");
+  print("   User in main areas: $userIsInMainAreas");
+
+  // Parse out-of-area fee
+  double outOfAreaFeeAmount = 0.0;
+  try {
+    String cleanOutOfAreaFee = outOfAreaFee.replaceAll(RegExp(r'[^0-9.]'), '');
+    if (cleanOutOfAreaFee.isNotEmpty) {
+      outOfAreaFeeAmount = double.parse(cleanOutOfAreaFee);
+    }
+  } catch (e) {
+    print("❌ Error parsing out-of-area fee: $e");
+  }
+
+  print("💰 Parsed out-of-area fee amount: $outOfAreaFeeAmount");
+
+  // Apply the correct logic based on area matching
+  if (userIsInMainAreas) {
+    // User is in the restaurant's main areas - no out-of-area fee
+    print("✅ MAIN AREAS MATCH: User '$userArea' is in restaurant's main areas");
+    print("✅ Charging delivery fee only: $baseDeliveryFee EGP");
+    print("✅ Out-of-area fee: 0 EGP");
     print(
         "🛒 === CALCULATION COMPLETE: Base=$baseDeliveryFee, OutOfArea=0 ===\n");
     return {'baseFee': baseDeliveryFee, 'outOfAreaFee': 0.0};
   } else {
-    // Restaurant doesn't serve user's area - add out of area fee
-    print("❌ Restaurant does NOT serve user area '$userArea'");
-    print("🔄 Parsing out-of-area fee: '$outOfAreaFee'");
+    // Check if user is in secondary areas (charge out-of-area fee)
+    bool userIsInSecondaryAreas = secondaryAreas.any((secondaryArea) =>
+        secondaryArea.trim().toLowerCase() == userArea.trim().toLowerCase());
 
-    double outOfAreaFeeAmount = 0.0;
-    try {
-      String cleanOutOfAreaFee =
-          outOfAreaFee.replaceAll(RegExp(r'[^0-9.]'), '');
-      print("🧹 Cleaned out-of-area fee: '$cleanOutOfAreaFee'");
+    if (userIsInSecondaryAreas) {
+      print(
+          "⚠️ SECONDARY AREA: User '$userArea' is in restaurant's secondary areas");
+      print("⚠️ Charging delivery fee: $baseDeliveryFee EGP");
+      print("⚠️ Plus out-of-area fee: $outOfAreaFeeAmount EGP");
 
-      if (cleanOutOfAreaFee.isNotEmpty) {
-        outOfAreaFeeAmount = double.parse(cleanOutOfAreaFee);
+      // Use the restaurant's specific out-of-area fee, or default if not set
+      if (outOfAreaFeeAmount == 0) {
+        outOfAreaFeeAmount = 20.0; // Default out-of-area fee
         print(
-            "💰 Successfully parsed out-of-area fee: $outOfAreaFeeAmount EGP");
-      } else {
-        print("⚠️ Clean out-of-area fee is empty, using default");
-        outOfAreaFeeAmount = 20.0; // Default out of area fee
+            "⚠️ No specific out-of-area fee set, using default: $outOfAreaFeeAmount EGP");
       }
-    } catch (e) {
-      print("❌ Error parsing out-of-area fee: $e");
-      outOfAreaFeeAmount = 20.0; // Default out of area fee
-      print("💰 Using default out-of-area fee: $outOfAreaFeeAmount EGP");
-    }
 
-    print(
-        "💰 FINAL BREAKDOWN: Base=$baseDeliveryFee, OutOfArea=$outOfAreaFeeAmount");
-    print(
-        "🛒 === CALCULATION COMPLETE: Base=$baseDeliveryFee, OutOfArea=$outOfAreaFeeAmount ===\n");
-    return {'baseFee': baseDeliveryFee, 'outOfAreaFee': outOfAreaFeeAmount};
+      print(
+          "💰 FINAL BREAKDOWN: Base=$baseDeliveryFee, OutOfArea=$outOfAreaFeeAmount");
+      print(
+          "🛒 === CALCULATION COMPLETE: Base=$baseDeliveryFee, OutOfArea=$outOfAreaFeeAmount ===\n");
+      return {'baseFee': baseDeliveryFee, 'outOfAreaFee': outOfAreaFeeAmount};
+    } else {
+      // User is not in any service area - restaurant doesn't serve this area
+      print(
+          "❌ NO SERVICE: User '$userArea' is NOT in restaurant's service areas");
+      print("❌ This should not happen as restaurant should be filtered out");
+      print(
+          "🛒 === CALCULATION COMPLETE: Base=$baseDeliveryFee, OutOfArea=0 ===\n");
+      return {'baseFee': baseDeliveryFee, 'outOfAreaFee': 0.0};
+    }
   }
 }
 

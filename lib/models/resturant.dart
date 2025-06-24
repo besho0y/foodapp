@@ -17,15 +17,18 @@ class Restuarants {
   List<String> categories;
   List<String>? menuCategories;
   List<String>? menuCategoriesAr;
-  String area; // Keep for backward compatibility
-  List<String> areas; // New field for multiple areas
 
-  // New fields for restaurant location
-  String? locationCityId; // City where restaurant is located
-  String? locationCityName; // City name for display
-  String? locationAreaId; // Specific area where restaurant is located
-  String? locationAreaName; // Area name for display
-  String? outOfAreaFee; // Fee for delivery outside main area
+  // Updated location structure
+  List<String>
+      mainAreas; // List of areas where restaurant is physically located (no out-of-area fee)
+  List<String>
+      secondaryAreas; // List of areas they deliver to with out-of-area fee
+
+  // Keep old fields for backward compatibility during migration
+  String area;
+  List<String> areas;
+
+  String? outOfAreaFee; // Fee for delivery outside main areas
 
   Restuarants({
     required this.name,
@@ -42,19 +45,28 @@ class Restuarants {
     required this.categories,
     this.menuCategories,
     this.menuCategoriesAr,
-    this.area = 'Cairo',
-    this.areas = const [], // Default to empty list
-    this.locationCityId,
-    this.locationCityName,
-    this.locationAreaId,
-    this.locationAreaName,
+    this.mainAreas = const [], // List of main areas where restaurant is located
+    this.secondaryAreas = const [], // Areas with out-of-area fee
+    this.area = 'Cairo', // Keep for backward compatibility
+    this.areas = const [], // Keep for backward compatibility
     this.outOfAreaFee = '0',
   }) {
     // Ensure categories is not null
     categories = categories.isEmpty ? ['Uncategorized'] : categories;
-    // If areas is empty but area is set, use area as single item in areas
-    if (areas.isEmpty && area.isNotEmpty) {
-      areas = [area];
+
+    // Migration logic: if using old structure, convert to new
+    if (mainAreas.isEmpty && areas.isNotEmpty) {
+      // Use first area as main area, rest as secondary
+      mainAreas = [areas.first];
+      secondaryAreas = areas.skip(1).toList();
+    }
+
+    // Ensure backward compatibility
+    if (areas.isEmpty && (mainAreas.isNotEmpty || secondaryAreas.isNotEmpty)) {
+      areas = [...mainAreas, ...secondaryAreas];
+    }
+    if (area == 'Cairo' && mainAreas.isNotEmpty) {
+      area = mainAreas.first;
     }
   }
 
@@ -74,12 +86,16 @@ class Restuarants {
         categories = _parseCategories(json['categories']),
         menuCategories = _parseMenuCategories(json['menuCategories']),
         menuCategoriesAr = _parseMenuCategories(json['menuCategoriesAr']),
+
+        // New location structure
+        mainAreas = _parseAreas(json['mainAreas']) ??
+            (json['mainArea'] != null ? [json['mainArea'].toString()] : []) ??
+            (json['area'] != null ? [json['area'].toString()] : ['Cairo']),
+        secondaryAreas = _parseAreas(json['secondaryAreas']),
+
+        // Backward compatibility
         area = json['area']?.toString() ?? 'Cairo',
         areas = _parseAreas(json['areas']),
-        locationCityId = json['locationCityId']?.toString(),
-        locationCityName = json['locationCityName']?.toString(),
-        locationAreaId = json['locationAreaId']?.toString(),
-        locationAreaName = json['locationAreaName']?.toString(),
         outOfAreaFee = json['outOfAreaFee']?.toString() ?? '0' {
     try {
       // Parse menu items with error handling
@@ -104,9 +120,19 @@ class Restuarants {
       if (category.isEmpty) category = 'Uncategorized';
       if (categoryAr.isEmpty) categoryAr = 'غير مصنف';
 
-      // If areas is empty but area is set, use area as single item in areas
-      if (areas.isEmpty && area.isNotEmpty) {
-        areas = [area];
+      // Migration logic for backward compatibility
+      if (mainAreas.isEmpty && areas.isNotEmpty) {
+        mainAreas = [areas.first];
+        secondaryAreas = areas.skip(1).toList();
+      }
+
+      // Ensure backward compatibility arrays are populated
+      if (areas.isEmpty &&
+          (mainAreas.isNotEmpty || secondaryAreas.isNotEmpty)) {
+        areas = [...mainAreas, ...secondaryAreas];
+      }
+      if (area == 'Cairo' && mainAreas.isNotEmpty) {
+        area = mainAreas.first;
       }
     } catch (e) {
       print('Error initializing restaurant from JSON: $e');
@@ -245,12 +271,15 @@ class Restuarants {
         'categories': categories,
         'menuCategories': menuCategories,
         'menuCategoriesAr': menuCategoriesAr,
+
+        // New location structure
+        'mainAreas': mainAreas,
+        'secondaryAreas': secondaryAreas,
+
+        // Backward compatibility
         'area': area,
-        'areas': areas, // Include areas array
-        'locationCityId': locationCityId,
-        'locationCityName': locationCityName,
-        'locationAreaId': locationAreaId,
-        'locationAreaName': locationAreaName,
+        'areas': areas,
+
         'outOfAreaFee': outOfAreaFee,
         'items': menuItems.map((item) => item.toJson()).toList(),
       };
@@ -282,12 +311,10 @@ class Restuarants {
       categories: [],
       menuCategories: [],
       menuCategoriesAr: [],
+      mainAreas: [],
+      secondaryAreas: [],
       area: 'Cairo',
       areas: [],
-      locationCityId: null,
-      locationCityName: null,
-      locationAreaId: null,
-      locationAreaName: null,
       outOfAreaFee: '0',
     );
   }
