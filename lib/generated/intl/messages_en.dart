@@ -312,6 +312,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "order_summary": MessageLookupByLibrary.simpleMessage("Order Summary"),
         "orderdetails": MessageLookupByLibrary.simpleMessage("Order Details"),
         "orders": MessageLookupByLibrary.simpleMessage("orders"),
+        "out_of_area_fee":
+            MessageLookupByLibrary.simpleMessage("Out of Area Fee"),
         "password": MessageLookupByLibrary.simpleMessage("Password"),
         "password_confirm_required": MessageLookupByLibrary.simpleMessage(
             "Password confirmation is required"),

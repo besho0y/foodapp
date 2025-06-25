@@ -902,17 +902,18 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
                                           ),
                                           // Show out of area fee if available
                                           if (model.outOfAreaFee != null &&
-                                              model.outOfAreaFee! > 0) ...[
-                                            SizedBox(height: 2.h),
-                                            Text(
-                                              "Out of area fee: ${model.outOfAreaFee!.toStringAsFixed(2)} ${S.of(context).egp}",
-                                              style: TextStyle(
-                                                fontSize:
-                                                    smallScreen ? 10.sp : 11.sp,
-                                                color: Colors.orange[700],
+                                              model.outOfAreaFee! > 0)
+                                            Padding(
+                                              padding:
+                                                  EdgeInsets.only(top: 4.h),
+                                              child: Text(
+                                                "${S.of(context).out_of_area_fee}: ${model.outOfAreaFee!.toStringAsFixed(2)} ${S.of(context).egp}",
+                                                style: TextStyle(
+                                                  fontSize: 12.sp,
+                                                  color: Colors.orange[700],
+                                                ),
                                               ),
                                             ),
-                                          ],
                                           SizedBox(height: 2.h),
                                           Container(
                                             padding: EdgeInsets.symmetric(

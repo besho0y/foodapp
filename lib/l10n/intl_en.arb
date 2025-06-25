@@ -140,6 +140,7 @@
     "no_ratings": "No ratings",
     "order_summary": "Order Summary",
     "delivery_fee": "Delivery Fee",
+    "out_of_area_fee": "Out of Area Fee",
     "select_payment_method": "Select Payment Method",
     "cash_on_delivery": "Cash on Delivery",
     "cash_on_delivery_subtitle": "Pay when your order is delivered",

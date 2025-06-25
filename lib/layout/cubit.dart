@@ -11,6 +11,7 @@ import 'package:foodapp/screens/login/loginScreen.dart';
 import 'package:foodapp/screens/oredrs/ordersScreeen.dart';
 import 'package:foodapp/screens/profile/cubit.dart';
 import 'package:foodapp/screens/profile/states.dart';
+import 'package:foodapp/screens/resturants/cubit.dart';
 import 'package:foodapp/screens/resturants/resturantScreen.dart';
 import 'package:foodapp/screens/settings/settingsScreen.dart';
 import 'package:foodapp/shared/local_storage.dart';
@@ -443,7 +444,7 @@ class Layoutcubit extends Cubit<Layoutstates> {
     return total;
   }
 
-  // Calculate total price including delivery fees
+  // Calculate total price including delivery fees and out-of-area fees
   double calculateTotalPrice({double? promoDiscount}) {
     print('\n=== DEBUGGING Cart Total Calculation ===');
 
@@ -500,35 +501,36 @@ class Layoutcubit extends Cubit<Layoutstates> {
       );
     });
 
-    // Calculate delivery fees (one fee per restaurant) using the breakdown logic
+    // Calculate delivery fees INCLUDING out-of-area fees
     double totalDeliveryFees = 0.0;
     double totalOutOfAreaFees = 0.0;
     print('\nCalculating Delivery Fees with Out-of-Area Logic:');
 
     itemsByRestaurant.forEach((restaurantId, items) {
       if (items.isNotEmpty) {
-        // Use the delivery fee breakdown logic from layout.dart
         try {
           // Get the context from the navigator key
           BuildContext? context = navigatorKey.currentContext;
           if (context != null) {
-            // Import the helper function from layout.dart and use it
-            // For now, we'll use a simplified version here
+            // Use the helper method that calculates the breakdown correctly
+            Map<String, double> feeBreakdown =
+                _calculateDeliveryFeeBreakdownInCubit(
+                    context, restaurantId, items.first.deliveryFee);
+
+            double baseFee = feeBreakdown['baseFee'] ?? 0.0;
+            double outOfAreaFee = feeBreakdown['outOfAreaFee'] ?? 0.0;
+
+            totalDeliveryFees += baseFee;
+            totalOutOfAreaFees += outOfAreaFee;
+
+            print(
+              '- ${items.first.restaurantName} (ID: "$restaurantId"): Base Fee $baseFee EGP, Out-of-Area $outOfAreaFee EGP',
+            );
+          } else {
+            // Fallback to simple parsing if no context available
             String baseFee = items.first.deliveryFee;
             String cleanFee = baseFee.replaceAll(RegExp(r'[^0-9.]'), '');
             double fee = double.parse(cleanFee.isEmpty ? '0' : cleanFee);
-
-            totalDeliveryFees += fee;
-            print(
-              '- ${items.first.restaurantName} (ID: "$restaurantId"): Base Fee $fee EGP',
-            );
-
-            // Note: Out-of-area fee calculation would require access to the
-            // calculateDeliveryFeeBreakdown function from layout.dart
-            // For now, we'll keep the simple calculation here and let the UI handle the breakdown
-          } else {
-            // Fallback to simple parsing
-            double fee = double.parse(items.first.deliveryFee);
             totalDeliveryFees += fee;
             print(
               '- ${items.first.restaurantName} (ID: "$restaurantId"): $fee EGP (fallback)',
@@ -536,7 +538,7 @@ class Layoutcubit extends Cubit<Layoutstates> {
           }
         } catch (e) {
           print(
-            'Error parsing delivery fee for ${items.first.restaurantName}: $e',
+            'Error calculating delivery fee for ${items.first.restaurantName}: $e',
           );
           // Use default fee on error
           totalDeliveryFees += 50.0;
@@ -547,12 +549,10 @@ class Layoutcubit extends Cubit<Layoutstates> {
     print(
       'Total base delivery fees from all restaurants: $totalDeliveryFees EGP',
     );
-    if (totalOutOfAreaFees > 0) {
-      print('Total out-of-area fees: $totalOutOfAreaFees EGP');
-    }
+    print('Total out-of-area fees: $totalOutOfAreaFees EGP');
 
-    // Calculate final total
-    double total = subtotal + totalDeliveryFees;
+    // Calculate final total INCLUDING out-of-area fees
+    double total = subtotal + totalDeliveryFees + totalOutOfAreaFees;
 
     // Apply promocode discount if provided
     if (promoDiscount != null && promoDiscount > 0) {
@@ -566,15 +566,151 @@ class Layoutcubit extends Cubit<Layoutstates> {
     print('\nFinal Breakdown:');
     print('- Subtotal (all items): $subtotal EGP');
     print(
-      '- Delivery Fees (${itemsByRestaurant.length} restaurants): $totalDeliveryFees EGP',
+      '- Base Delivery Fees (${itemsByRestaurant.length} restaurants): $totalDeliveryFees EGP',
     );
+    if (totalOutOfAreaFees > 0) {
+      print('- Out-of-Area Fees: $totalOutOfAreaFees EGP');
+    }
     if (promoDiscount != null && promoDiscount > 0) {
       print('- Promocode Discount: -$promoDiscount EGP');
     }
-    print('- Total: $total EGP');
+    print('- TOTAL: $total EGP');
     print('=== End of Cart Calculation ===\n');
 
     return total;
+  }
+
+  // Helper method to calculate delivery fee breakdown (matching layout.dart logic)
+  Map<String, double> _calculateDeliveryFeeBreakdownInCubit(
+      BuildContext context, String restaurantId, String baseFee) {
+    try {
+      // Get necessary cubits
+      final profileCubit = ProfileCubit.get(context);
+      final restaurantCubit = Restuarantscubit.get(context);
+      String userArea = profileCubit.user.selectedArea;
+
+      // Parse base delivery fee
+      double baseDeliveryFee = 0.0;
+      try {
+        String cleanBaseFee = baseFee.replaceAll(RegExp(r'[^0-9.]'), '');
+        if (cleanBaseFee.isEmpty) {
+          baseDeliveryFee = 50.0;
+        } else {
+          baseDeliveryFee = double.parse(cleanBaseFee);
+        }
+      } catch (e) {
+        baseDeliveryFee = 50.0; // Default fallback
+      }
+
+      // If user area is empty/default, return base fee only
+      if (userArea.isEmpty || userArea == 'Cairo' || userArea == 'All') {
+        return {'baseFee': baseDeliveryFee, 'outOfAreaFee': 0.0};
+      }
+
+      // Try to find the restaurant in the cubit to get the real out-of-area fee
+      try {
+        // Try exact match first
+        var restaurant = restaurantCubit.restaurants.firstWhere(
+          (r) => r.id == restaurantId,
+          orElse: () => throw Exception('Restaurant not found'),
+        );
+
+        // Check if user is in restaurant's main areas (no out-of-area fee)
+        bool userIsInMainAreas = restaurant.mainAreas.any((mainArea) =>
+            mainArea.trim().toLowerCase() == userArea.trim().toLowerCase());
+
+        if (userIsInMainAreas) {
+          // User is in main service area - no out-of-area fee
+          return {'baseFee': baseDeliveryFee, 'outOfAreaFee': 0.0};
+        } else {
+          // Check if user is in secondary areas (charge out-of-area fee)
+          bool userIsInSecondaryAreas = restaurant.secondaryAreas.any((area) =>
+              area.trim().toLowerCase() == userArea.trim().toLowerCase());
+
+          if (userIsInSecondaryAreas) {
+            // Parse the restaurant's specific out-of-area fee
+            double outOfAreaFee = 0.0;
+            try {
+              String cleanOutOfAreaFee = (restaurant.outOfAreaFee ?? '0')
+                  .replaceAll(RegExp(r'[^0-9.]'), '');
+              if (cleanOutOfAreaFee.isNotEmpty) {
+                outOfAreaFee = double.parse(cleanOutOfAreaFee);
+              }
+            } catch (e) {
+              outOfAreaFee = 20.0; // Default fallback
+            }
+
+            // If no specific out-of-area fee is set, use default
+            if (outOfAreaFee == 0) {
+              outOfAreaFee = 20.0;
+            }
+
+            return {'baseFee': baseDeliveryFee, 'outOfAreaFee': outOfAreaFee};
+          } else {
+            // User is not in any service area - restaurant doesn't serve this area
+            return {'baseFee': baseDeliveryFee, 'outOfAreaFee': 0.0};
+          }
+        }
+      } catch (e) {
+        // Restaurant not found in cubit, try trimmed comparison
+        try {
+          var restaurant = restaurantCubit.restaurants.firstWhere(
+            (r) => r.id.trim() == restaurantId.trim(),
+            orElse: () => throw Exception('Restaurant not found'),
+          );
+
+          // Same logic as above for trimmed match
+          bool userIsInMainAreas = restaurant.mainAreas.any((mainArea) =>
+              mainArea.trim().toLowerCase() == userArea.trim().toLowerCase());
+
+          if (userIsInMainAreas) {
+            return {'baseFee': baseDeliveryFee, 'outOfAreaFee': 0.0};
+          } else {
+            bool userIsInSecondaryAreas = restaurant.secondaryAreas.any(
+                (area) =>
+                    area.trim().toLowerCase() == userArea.trim().toLowerCase());
+
+            if (userIsInSecondaryAreas) {
+              double outOfAreaFee = 0.0;
+              try {
+                String cleanOutOfAreaFee = (restaurant.outOfAreaFee ?? '0')
+                    .replaceAll(RegExp(r'[^0-9.]'), '');
+                if (cleanOutOfAreaFee.isNotEmpty) {
+                  outOfAreaFee = double.parse(cleanOutOfAreaFee);
+                }
+              } catch (e) {
+                outOfAreaFee = 20.0;
+              }
+
+              if (outOfAreaFee == 0) {
+                outOfAreaFee = 20.0;
+              }
+
+              return {'baseFee': baseDeliveryFee, 'outOfAreaFee': outOfAreaFee};
+            } else {
+              return {'baseFee': baseDeliveryFee, 'outOfAreaFee': 0.0};
+            }
+          }
+        } catch (e2) {
+          print('Restaurant not found in cubit: $restaurantId');
+          // Fallback - if user is not in default areas, apply default out-of-area fee
+          if (userArea != 'Cairo' && userArea != 'All' && userArea.isNotEmpty) {
+            return {'baseFee': baseDeliveryFee, 'outOfAreaFee': 20.0};
+          }
+          return {'baseFee': baseDeliveryFee, 'outOfAreaFee': 0.0};
+        }
+      }
+    } catch (e) {
+      print('Error in delivery fee breakdown calculation: $e');
+      // Return parsed base fee as fallback
+      try {
+        String cleanBaseFee = baseFee.replaceAll(RegExp(r'[^0-9.]'), '');
+        double fallbackFee = double.parse(cleanBaseFee);
+        return {'baseFee': fallbackFee, 'outOfAreaFee': 0.0};
+      } catch (e2) {
+        return {'baseFee': 50.0, 'outOfAreaFee': 0.0};
+      }
+    }
   }
 
   void toggletheme() async {

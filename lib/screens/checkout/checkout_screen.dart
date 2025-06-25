@@ -810,7 +810,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                 // Out-of-area fee row (only if > 0)
                                 if (totalOutOfAreaFee > 0)
                                   _buildSummaryRow(
-                                    label: 'Out of Area Fee',
+                                    label: S.of(context).out_of_area_fee,
                                     value:
                                         '${totalOutOfAreaFee.toStringAsFixed(2)} ${S.of(context).egp}',
                                   ),

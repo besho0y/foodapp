@@ -140,6 +140,7 @@
     "no_ratings": "لا يوجد تقييمات",
     "order_summary": "ملخص الطلب",
     "delivery_fee": "رسوم التوصيل",
+    "out_of_area_fee": "رسوم خارج المنطقة",
     "select_payment_method": "اختر طريقة الدفع",
     "cash_on_delivery": "الدفع عند الاستلام",
     "cash_on_delivery_subtitle": "ادفع عند استلام طلبك",

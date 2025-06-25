@@ -1460,6 +1460,16 @@ class S {
     );
   }
 
+  /// `Out of Area Fee`
+  String get out_of_area_fee {
+    return Intl.message(
+      'Out of Area Fee',
+      name: 'out_of_area_fee',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Select Payment Method`
   String get select_payment_method {
     return Intl.message(

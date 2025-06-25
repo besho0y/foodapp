@@ -1004,7 +1004,7 @@ class _LayoutState extends State<Layout> {
                                                                               MainAxisAlignment.spaceBetween,
                                                                           children: [
                                                                             Text(
-                                                                              'Out of Area Fee',
+                                                                              S.of(context).out_of_area_fee,
                                                                               style: TextStyle(
                                                                                 fontSize: 14.sp,
                                                                                 color: Colors.grey[600],

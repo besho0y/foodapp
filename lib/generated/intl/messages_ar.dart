@@ -303,6 +303,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "order_summary": MessageLookupByLibrary.simpleMessage("ملخص الطلب"),
         "orderdetails": MessageLookupByLibrary.simpleMessage("تفاصيل الطلب"),
         "orders": MessageLookupByLibrary.simpleMessage("الطلبات"),
+        "out_of_area_fee":
+            MessageLookupByLibrary.simpleMessage("رسوم خارج المنطقة"),
         "password": MessageLookupByLibrary.simpleMessage("كلمة المرور"),
         "password_confirm_required":
             MessageLookupByLibrary.simpleMessage("تأكيد كلمة المرور مطلوب"),

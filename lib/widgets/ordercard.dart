@@ -400,10 +400,10 @@ class _OrderCardState extends State<OrderCard> {
                         if (widget.model.outOfAreaFee != null &&
                             widget.model.outOfAreaFee! > 0)
                           Text(
-                            "Out of area fee: ${widget.model.outOfAreaFee!.toStringAsFixed(2)} ${S.of(context).egp}",
+                            "${S.of(context).out_of_area_fee}: ${widget.model.outOfAreaFee!.toStringAsFixed(2)} ${S.of(context).egp}",
                             style: TextStyle(
-                              fontSize: 12.sp,
-                              color: Colors.orange[700],
+                              fontSize: 13.sp,
+                              color: Colors.grey[600],
                             ),
                           ),
 
