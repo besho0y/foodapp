@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:foodapp/generated/l10n.dart';
 import 'package:foodapp/layout/states.dart';
 import 'package:foodapp/main.dart';
+import 'package:foodapp/models/resturant.dart';
 import 'package:foodapp/models/user.dart';
 import 'package:foodapp/screens/admin%20panel/adminpanelscreen.dart';
 import 'package:foodapp/screens/favourits/favouritsScreen.dart';
@@ -446,270 +447,331 @@ class Layoutcubit extends Cubit<Layoutstates> {
 
   // Calculate total price including delivery fees and out-of-area fees
   double calculateTotalPrice({double? promoDiscount}) {
-    print('\n=== DEBUGGING Cart Total Calculation ===');
+    print('\n=== CART TOTAL CALCULATION WITH AREA LOGIC ===');
 
-    // Calculate subtotal (items only)
+    // Step 1: Calculate subtotal (items only)
     double subtotal = cartitems.fold(0, (sum, item) {
       double itemTotal = item.price * item.quantity;
       print(
-        '- ${item.name}: ${item.price} × ${item.quantity} = $itemTotal EGP',
-      );
+          '- ${item.name}: ${item.price} × ${item.quantity} = $itemTotal EGP');
       return sum + itemTotal;
     });
     print('Subtotal (items only): $subtotal EGP');
 
-    // Print all cart items with restaurant information for debugging
-    print('\nCurrent cart contains ${cartitems.length} items:');
-    for (int i = 0; i < cartitems.length; i++) {
-      print('ITEM #$i');
-      print('- Name: ${cartitems[i].name}');
-      print('- Restaurant: ${cartitems[i].restaurantName}');
-      print(
-        '- Restaurant ID: "${cartitems[i].restaurantId}"',
-      ); // Note the quotes to see whitespace
-      print('- Delivery Fee: ${cartitems[i].deliveryFee}');
-    }
-
-    // Group items by restaurant to avoid duplicate fees
-    Map<String, List<CartItem>> itemsByRestaurant = {};
-    print('\nGrouping items by restaurant ID:');
-    for (var item in cartitems) {
-      String resId = item.restaurantId.trim();
-      print(
-        'Processing item ${item.name} from restaurant ${item.restaurantName} with ID "$resId"',
-      );
-
-      if (!itemsByRestaurant.containsKey(resId)) {
-        itemsByRestaurant[resId] = [];
-        print(
-          '  - Created new group for restaurant: ${item.restaurantName} (ID: $resId)',
-        );
-      } else {
-        print(
-          '  - Adding to existing group for restaurant: ${item.restaurantName} (ID: $resId)',
-        );
-      }
-      itemsByRestaurant[resId]!.add(item);
-    }
-
-    print(
-      '\nAfter grouping: Found ${itemsByRestaurant.length} unique restaurants in cart',
-    );
-    itemsByRestaurant.forEach((resId, items) {
-      print(
-        'Restaurant group "$resId": ${items.length} items from ${items.first.restaurantName}',
-      );
-    });
-
-    // Calculate delivery fees INCLUDING out-of-area fees
+    // Step 2: Calculate delivery fees with area logic if context is available
     double totalDeliveryFees = 0.0;
     double totalOutOfAreaFees = 0.0;
-    print('\nCalculating Delivery Fees with Out-of-Area Logic:');
 
-    itemsByRestaurant.forEach((restaurantId, items) {
-      if (items.isNotEmpty) {
-        try {
-          // Get the context from the navigator key
-          BuildContext? context = navigatorKey.currentContext;
-          if (context != null) {
-            // Use the helper method that calculates the breakdown correctly
-            Map<String, double> feeBreakdown =
-                _calculateDeliveryFeeBreakdownInCubit(
-                    context, restaurantId, items.first.deliveryFee);
-
-            double baseFee = feeBreakdown['baseFee'] ?? 0.0;
-            double outOfAreaFee = feeBreakdown['outOfAreaFee'] ?? 0.0;
-
-            totalDeliveryFees += baseFee;
-            totalOutOfAreaFees += outOfAreaFee;
-
-            print(
-              '- ${items.first.restaurantName} (ID: "$restaurantId"): Base Fee $baseFee EGP, Out-of-Area $outOfAreaFee EGP',
-            );
-          } else {
-            // Fallback to simple parsing if no context available
-            String baseFee = items.first.deliveryFee;
-            String cleanFee = baseFee.replaceAll(RegExp(r'[^0-9.]'), '');
-            double fee = double.parse(cleanFee.isEmpty ? '0' : cleanFee);
-            totalDeliveryFees += fee;
-            print(
-              '- ${items.first.restaurantName} (ID: "$restaurantId"): $fee EGP (fallback)',
-            );
-          }
-        } catch (e) {
-          print(
-            'Error calculating delivery fee for ${items.first.restaurantName}: $e',
-          );
-          // Use default fee on error
-          totalDeliveryFees += 50.0;
-        }
+    BuildContext? context = navigatorKey.currentContext;
+    if (context != null) {
+      try {
+        // Use area-based calculation when context is available
+        Map<String, double> feeBreakdown =
+            calculateDeliveryFeesWithAreaLogic(context);
+        totalDeliveryFees = feeBreakdown['baseFee'] ?? 0.0;
+        totalOutOfAreaFees = feeBreakdown['outOfAreaFee'] ?? 0.0;
+        print('Using area-based calculation:');
+        print('- Base delivery fees: $totalDeliveryFees EGP');
+        print('- Out-of-area fees: $totalOutOfAreaFees EGP');
+      } catch (e) {
+        print('Error in area-based calculation, falling back to simple: $e');
+        // Fallback to simple calculation
+        totalDeliveryFees = _calculateSimpleDeliveryFees();
+        totalOutOfAreaFees = 0.0;
       }
-    });
+    } else {
+      print('No context available, using simple delivery fee calculation');
+      // Fallback to simple calculation when no context
+      totalDeliveryFees = _calculateSimpleDeliveryFees();
+      totalOutOfAreaFees = 0.0;
+    }
 
-    print(
-      'Total base delivery fees from all restaurants: $totalDeliveryFees EGP',
-    );
-    print('Total out-of-area fees: $totalOutOfAreaFees EGP');
-
-    // Calculate final total INCLUDING out-of-area fees
+    // Step 3: Calculate total before discount
     double total = subtotal + totalDeliveryFees + totalOutOfAreaFees;
+    print('Total before discount: $total EGP');
 
-    // Apply promocode discount if provided
+    // Step 4: Apply promocode discount if provided
     if (promoDiscount != null && promoDiscount > 0) {
-      print('\nApplying promocode discount: $promoDiscount EGP');
+      print('Applying promocode discount: $promoDiscount EGP');
       total = total - promoDiscount;
       // Ensure total is never negative
       if (total < 0) total = 0;
     }
 
-    // Print breakdown of total
+    // Step 5: Print final breakdown
     print('\nFinal Breakdown:');
     print('- Subtotal (all items): $subtotal EGP');
-    print(
-      '- Base Delivery Fees (${itemsByRestaurant.length} restaurants): $totalDeliveryFees EGP',
-    );
+    print('- Base delivery fees: $totalDeliveryFees EGP');
     if (totalOutOfAreaFees > 0) {
-      print('- Out-of-Area Fees: $totalOutOfAreaFees EGP');
+      print('- Out-of-area fees: $totalOutOfAreaFees EGP');
     }
     if (promoDiscount != null && promoDiscount > 0) {
-      print('- Promocode Discount: -$promoDiscount EGP');
+      print('- Promocode discount: -$promoDiscount EGP');
     }
-    print('- TOTAL: $total EGP');
+    print('- FINAL TOTAL: $total EGP');
     print('=== End of Cart Calculation ===\n');
 
     return total;
   }
 
-  // Helper method to calculate delivery fee breakdown (matching layout.dart logic)
-  Map<String, double> _calculateDeliveryFeeBreakdownInCubit(
-      BuildContext context, String restaurantId, String baseFee) {
+  // Helper method for simple delivery fee calculation (fallback)
+  double _calculateSimpleDeliveryFees() {
+    // Group items by restaurant to avoid duplicate fees
+    Map<String, List<CartItem>> itemsByRestaurant = {};
+    for (var item in cartitems) {
+      String resId = item.restaurantId.trim();
+      if (!itemsByRestaurant.containsKey(resId)) {
+        itemsByRestaurant[resId] = [];
+      }
+      itemsByRestaurant[resId]!.add(item);
+    }
+
+    double totalDeliveryFees = 0.0;
+    itemsByRestaurant.forEach((restaurantId, items) {
+      if (items.isNotEmpty) {
+        try {
+          String cleanFee =
+              items.first.deliveryFee.replaceAll(RegExp(r'[^0-9.]'), '');
+          double fee = double.parse(cleanFee.isEmpty ? '50' : cleanFee);
+          totalDeliveryFees += fee;
+        } catch (e) {
+          totalDeliveryFees += 50.0; // Default fallback
+        }
+      }
+    });
+
+    return totalDeliveryFees;
+  }
+
+  // Calculate delivery fees with area-based logic (for UI breakdown display)
+  Map<String, double> calculateDeliveryFeesWithAreaLogic(BuildContext context) {
+    double totalBaseFee = 0.0;
+    double totalOutOfAreaFee = 0.0;
+
     try {
-      // Get necessary cubits
+      // Get user's selected area
       final profileCubit = ProfileCubit.get(context);
       final restaurantCubit = Restuarantscubit.get(context);
       String userArea = profileCubit.user.selectedArea;
 
-      // Parse base delivery fee
-      double baseDeliveryFee = 0.0;
-      try {
-        String cleanBaseFee = baseFee.replaceAll(RegExp(r'[^0-9.]'), '');
-        if (cleanBaseFee.isEmpty) {
-          baseDeliveryFee = 50.0;
-        } else {
-          baseDeliveryFee = double.parse(cleanBaseFee);
+      print('\n🏪 === AREA-BASED FEE CALCULATION ===');
+      print('User selected area: "$userArea" (length: ${userArea.length})');
+      print(
+          'User data: ${profileCubit.user.name}, email: ${profileCubit.user.email}');
+      print(
+          'Available restaurants in cubit: ${restaurantCubit.restaurants.length}');
+
+      // Debug: Show all restaurants and their areas
+      print('\n🔍 === ALL RESTAURANTS AREAS DEBUG ===');
+      for (int i = 0; i < restaurantCubit.restaurants.length; i++) {
+        var restaurant = restaurantCubit.restaurants[i];
+        print('Restaurant #$i: "${restaurant.name}"');
+        print('  ID: "${restaurant.id}"');
+        print('  Main Areas: ${restaurant.mainAreas}');
+        print('  Secondary Areas: ${restaurant.secondaryAreas}');
+        print('  Out-of-area Fee: "${restaurant.outOfAreaFee}"');
+      }
+      print('=== END ALL RESTAURANTS DEBUG ===\n');
+
+      // Group items by restaurant
+      Map<String, List<CartItem>> itemsByRestaurant = {};
+      for (var item in cartitems) {
+        String resId = item.restaurantId.trim();
+        if (!itemsByRestaurant.containsKey(resId)) {
+          itemsByRestaurant[resId] = [];
         }
-      } catch (e) {
-        baseDeliveryFee = 50.0; // Default fallback
+        itemsByRestaurant[resId]!.add(item);
       }
 
-      // If user area is empty/default, return base fee only
-      if (userArea.isEmpty || userArea == 'Cairo' || userArea == 'All') {
-        return {'baseFee': baseDeliveryFee, 'outOfAreaFee': 0.0};
+      // Calculate fees for each restaurant with area logic
+      itemsByRestaurant.forEach((restaurantId, items) {
+        if (items.isNotEmpty) {
+          // Parse base delivery fee
+          double baseFee = 0.0;
+          try {
+            String cleanFee =
+                items.first.deliveryFee.replaceAll(RegExp(r'[^0-9.]'), '');
+            baseFee = double.parse(cleanFee.isEmpty ? '50' : cleanFee);
+          } catch (e) {
+            baseFee = 50.0;
+          }
+
+          totalBaseFee += baseFee;
+          print('Restaurant: ${items.first.restaurantName}');
+          print('- Base delivery fee: $baseFee EGP');
+
+          // Check if we need to apply out-of-area fee
+          double outOfAreaFee = _calculateOutOfAreaFee(
+              context, restaurantId, userArea, restaurantCubit);
+
+          if (outOfAreaFee > 0) {
+            totalOutOfAreaFee += outOfAreaFee;
+            print('- Out-of-area fee: $outOfAreaFee EGP');
+          } else {
+            print('- No out-of-area fee (user in main service area)');
+          }
+        }
+      });
+
+      print('Total base fees: $totalBaseFee EGP');
+      print('Total out-of-area fees: $totalOutOfAreaFee EGP');
+      print('=== END AREA-BASED CALCULATION ===\n');
+    } catch (e) {
+      print('Error in area-based calculation: $e');
+      // Fallback to simple calculation
+      Map<String, List<CartItem>> itemsByRestaurant = {};
+      for (var item in cartitems) {
+        String resId = item.restaurantId.trim();
+        if (!itemsByRestaurant.containsKey(resId)) {
+          itemsByRestaurant[resId] = [];
+        }
+        itemsByRestaurant[resId]!.add(item);
       }
 
-      // Try to find the restaurant in the cubit to get the real out-of-area fee
+      itemsByRestaurant.forEach((restaurantId, items) {
+        if (items.isNotEmpty) {
+          try {
+            String cleanFee =
+                items.first.deliveryFee.replaceAll(RegExp(r'[^0-9.]'), '');
+            double fee = double.parse(cleanFee.isEmpty ? '50' : cleanFee);
+            totalBaseFee += fee;
+          } catch (e) {
+            totalBaseFee += 50.0;
+          }
+        }
+      });
+    }
+
+    return {
+      'baseFee': totalBaseFee,
+      'outOfAreaFee': totalOutOfAreaFee,
+      'total': totalBaseFee + totalOutOfAreaFee
+    };
+  }
+
+  // Helper method to calculate out-of-area fee for a specific restaurant
+  double _calculateOutOfAreaFee(BuildContext context, String restaurantId,
+      String userArea, dynamic restaurantCubit) {
+    print('\n🔍 === OUT-OF-AREA FEE CALCULATION DEBUG ===');
+    print('Restaurant ID: "$restaurantId"');
+    print('User Area: "$userArea"');
+
+    // If user area is empty or default, no out-of-area fee
+    if (userArea.isEmpty || userArea == 'Cairo' || userArea == 'All') {
+      print('❌ User area is empty/default - no out-of-area fee');
+      print('=== END OUT-OF-AREA FEE CALCULATION ===\n');
+      return 0.0;
+    }
+
+    try {
+      // Try to find the restaurant in the cubit
+      Restuarants? restaurant;
       try {
-        // Try exact match first
-        var restaurant = restaurantCubit.restaurants.firstWhere(
-          (r) => r.id == restaurantId,
-          orElse: () => throw Exception('Restaurant not found'),
+        restaurant = restaurantCubit.restaurants.firstWhere(
+          (r) => r.id.trim() == restaurantId.trim(),
         );
-
-        // Check if user is in restaurant's main areas (no out-of-area fee)
-        bool userIsInMainAreas = restaurant.mainAreas.any((mainArea) =>
-            mainArea.trim().toLowerCase() == userArea.trim().toLowerCase());
-
-        if (userIsInMainAreas) {
-          // User is in main service area - no out-of-area fee
-          return {'baseFee': baseDeliveryFee, 'outOfAreaFee': 0.0};
-        } else {
-          // Check if user is in secondary areas (charge out-of-area fee)
-          bool userIsInSecondaryAreas = restaurant.secondaryAreas.any((area) =>
-              area.trim().toLowerCase() == userArea.trim().toLowerCase());
-
-          if (userIsInSecondaryAreas) {
-            // Parse the restaurant's specific out-of-area fee
-            double outOfAreaFee = 0.0;
-            try {
-              String cleanOutOfAreaFee = (restaurant.outOfAreaFee ?? '0')
-                  .replaceAll(RegExp(r'[^0-9.]'), '');
-              if (cleanOutOfAreaFee.isNotEmpty) {
-                outOfAreaFee = double.parse(cleanOutOfAreaFee);
-              }
-            } catch (e) {
-              outOfAreaFee = 20.0; // Default fallback
-            }
-
-            // If no specific out-of-area fee is set, use default
-            if (outOfAreaFee == 0) {
-              outOfAreaFee = 20.0;
-            }
-
-            return {'baseFee': baseDeliveryFee, 'outOfAreaFee': outOfAreaFee};
-          } else {
-            // User is not in any service area - restaurant doesn't serve this area
-            return {'baseFee': baseDeliveryFee, 'outOfAreaFee': 0.0};
-          }
-        }
       } catch (e) {
-        // Restaurant not found in cubit, try trimmed comparison
-        try {
-          var restaurant = restaurantCubit.restaurants.firstWhere(
-            (r) => r.id.trim() == restaurantId.trim(),
-            orElse: () => throw Exception('Restaurant not found'),
-          );
+        restaurant = null;
+      }
 
-          // Same logic as above for trimmed match
-          bool userIsInMainAreas = restaurant.mainAreas.any((mainArea) =>
-              mainArea.trim().toLowerCase() == userArea.trim().toLowerCase());
+      if (restaurant == null) {
+        print('❌ Restaurant not found in cubit for ID: $restaurantId');
+        print(
+            'Available restaurant IDs: ${restaurantCubit.restaurants.map((r) => r.id).toList()}');
+        print('=== END OUT-OF-AREA FEE CALCULATION ===\n');
+        return 0.0; // Changed: don't charge fee if restaurant not found
+      }
 
-          if (userIsInMainAreas) {
-            return {'baseFee': baseDeliveryFee, 'outOfAreaFee': 0.0};
-          } else {
-            bool userIsInSecondaryAreas = restaurant.secondaryAreas.any(
-                (area) =>
-                    area.trim().toLowerCase() == userArea.trim().toLowerCase());
+      print('✅ Found restaurant: ${restaurant.name}');
+      print('📍 Restaurant main areas: ${restaurant.mainAreas}');
+      print('📍 Restaurant secondary areas: ${restaurant.secondaryAreas}');
+      print(
+          '💰 Restaurant out-of-area fee: "${restaurant.outOfAreaFee ?? 'null'}"');
 
-            if (userIsInSecondaryAreas) {
-              double outOfAreaFee = 0.0;
-              try {
-                String cleanOutOfAreaFee = (restaurant.outOfAreaFee ?? '0')
-                    .replaceAll(RegExp(r'[^0-9.]'), '');
-                if (cleanOutOfAreaFee.isNotEmpty) {
-                  outOfAreaFee = double.parse(cleanOutOfAreaFee);
-                }
-              } catch (e) {
-                outOfAreaFee = 20.0;
-              }
+      // Detailed area matching analysis
+      print('\n🔍 AREA MATCHING ANALYSIS:');
+      print('User area: "$userArea" (length: ${userArea.length})');
+      print('User area cleaned: "${userArea.trim().toLowerCase()}"');
 
-              if (outOfAreaFee == 0) {
-                outOfAreaFee = 20.0;
-              }
+      // Check if user is in restaurant's main areas (no out-of-area fee)
+      print('\n🏠 CHECKING MAIN AREAS (no fee):');
+      bool userIsInMainAreas = false;
+      for (int i = 0; i < restaurant.mainAreas.length; i++) {
+        String mainArea = restaurant.mainAreas[i];
+        String cleanMainArea = mainArea.trim().toLowerCase();
+        String cleanUserArea = userArea.trim().toLowerCase();
+        bool matches = cleanMainArea == cleanUserArea;
 
-              return {'baseFee': baseDeliveryFee, 'outOfAreaFee': outOfAreaFee};
-            } else {
-              return {'baseFee': baseDeliveryFee, 'outOfAreaFee': 0.0};
-            }
-          }
-        } catch (e2) {
-          print('Restaurant not found in cubit: $restaurantId');
-          // Fallback - if user is not in default areas, apply default out-of-area fee
-          if (userArea != 'Cairo' && userArea != 'All' && userArea.isNotEmpty) {
-            return {'baseFee': baseDeliveryFee, 'outOfAreaFee': 20.0};
-          }
-          return {'baseFee': baseDeliveryFee, 'outOfAreaFee': 0.0};
+        print('  [$i] "$mainArea" → "$cleanMainArea" | Match: $matches');
+        if (matches) {
+          userIsInMainAreas = true;
         }
+      }
+
+      if (userIsInMainAreas) {
+        print(
+            '✅ RESULT: User "$userArea" is in MAIN service areas - NO EXTRA FEE');
+        print('=== END OUT-OF-AREA FEE CALCULATION ===\n');
+        return 0.0;
+      }
+
+      // Check if user is in restaurant's secondary areas (charge out-of-area fee)
+      print('\n🏪 CHECKING SECONDARY AREAS (with fee):');
+      bool userIsInSecondaryAreas = false;
+      for (int i = 0; i < restaurant.secondaryAreas.length; i++) {
+        String secondaryArea = restaurant.secondaryAreas[i];
+        String cleanSecondaryArea = secondaryArea.trim().toLowerCase();
+        String cleanUserArea = userArea.trim().toLowerCase();
+        bool matches = cleanSecondaryArea == cleanUserArea;
+
+        print(
+            '  [$i] "$secondaryArea" → "$cleanSecondaryArea" | Match: $matches');
+        if (matches) {
+          userIsInSecondaryAreas = true;
+        }
+      }
+
+      if (userIsInSecondaryAreas) {
+        print(
+            '⚠️ RESULT: User "$userArea" is in SECONDARY service areas - APPLYING OUT-OF-AREA FEE');
+
+        // Parse the restaurant's specific out-of-area fee
+        double outOfAreaFee = 0.0;
+        try {
+          String cleanOutOfAreaFee = (restaurant.outOfAreaFee ?? '0')
+              .replaceAll(RegExp(r'[^0-9.]'), '');
+          print(
+              '💰 Parsing out-of-area fee: "${restaurant.outOfAreaFee}" → "$cleanOutOfAreaFee"');
+
+          if (cleanOutOfAreaFee.isNotEmpty) {
+            outOfAreaFee = double.parse(cleanOutOfAreaFee);
+          }
+        } catch (e) {
+          print('❌ Error parsing restaurant out-of-area fee: $e');
+        }
+
+        // If no specific out-of-area fee is set, use default
+        if (outOfAreaFee == 0) {
+          outOfAreaFee = 20.0; // Default out-of-area fee
+          print('💰 Using DEFAULT out-of-area fee: $outOfAreaFee EGP');
+        } else {
+          print(
+              '💰 Using RESTAURANT-SPECIFIC out-of-area fee: $outOfAreaFee EGP');
+        }
+
+        print('=== END OUT-OF-AREA FEE CALCULATION ===\n');
+        return outOfAreaFee;
+      } else {
+        print(
+            '❌ RESULT: User "$userArea" is NOT in any restaurant service areas');
+        print('🚫 Restaurant does not serve this area - no fee charged');
+        print('=== END OUT-OF-AREA FEE CALCULATION ===\n');
+        return 0.0; // Restaurant doesn't serve this area
       }
     } catch (e) {
-      print('Error in delivery fee breakdown calculation: $e');
-      // Return parsed base fee as fallback
-      try {
-        String cleanBaseFee = baseFee.replaceAll(RegExp(r'[^0-9.]'), '');
-        double fallbackFee = double.parse(cleanBaseFee);
-        return {'baseFee': fallbackFee, 'outOfAreaFee': 0.0};
-      } catch (e2) {
-        return {'baseFee': 50.0, 'outOfAreaFee': 0.0};
-      }
+      print('💥 Error checking restaurant areas: $e');
+      print('=== END OUT-OF-AREA FEE CALCULATION ===\n');
+      return 0.0; // Changed: don't charge fee on error
     }
   }
 

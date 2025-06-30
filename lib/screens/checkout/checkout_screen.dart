@@ -744,58 +744,21 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               '${layoutCubit.calculateSubtotal().toStringAsFixed(2)} ${S.of(context).egp}',
                         ),
 
-                        // Delivery fee breakdown section
+                        // Delivery fee section with area-based logic
                         Builder(
                           builder: (context) {
-                            print(
-                                "\n🔍 === CHECKOUT DELIVERY FEE CALCULATION START ===");
-                            // Calculate total delivery fees with breakdown
-                            double totalDeliveryFee = 0.0;
-                            double totalOutOfAreaFee = 0.0;
-                            // Group by restaurant to avoid duplicates
+                            // Use the area-based calculation method from layout cubit
+                            final layoutCubit = Layoutcubit.get(context);
+                            Map<String, double> feeBreakdown = layoutCubit
+                                .calculateDeliveryFeesWithAreaLogic(context);
+
+                            double totalBaseFee =
+                                feeBreakdown['baseFee'] ?? 0.0;
+                            double totalOutOfAreaFee =
+                                feeBreakdown['outOfAreaFee'] ?? 0.0;
+
                             final restaurantGroups =
                                 groupItemsByRestaurant(cartItems);
-                            print(
-                                "📊 Found ${restaurantGroups.length} restaurant groups");
-
-                            // Add one delivery fee per restaurant
-                            restaurantGroups.forEach((restaurantId, items) {
-                              print(
-                                  "🏪 Processing restaurant: $restaurantId with ${items.length} items");
-                              print(
-                                  "🏪 First item: ${items.first.name} (${items.first.restaurantName})");
-                              print(
-                                  "🏪 Base delivery fee from cart: ${items.first.deliveryFee}");
-
-                              try {
-                                Map<String, double> feeBreakdown =
-                                    _calculateDeliveryFeeBreakdownForRestaurant(
-                                        context,
-                                        restaurantId,
-                                        items.first.deliveryFee);
-                                totalDeliveryFee +=
-                                    feeBreakdown['baseFee'] ?? 0.0;
-                                totalOutOfAreaFee +=
-                                    feeBreakdown['outOfAreaFee'] ?? 0.0;
-                                print(
-                                    "✅ Fee breakdown: Base=${feeBreakdown['baseFee']}, OutOfArea=${feeBreakdown['outOfAreaFee']}");
-                              } catch (e) {
-                                print('❌ Error calculating delivery fee: $e');
-                                // Fallback to basic parsing
-                                try {
-                                  String cleanFee = items.first.deliveryFee
-                                      .replaceAll(RegExp(r'[^0-9.]'), '');
-                                  totalDeliveryFee += double.parse(cleanFee);
-                                } catch (e2) {
-                                  totalDeliveryFee += 50.0; // Ultimate fallback
-                                }
-                              }
-                            });
-
-                            print(
-                                "💰 FINAL DELIVERY FEE BREAKDOWN: Base=$totalDeliveryFee, OutOfArea=$totalOutOfAreaFee");
-                            print(
-                                "🔍 === CHECKOUT DELIVERY FEE CALCULATION END ===\n");
 
                             return Column(
                               children: [
@@ -805,7 +768,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                       ? '${S.of(context).delivery_fee} (${restaurantGroups.length})'
                                       : S.of(context).delivery_fee,
                                   value:
-                                      '${totalDeliveryFee.toStringAsFixed(2)} ${S.of(context).egp}',
+                                      '${totalBaseFee.toStringAsFixed(2)} ${S.of(context).egp}',
                                 ),
                                 // Out-of-area fee row (only if > 0)
                                 if (totalOutOfAreaFee > 0)
