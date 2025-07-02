@@ -197,8 +197,7 @@ class _ResturantscreenState extends State<Resturantscreen> {
                                       child: _buildCategoryImage(category.img),
                                     ),
                                     SizedBox(height: 6.h),
-                                    SizedBox(
-                                      width: 65.w,
+                                    Flexible(
                                       child: Text(
                                         cubit.getCategoryName(
                                             category, isArabic),
@@ -206,8 +205,6 @@ class _ResturantscreenState extends State<Resturantscreen> {
                                             .textTheme
                                             .labelMedium,
                                         textAlign: TextAlign.center,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
                                   ],
