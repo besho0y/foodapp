@@ -30,7 +30,7 @@ Widget itemcard(context, bool fromFavourites, Item model, dynamic items) {
   print("Item ${model.name} - nameAr: '${model.nameAr}' - RTL: $isRTL");
 
   return Padding(
-    padding: EdgeInsets.only(bottom: 10.h),
+    padding: EdgeInsets.only(bottom: 12.h),
     child: GestureDetector(
       onTap: () {
         navigateTo(
@@ -51,151 +51,153 @@ Widget itemcard(context, bool fromFavourites, Item model, dynamic items) {
           ),
         );
       },
-      child: Stack(
-        children: [
-          Container(
-            width: double.infinity,
-            height: 145.h,
-            color: Colors.transparent,
-          ),
-          Positioned(
-            top: 5.h,
-            right: isRTL ? null : 0,
-            left: isRTL ? 0 : null,
-            child: SizedBox(
-              width: MediaQuery.of(context).size.width - 20.w,
-              height: 120.h,
-              child: Card(
-                margin: EdgeInsets.zero,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10.r),
-                ),
-                child: Padding(
-                  padding: EdgeInsets.all(8.h),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    textDirection:
-                        isRTL ? TextDirection.rtl : TextDirection.ltr,
-                    children: [
-                      SizedBox(width: 45.w),
-                      Expanded(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (restaurant != null) ...[
-                              Text(
-                                isRTL ? restaurant.nameAr : restaurant.name,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodySmall
-                                    ?.copyWith(
-                                      color: Theme.of(context).primaryColor,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                textAlign:
-                                    isRTL ? TextAlign.right : TextAlign.left,
-                              ),
-                              SizedBox(height: 2.h),
-                            ],
-                            Text(
-                              isRTL ? model.nameAr : model.name,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              textAlign:
-                                  isRTL ? TextAlign.right : TextAlign.left,
-                            ),
-                            SizedBox(height: 3.h),
-                            Text(
-                              isRTL ? model.descriptionAr : model.description,
-                              style: Theme.of(context).textTheme.bodySmall,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              textAlign:
-                                  isRTL ? TextAlign.right : TextAlign.left,
-                            ),
-                            const Spacer(),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              textDirection:
-                                  isRTL ? TextDirection.rtl : TextDirection.ltr,
-                              children: [
-                                Expanded(
-                                  flex: 2,
-                                  child: Text(
-                                    "${model.price} ${S.of(context).egp}",
-                                    style:
-                                        Theme.of(context).textTheme.labelMedium,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                SizedBox(width: 4.w),
-                                BlocBuilder<Favouritecubit, FavouriteState>(
-                                  builder: (context, state) {
-                                    // Update the model's favorite status based on cubit's cache
-                                    model.isfavourite =
-                                        cubit.isFavorite(model.id);
-
-                                    return IconButton(
-                                      onPressed: () {
-                                        cubit.toggleFavourite(model);
-                                      },
-                                      icon: Icon(
-                                        model.isfavourite
-                                            ? Icons.favorite
-                                            : Icons.favorite_border,
-                                        color: model.isfavourite
-                                            ? Colors.red
-                                            : null,
-                                        size: 18.sp,
-                                      ),
-                                      padding: EdgeInsets.zero,
-                                      constraints: BoxConstraints(
-                                        minWidth: 20.w,
-                                        minHeight: 20.h,
-                                        maxWidth: 30.w,
-                                        maxHeight: 30.h,
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+      child: Container(
+        width: double.infinity,
+        height: 130.h,
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(12.r),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 6,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: EdgeInsets.all(12.w),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            textDirection: isRTL ? TextDirection.rtl : TextDirection.ltr,
+            children: [
+              // Image Section
+              ClipRRect(
+                borderRadius: BorderRadius.circular(10.r),
+                child: Container(
+                  width: 100.w,
+                  height: 100.h,
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      fit: BoxFit.cover,
+                      image: _getImageProvider(model.img),
+                    ),
                   ),
                 ),
               ),
-            ),
-          ),
-          Positioned(
-            top: 20.h,
-            left: isRTL ? null : 0,
-            right: isRTL ? 0 : null,
-            child: Container(
-              width: 90.w,
-              height: 90.h,
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  fit: BoxFit.cover,
-                  image: _getImageProvider(model.img),
+              SizedBox(width: 12.w),
+
+              // Content Section
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Top section with restaurant name and item name
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (restaurant != null) ...[
+                          Text(
+                            isRTL ? restaurant.nameAr : restaurant.name,
+                            style:
+                                Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: Theme.of(context).primaryColor,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 12.sp,
+                                    ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: isRTL ? TextAlign.right : TextAlign.left,
+                          ),
+                          SizedBox(height: 4.h),
+                        ],
+                        Text(
+                          isRTL ? model.nameAr : model.name,
+                          style:
+                              Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16.sp,
+                                  ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: isRTL ? TextAlign.right : TextAlign.left,
+                        ),
+                        SizedBox(height: 6.h),
+                        Text(
+                          isRTL ? model.descriptionAr : model.description,
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Theme.of(context)
+                                        .textTheme
+                                        .bodySmall
+                                        ?.color
+                                        ?.withOpacity(0.8),
+                                    fontSize: 12.sp,
+                                  ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: isRTL ? TextAlign.right : TextAlign.left,
+                        ),
+                      ],
+                    ),
+
+                    // Bottom section with price and favorite
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            "${model.price} ${S.of(context).egp}",
+                            style: Theme.of(context)
+                                .textTheme
+                                .labelLarge
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15.sp,
+                                  color: Theme.of(context).primaryColor,
+                                ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        BlocBuilder<Favouritecubit, FavouriteState>(
+                          builder: (context, state) {
+                            // Update the model's favorite status based on cubit's cache
+                            model.isfavourite = cubit.isFavorite(model.id);
+
+                            return IconButton(
+                              onPressed: () {
+                                cubit.toggleFavourite(model);
+                              },
+                              icon: Icon(
+                                model.isfavourite
+                                    ? Icons.favorite
+                                    : Icons.favorite_border,
+                                color: model.isfavourite
+                                    ? Colors.red
+                                    : Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.color,
+                                size: 22.sp,
+                              ),
+                              padding: EdgeInsets.zero,
+                              constraints: BoxConstraints(
+                                minWidth: 35.w,
+                                minHeight: 35.h,
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-                borderRadius: BorderRadius.circular(8.r),
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     ),
   );

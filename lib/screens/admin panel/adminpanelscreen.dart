@@ -1411,22 +1411,38 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
           title: Text(categoryName),
           subtitle: Text(categoryNameAr),
           trailing: categoryName.toLowerCase() != "uncategorized"
-              ? IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.red),
-                  onPressed: () async {
-                    try {
-                      await cubit.deleteMenuCategory(
-                        restaurantId: selectedRestaurantId!,
-                        categoryName: categoryName,
-                      );
-                      _showSnackBar("Category deleted successfully",
-                          backgroundColor: Colors.green);
-                    } catch (e) {
-                      print("Error deleting category: $e");
-                      _showSnackBar("Error deleting category",
-                          backgroundColor: Colors.red);
-                    }
-                  },
+              ? Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.edit, color: Colors.blue),
+                      onPressed: () => _showEditMenuCategoryDialog(
+                        cubit,
+                        selectedRestaurantId!,
+                        categoryName,
+                        categoryNameAr,
+                      ),
+                      tooltip: "Edit Category",
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.red),
+                      onPressed: () async {
+                        try {
+                          await cubit.deleteMenuCategory(
+                            restaurantId: selectedRestaurantId!,
+                            categoryName: categoryName,
+                          );
+                          _showSnackBar("Category deleted successfully",
+                              backgroundColor: Colors.green);
+                        } catch (e) {
+                          print("Error deleting category: $e");
+                          _showSnackBar("Error deleting category",
+                              backgroundColor: Colors.red);
+                        }
+                      },
+                      tooltip: "Delete Category",
+                    ),
+                  ],
                 )
               : null,
         );
@@ -1467,41 +1483,58 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
           title: Text(categoryName),
           subtitle: Text(categoryNameAr),
           trailing: categoryName.toLowerCase() != "uncategorized"
-              ? IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.red),
-                  onPressed: () async {
-                    try {
-                      // Delete directly from subcollection using the document ID
-                      if (categoryId.isNotEmpty) {
-                        // First delete from subcollection
-                        await FirebaseFirestore.instance
-                            .collection("restaurants")
-                            .doc(selectedRestaurantId)
-                            .collection("menu_categories")
-                            .doc(categoryId)
-                            .delete();
+              ? Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.edit, color: Colors.blue),
+                      onPressed: () => _showEditMenuCategoryDialog(
+                        cubit,
+                        selectedRestaurantId!,
+                        categoryName,
+                        categoryNameAr,
+                        categoryId: categoryId,
+                      ),
+                      tooltip: "Edit Category",
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.red),
+                      onPressed: () async {
+                        try {
+                          // Delete directly from subcollection using the document ID
+                          if (categoryId.isNotEmpty) {
+                            // First delete from subcollection
+                            await FirebaseFirestore.instance
+                                .collection("restaurants")
+                                .doc(selectedRestaurantId)
+                                .collection("menu_categories")
+                                .doc(categoryId)
+                                .delete();
 
-                        // Then also update through cubit for arrays (backward compatibility)
-                        await cubit.deleteMenuCategory(
-                          restaurantId: selectedRestaurantId!,
-                          categoryName: categoryName,
-                        );
-                      } else {
-                        // Fall back to just the cubit method if ID is not available
-                        await cubit.deleteMenuCategory(
-                          restaurantId: selectedRestaurantId!,
-                          categoryName: categoryName,
-                        );
-                      }
+                            // Then also update through cubit for arrays (backward compatibility)
+                            await cubit.deleteMenuCategory(
+                              restaurantId: selectedRestaurantId!,
+                              categoryName: categoryName,
+                            );
+                          } else {
+                            // Fall back to just the cubit method if ID is not available
+                            await cubit.deleteMenuCategory(
+                              restaurantId: selectedRestaurantId!,
+                              categoryName: categoryName,
+                            );
+                          }
 
-                      _showSnackBar("Category deleted successfully",
-                          backgroundColor: Colors.green);
-                    } catch (e) {
-                      print("Error deleting category: $e");
-                      _showSnackBar("Error deleting category",
-                          backgroundColor: Colors.red);
-                    }
-                  },
+                          _showSnackBar("Category deleted successfully",
+                              backgroundColor: Colors.green);
+                        } catch (e) {
+                          print("Error deleting category: $e");
+                          _showSnackBar("Error deleting category",
+                              backgroundColor: Colors.red);
+                        }
+                      },
+                      tooltip: "Delete Category",
+                    ),
+                  ],
                 )
               : null,
         );
@@ -5731,6 +5764,179 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  // Show edit menu category dialog
+  void _showEditMenuCategoryDialog(
+    AdminPanelCubit cubit,
+    String restaurantId,
+    String currentEnglishName,
+    String currentArabicName, {
+    String? categoryId,
+  }) {
+    final TextEditingController editCategoryNameController =
+        TextEditingController(text: currentEnglishName);
+    final TextEditingController editCategoryNameArController =
+        TextEditingController(text: currentArabicName);
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text('${S.of(context).Edit} ${S.of(context).admin_categories}'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // English Name
+              TextFormField(
+                controller: editCategoryNameController,
+                decoration: InputDecoration(
+                  labelText: S.of(context).category_name_english,
+                  labelStyle: TextStyle(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white
+                        : Colors.black,
+                  ),
+                  hintStyle: TextStyle(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white70
+                        : Colors.black54,
+                  ),
+                  border: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white
+                          : Colors.black,
+                      width: 1.5,
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white
+                          : Colors.black,
+                      width: 1.5,
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white
+                          : Colors.black,
+                      width: 2.0,
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(height: 12.h),
+
+              // Arabic Name
+              TextFormField(
+                controller: editCategoryNameArController,
+                decoration: InputDecoration(
+                  labelText: S.of(context).category_name_arabic,
+                  labelStyle: TextStyle(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white
+                        : Colors.black,
+                  ),
+                  hintStyle: TextStyle(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white70
+                        : Colors.black54,
+                  ),
+                  border: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white
+                          : Colors.black,
+                      width: 1.5,
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white
+                          : Colors.black,
+                      width: 1.5,
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white
+                          : Colors.black,
+                      width: 2.0,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(
+              S.of(context).cancel,
+              style: TextStyle(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.white
+                    : Colors.black,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (editCategoryNameController.text.trim().isEmpty ||
+                  editCategoryNameArController.text.trim().isEmpty) {
+                _showSnackBar(S.of(context).please_fill_all_fields,
+                    backgroundColor: Colors.red);
+                return;
+              }
+
+              try {
+                // Show loading
+                showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (loadingContext) => const Center(
+                    child: CircularProgressIndicator(),
+                  ),
+                );
+
+                // Update menu category
+                await cubit.editMenuCategory(
+                  restaurantId: restaurantId,
+                  oldCategoryName: currentEnglishName,
+                  newCategoryName: editCategoryNameController.text.trim(),
+                  newCategoryNameAr: editCategoryNameArController.text.trim(),
+                  categoryId: categoryId,
+                );
+
+                // Close loading dialog
+                Navigator.pop(context);
+                // Close edit dialog
+                Navigator.pop(dialogContext);
+
+                _showSnackBar('Menu category updated successfully',
+                    backgroundColor: Colors.green);
+
+                // Refresh the admin panel
+                await _refreshAdminPanel();
+              } catch (e) {
+                // Close loading dialog
+                Navigator.pop(context);
+                _showSnackBar('Error updating menu category: $e',
+                    backgroundColor: Colors.red);
+              }
+            },
+            child: Text(S.of(context).UpdateProfile),
+          ),
+        ],
       ),
     );
   }

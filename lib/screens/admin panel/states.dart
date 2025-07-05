@@ -101,6 +101,15 @@ class ErrorDeletingMenuCategoryState extends AdminPanelStates {
   ErrorDeletingMenuCategoryState(this.error);
 }
 
+class EditingMenuCategoryState extends AdminPanelStates {}
+
+class SuccessEditingMenuCategoryState extends AdminPanelStates {}
+
+class ErrorEditingMenuCategoryState extends AdminPanelStates {
+  final String error;
+  ErrorEditingMenuCategoryState(this.error);
+}
+
 // Promocode states
 class LoadingPromocodesState extends AdminPanelStates {}
 

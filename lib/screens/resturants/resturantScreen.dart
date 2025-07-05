@@ -179,7 +179,7 @@ class _ResturantscreenState extends State<Resturantscreen> {
                                           color: Theme.of(context).brightness ==
                                                   Brightness.dark
                                               ? AppColors.darkCard
-                                              : AppColors.lightBackground,
+                                              : AppColors.primaryBrown,
                                           borderRadius:
                                               BorderRadius.circular(10.r),
                                           boxShadow: [
@@ -262,7 +262,9 @@ class _ResturantscreenState extends State<Resturantscreen> {
         return Icon(
           Icons.category,
           size: 35.sp,
-          color: Colors.orange,
+          color: Theme.of(context).brightness == Brightness.dark
+              ? Colors.orange
+              : Colors.white,
         );
       }
 
@@ -283,8 +285,11 @@ class _ResturantscreenState extends State<Resturantscreen> {
                           loadingProgress.expectedTotalBytes!
                       : null,
                   strokeWidth: 2,
-                  valueColor:
-                      const AlwaysStoppedAnimation<Color>(Colors.orange),
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    Theme.of(context).brightness == Brightness.dark
+                        ? Colors.orange
+                        : Colors.white,
+                  ),
                 ),
               );
             },
@@ -309,7 +314,9 @@ class _ResturantscreenState extends State<Resturantscreen> {
               return Icon(
                 Icons.category,
                 size: 30.sp,
-                color: Colors.orange,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.orange
+                    : Colors.white,
               );
             },
           ),
@@ -355,7 +362,9 @@ class _ResturantscreenState extends State<Resturantscreen> {
             return Icon(
               Icons.restaurant_menu,
               size: 30.sp,
-              color: Colors.orange,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.orange
+                  : Colors.white,
             );
           },
         ),
@@ -365,7 +374,9 @@ class _ResturantscreenState extends State<Resturantscreen> {
       return Icon(
         Icons.category,
         size: 30.sp,
-        color: Colors.orange,
+        color: Theme.of(context).brightness == Brightness.dark
+            ? Colors.orange
+            : Colors.white,
       );
     }
   }

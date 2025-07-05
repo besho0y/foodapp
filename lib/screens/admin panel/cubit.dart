@@ -888,6 +888,151 @@ class AdminPanelCubit extends Cubit<AdminPanelStates> {
     }
   }
 
+  // Edit a menu category
+  Future<void> editMenuCategory({
+    required String restaurantId,
+    required String oldCategoryName,
+    required String newCategoryName,
+    required String newCategoryNameAr,
+    String? categoryId,
+  }) async {
+    emit(EditingMenuCategoryState());
+    try {
+      // Don't allow editing the "All" category
+      if (oldCategoryName == "All") {
+        emit(ErrorEditingMenuCategoryState("Cannot edit the 'All' category"));
+        return;
+      }
+
+      // Check if new category name already exists (if it's different from old name)
+      if (oldCategoryName != newCategoryName) {
+        final existingCategorySnapshot = await FirebaseFirestore.instance
+            .collection("restaurants")
+            .doc(restaurantId)
+            .collection("menu_categories")
+            .where("name", isEqualTo: newCategoryName)
+            .get();
+
+        if (existingCategorySnapshot.docs.isNotEmpty) {
+          emit(ErrorEditingMenuCategoryState(
+              "Category '$newCategoryName' already exists"));
+          return;
+        }
+      }
+
+      // Update subcollection first
+      if (categoryId != null && categoryId.isNotEmpty) {
+        // Update using the category ID
+        await FirebaseFirestore.instance
+            .collection("restaurants")
+            .doc(restaurantId)
+            .collection("menu_categories")
+            .doc(categoryId)
+            .update({
+          'name': newCategoryName,
+          'nameAr': newCategoryNameAr,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+        print("Updated category document $categoryId in subcollection");
+      } else {
+        // Find and update by name
+        final categorySnapshot = await FirebaseFirestore.instance
+            .collection("restaurants")
+            .doc(restaurantId)
+            .collection("menu_categories")
+            .where("name", isEqualTo: oldCategoryName)
+            .get();
+
+        for (var doc in categorySnapshot.docs) {
+          await FirebaseFirestore.instance
+              .collection("restaurants")
+              .doc(restaurantId)
+              .collection("menu_categories")
+              .doc(doc.id)
+              .update({
+            'name': newCategoryName,
+            'nameAr': newCategoryNameAr,
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+          print("Updated category document ${doc.id} in subcollection");
+        }
+      }
+
+      // For backward compatibility, also update the menuCategories array
+      final restaurantDoc = await FirebaseFirestore.instance
+          .collection("restaurants")
+          .doc(restaurantId)
+          .get();
+
+      if (restaurantDoc.exists) {
+        final data = restaurantDoc.data();
+        List<String> menuCategories =
+            List<String>.from(data?['menuCategories'] ?? []);
+        List<String> menuCategoriesAr =
+            List<String>.from(data?['menuCategoriesAr'] ?? []);
+
+        // Update category if it exists in the array
+        if (menuCategories.contains(oldCategoryName)) {
+          int index = menuCategories.indexOf(oldCategoryName);
+          menuCategories[index] = newCategoryName;
+
+          // Also update the corresponding Arabic category if it exists
+          if (index < menuCategoriesAr.length) {
+            menuCategoriesAr[index] = newCategoryNameAr;
+          }
+
+          // Update restaurant document
+          final updateData = {
+            'menuCategories': menuCategories,
+          };
+
+          if (menuCategoriesAr.isNotEmpty) {
+            updateData['menuCategoriesAr'] = menuCategoriesAr;
+          }
+
+          await FirebaseFirestore.instance
+              .collection("restaurants")
+              .doc(restaurantId)
+              .update(updateData);
+
+          print("Updated menuCategories array for backward compatibility");
+        }
+
+        // Update all items with the old category name
+        if (oldCategoryName != newCategoryName) {
+          final itemsSnapshot = await FirebaseFirestore.instance
+              .collection("restaurants")
+              .doc(restaurantId)
+              .collection("items")
+              .where("category", isEqualTo: oldCategoryName)
+              .get();
+
+          print(
+              "Found ${itemsSnapshot.docs.length} items with category '$oldCategoryName'");
+
+          // Update all items to use the new category name
+          final batch = FirebaseFirestore.instance.batch();
+          for (var doc in itemsSnapshot.docs) {
+            batch.update(doc.reference, {'category': newCategoryName});
+          }
+
+          // Commit the batch update
+          if (itemsSnapshot.docs.isNotEmpty) {
+            await batch.commit();
+            print(
+                "Updated ${itemsSnapshot.docs.length} items to category '$newCategoryName'");
+          }
+        }
+      }
+
+      await getRestaurants();
+      emit(SuccessEditingMenuCategoryState());
+    } catch (e) {
+      print("Error editing menu category: $e");
+      emit(ErrorEditingMenuCategoryState(e.toString()));
+    }
+  }
+
   // Get menu categories for a restaurant
   List<String> getMenuCategoriesForRestaurant(String restaurantId) {
     try {
