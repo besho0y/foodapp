@@ -154,7 +154,12 @@ class MessageLookup extends MessageLookupByLibrary {
         "checkout": MessageLookupByLibrary.simpleMessage("الدفع"),
         "choose_payment_method":
             MessageLookupByLibrary.simpleMessage("اختر طريقة الدفع"),
+        "clear": MessageLookupByLibrary.simpleMessage("مسح"),
         "clear_cart": MessageLookupByLibrary.simpleMessage("تفريغ السلة"),
+        "clear_history_confirmation": MessageLookupByLibrary.simpleMessage(
+            "هل أنت متأكد أنك تريد مسح سجل الطلبات بالكامل؟ لا يمكن التراجع عن هذا الإجراء."),
+        "clear_order_history":
+            MessageLookupByLibrary.simpleMessage("مسح سجل الطلبات"),
         "comma_separated":
             MessageLookupByLibrary.simpleMessage("مفصولة بفواصل"),
         "confirm_exit": MessageLookupByLibrary.simpleMessage(
@@ -208,10 +213,11 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("أدخل كلمة المرور"),
         "enter_phone": MessageLookupByLibrary.simpleMessage("أدخل رقم هاتفك"),
         "enter_promocode":
-            MessageLookupByLibrary.simpleMessage("أدخل الكود الخصمي"),
+            MessageLookupByLibrary.simpleMessage("أدخل كود الخصم"),
         "enter_reference_number": MessageLookupByLibrary.simpleMessage(
             "الرجاء إدخال رقم مرجع التحويل"),
         "error": MessageLookupByLibrary.simpleMessage("خطأ"),
+        "error_message": MessageLookupByLibrary.simpleMessage("خطأ"),
         "error_updating_order_status": m1,
         "existing_categories":
             MessageLookupByLibrary.simpleMessage("الفئات الموجودة"),
@@ -296,6 +302,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "order": MessageLookupByLibrary.simpleMessage("طلب"),
         "order_error":
             MessageLookupByLibrary.simpleMessage("حدث خطأ في تأكيد الطلب"),
+        "order_history_cleared":
+            MessageLookupByLibrary.simpleMessage("تم مسح سجل الطلبات بنجاح"),
         "order_items": MessageLookupByLibrary.simpleMessage("عناصر الطلب"),
         "order_placed":
             MessageLookupByLibrary.simpleMessage("تم تأكيد الطلب بنجاح!"),
@@ -336,6 +344,8 @@ class MessageLookup extends MessageLookupByLibrary {
             "يجب أن يكون رقم الهاتف 11 رقماً"),
         "phone_required":
             MessageLookupByLibrary.simpleMessage("رقم الهاتف مطلوب"),
+        "phone_updated_successfully":
+            MessageLookupByLibrary.simpleMessage("تم تحديث رقم الهاتف بنجاح"),
         "phoneverfy": MessageLookupByLibrary.simpleMessage(
             "يجب أن يكون رقم الهاتف 11 رقم"),
         "place_order": MessageLookupByLibrary.simpleMessage("تأكيد الطلب"),
@@ -350,7 +360,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "preferences": MessageLookupByLibrary.simpleMessage("التفضيلات"),
         "processing": MessageLookupByLibrary.simpleMessage("قيد المعالجة"),
         "profile": MessageLookupByLibrary.simpleMessage("الحساب"),
-        "promocode": MessageLookupByLibrary.simpleMessage("الكود الخصمي"),
+        "promocode": MessageLookupByLibrary.simpleMessage("كود الخصم"),
         "qty": MessageLookupByLibrary.simpleMessage("الكمية"),
         "rate_your_experience":
             MessageLookupByLibrary.simpleMessage("قيم تجربتك"),

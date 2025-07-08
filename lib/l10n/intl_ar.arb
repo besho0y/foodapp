@@ -268,6 +268,12 @@
     "location_updated_to": "تم تحديث الموقع إلى",
     "restaurants_found": "مطعم",
     "apply": "تطبيق",
-    "enter_promocode": "أدخل الكود الخصمي",
-    "promocode": "الكود الخصمي"
+    "enter_promocode": "أدخل كود الخصم",
+    "promocode": "كود الخصم",
+    "clear_order_history": "مسح سجل الطلبات",
+    "error_message": "خطأ",
+    "order_history_cleared": "تم مسح سجل الطلبات بنجاح",
+    "clear_history_confirmation": "هل أنت متأكد أنك تريد مسح سجل الطلبات بالكامل؟ لا يمكن التراجع عن هذا الإجراء.",
+    "clear": "مسح",
+    "phone_updated_successfully": "تم تحديث رقم الهاتف بنجاح"
 }

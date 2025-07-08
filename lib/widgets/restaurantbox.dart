@@ -28,6 +28,7 @@ class RestaurantBox extends StatelessWidget {
             deliveryprice: restaurant.deliveryFee,
             deliverytime: restaurant.deliveryTime,
             restaurantId: restaurant.id,
+            outOfAreaFee: restaurant.outOfAreaFee,
           ),
         );
       },

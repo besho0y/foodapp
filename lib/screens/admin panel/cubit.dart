@@ -590,6 +590,104 @@ class AdminPanelCubit extends Cubit<AdminPanelStates> {
     }
   }
 
+  // Edit existing item in restaurant
+  Future<void> editItem({
+    required String restaurantId,
+    required String itemId,
+    required String name,
+    required String nameAr,
+    required String description,
+    required String descriptionAr,
+    required double price,
+    required String category,
+    required List<String> categories,
+    File? imageFile,
+  }) async {
+    emit(AddingItemState()); // Use same state as adding for consistency
+    try {
+      print("Editing item: $itemId ($name) in restaurant: $restaurantId");
+
+      // Get current item data to preserve existing image if no new image is uploaded
+      final currentItemDoc = await FirebaseFirestore.instance
+          .collection("restaurants")
+          .doc(restaurantId)
+          .collection("items")
+          .doc(itemId)
+          .get();
+
+      if (!currentItemDoc.exists) {
+        throw Exception("Item not found in the database");
+      }
+
+      final currentData = currentItemDoc.data() as Map<String, dynamic>;
+      String imageUrl = currentData['img'] ??
+          'assets/images/items/default.jpg'; // Keep existing image as default
+
+      // Upload new image if provided
+      if (imageFile != null) {
+        print("Uploading new item image...");
+        try {
+          String uploadedImageUrl = await uploadImage(imageFile, 'items');
+          if (uploadedImageUrl.isNotEmpty) {
+            imageUrl = uploadedImageUrl;
+            print("New item image uploaded successfully: $imageUrl");
+          } else {
+            print(
+                "New item image upload returned empty URL, keeping existing image");
+          }
+        } catch (e) {
+          print("Error uploading new item image: $e");
+          // Continue with existing image URL
+        }
+      } else {
+        print("No new image file provided for item, keeping existing image");
+      }
+
+      // Create a categories array that includes the main category and "All"
+      final List<String> itemCategories = ["All"];
+
+      // Add the main category if it's not "All" and not already included
+      if (category != "All" && !itemCategories.contains(category)) {
+        itemCategories.add(category);
+      }
+
+      // Add any additional categories
+      for (String cat in categories) {
+        if (!itemCategories.contains(cat)) {
+          itemCategories.add(cat);
+        }
+      }
+
+      // Update item data
+      await FirebaseFirestore.instance
+          .collection("restaurants")
+          .doc(restaurantId)
+          .collection("items")
+          .doc(itemId)
+          .update({
+        'name': name,
+        'namear': nameAr,
+        'description': description,
+        'descriptionar': descriptionAr,
+        'price': price,
+        'img': imageUrl,
+        'category': category,
+        'categories': itemCategories,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      print("Item data updated in Firestore with image URL: $imageUrl");
+
+      await getRestaurants(); // Refresh restaurants list
+      emit(
+          SuccessAddingItemState()); // Use same success state as adding for consistency
+    } catch (e) {
+      print("Error editing item: $e");
+      emit(ErrorAddingItemState(
+          e.toString())); // Use same error state as adding for consistency
+    }
+  }
+
   // Delete item from restaurant
   Future<void> deleteItem({
     required String restaurantId,

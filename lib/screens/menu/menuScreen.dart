@@ -23,6 +23,7 @@ class Menuscreen extends StatefulWidget {
     required this.deliverytime,
     required this.deliveryprice,
     required this.restaurantId,
+    this.outOfAreaFee,
   });
 
   final List<Item> items;
@@ -31,6 +32,7 @@ class Menuscreen extends StatefulWidget {
   final String deliverytime;
   final String deliveryprice;
   final String restaurantId;
+  final String? outOfAreaFee;
 
   @override
   State<Menuscreen> createState() => _MenuscreenState();
@@ -500,58 +502,98 @@ class _MenuscreenState extends State<Menuscreen> {
                       bottom: BorderSide(color: Colors.grey[300]!),
                     ),
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
+                  child: Column(
                     children: [
-                      // Delivery time with icon
+                      // First row: Delivery info
                       Row(
-                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.access_time, size: 16.sp),
-                          SizedBox(width: 4.w),
+                          // Delivery time with icon
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.access_time, size: 16.sp),
+                              SizedBox(width: 4.w),
+                              Text(
+                                widget.deliverytime,
+                                style: TextStyle(fontSize: 12.sp),
+                              ),
+                            ],
+                          ),
+                          dot(),
+                          // Delivery fee
                           Text(
-                            widget.deliverytime,
-                            style: TextStyle(fontSize: 12.sp),
+                            "${widget.deliveryprice} ${S.of(context).egp}",
+                            style: TextStyle(
+                              color: Colors.green,
+                              fontSize: 12.sp,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          // Out-of-area fee (only show if it exists and > 0)
+                          if (widget.outOfAreaFee != null && 
+                              widget.outOfAreaFee!.isNotEmpty && 
+                              widget.outOfAreaFee != "0" &&
+                              double.tryParse(widget.outOfAreaFee!) != null &&
+                              double.parse(widget.outOfAreaFee!) > 0) ...[
+                            Text(
+                              " + ${widget.outOfAreaFee} ${S.of(context).egp}",
+                              style: TextStyle(
+                                color: Colors.orange,
+                                fontSize: 12.sp,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                          dot(),
+                          Icon(Icons.delivery_dining, size: 18.sp),
+                          const Spacer(),
+                          // Reviews button
+                          TextButton.icon(
+                            onPressed: () {
+                              navigateTo(
+                                context,
+                                Reviewsscreen(restaurantId: widget.restaurantId),
+                              );
+                            },
+                            icon: const Icon(Icons.star_rate,
+                                color: Colors.amber, size: 16),
+                            label: Text(
+                              S.of(context).reviews,
+                              style: TextStyle(fontSize: 12.sp),
+                            ),
+                            style: TextButton.styleFrom(
+                              foregroundColor:
+                                  Theme.of(context).brightness == Brightness.dark
+                                      ? Colors.white
+                                      : Colors.black87,
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 8.w,
+                                vertical: 0,
+                              ),
+                            ),
                           ),
                         ],
                       ),
-                      dot(),
-                      // Delivery fee
-                      Text(
-                        " ${widget.deliveryprice} ${S.of(context).egp}",
-                        style: TextStyle(
-                          color: Colors.green,
-                          fontSize: 12.sp,
+                      // Second row: Out-of-area label (only if fee exists)
+                      if (widget.outOfAreaFee != null && 
+                          widget.outOfAreaFee!.isNotEmpty && 
+                          widget.outOfAreaFee != "0" &&
+                          double.tryParse(widget.outOfAreaFee!) != null &&
+                          double.parse(widget.outOfAreaFee!) > 0) ...[
+                        SizedBox(height: 4.h),
+                        Row(
+                          children: [
+                            Text(
+                              "* ${isRtl ? 'خارج المنطقة' : 'Out-of-area delivery fee applies'}",
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 10.sp,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                      dot(),
-                      Icon(Icons.delivery_dining, size: 18.sp),
-                      const Spacer(),
-                      // Reviews button
-                      TextButton.icon(
-                        onPressed: () {
-                          navigateTo(
-                            context,
-                            Reviewsscreen(restaurantId: widget.restaurantId),
-                          );
-                        },
-                        icon: const Icon(Icons.star_rate,
-                            color: Colors.amber, size: 18),
-                        label: Text(
-                          S.of(context).reviews,
-                          style: TextStyle(fontSize: 12.sp),
-                        ),
-                        style: TextButton.styleFrom(
-                          foregroundColor:
-                              Theme.of(context).brightness == Brightness.dark
-                                  ? Colors.white
-                                  : Colors.black87,
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 8.w,
-                            vertical: 0,
-                          ),
-                        ),
-                      ),
+                      ],
                     ],
                   ),
                 ),

@@ -77,7 +77,7 @@ class _OrdersscreeenState extends State<Ordersscreeen> {
                 ),
                 SizedBox(height: 20.h),
                 Text(
-                  'Please login to view your orders',
+                  S.of(context).login_to_continue,
                   style: Theme.of(context).textTheme.bodyLarge,
                   textAlign: TextAlign.center,
                 ),
@@ -89,7 +89,7 @@ class _OrdersscreeenState extends State<Ordersscreeen> {
                     backgroundColor: Colors.orange,
                     foregroundColor: Colors.white,
                   ),
-                  child: const Text('Login'),
+                  child: Text(S.of(context).log_in),
                 ),
               ],
             ),
@@ -102,33 +102,20 @@ class _OrdersscreeenState extends State<Ordersscreeen> {
     return ThemeBasedBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          title: Text(S.of(context).yourorders),
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          actions: [
-            // Only show clear button if user has orders
-            if (cubit.orders.isNotEmpty)
-              IconButton(
-                onPressed: () => _showClearHistoryDialog(context),
-                icon: const Icon(Icons.clear_all),
-                tooltip: 'Clear Order History',
-              ),
-          ],
-        ),
         body: BlocConsumer<OrderCubit, OrdersStates>(
           listener: (context, state) {
             if (state is OrderErrorState) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Error: ${state.error}'),
+                  content:
+                      Text("${S.of(context).error_message}: ${state.error}"),
                   backgroundColor: Colors.red,
                 ),
               );
             } else if (state is OrdersClearedSuccessState) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Order history cleared successfully'),
+                SnackBar(
+                  content: Text(S.of(context).order_history_cleared),
                   backgroundColor: Colors.green,
                 ),
               );
@@ -185,12 +172,26 @@ class _OrdersscreeenState extends State<Ordersscreeen> {
                       SizedBox(height: 10.h),
                       Padding(
                         padding: EdgeInsets.symmetric(horizontal: 10.w),
-                        child: Text(
-                          S.of(context).yourorders,
-                          style: TextStyle(
-                            fontSize: 20.sp,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              S.of(context).yourorders,
+                              style: TextStyle(
+                                fontSize: 20.sp,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            // Only show clear button if user has orders
+                            if (uniqueOrders.isNotEmpty)
+                              IconButton(
+                                onPressed: () =>
+                                    _showClearHistoryDialog(context),
+                                icon: const Icon(Icons.clear_all),
+                                tooltip: S.of(context).clear_order_history,
+                                iconSize: 20.sp,
+                              ),
+                          ],
                         ),
                       ),
                       SizedBox(height: 5.h),
@@ -243,9 +244,8 @@ class _OrdersscreeenState extends State<Ordersscreeen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Clear Order History'),
-          content: const Text(
-              'Are you sure you want to clear your entire order history? This action cannot be undone.'),
+          title: Text(S.of(context).clear_order_history),
+          content: Text(S.of(context).clear_history_confirmation),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
@@ -256,7 +256,7 @@ class _OrdersscreeenState extends State<Ordersscreeen> {
                 OrderCubit.get(context).clearUserOrderHistory();
                 Navigator.of(context).pop();
               },
-              child: const Text('Clear'),
+              child: Text(S.of(context).clear),
             ),
           ],
         );

@@ -93,25 +93,10 @@ Widget itemcard(context, bool fromFavourites, Item model, dynamic items) {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // Top section with restaurant name and item name
+                    // Top section with item name
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (restaurant != null) ...[
-                          Text(
-                            isRTL ? restaurant.nameAr : restaurant.name,
-                            style:
-                                Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      color: Theme.of(context).primaryColor,
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 12.sp,
-                                    ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            textAlign: isRTL ? TextAlign.right : TextAlign.left,
-                          ),
-                          SizedBox(height: 4.h),
-                        ],
                         Text(
                           isRTL ? model.nameAr : model.name,
                           style:

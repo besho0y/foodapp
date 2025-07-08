@@ -272,5 +272,11 @@
     "restaurants_found": "restaurants found",
     "apply": "Apply",
     "enter_promocode": "Enter promocode",
-    "promocode": "Promocode"
+    "promocode": "Promocode",
+    "clear_order_history": "Clear Order History",
+    "error_message": "Error",
+    "order_history_cleared": "Order history cleared successfully",
+    "clear_history_confirmation": "Are you sure you want to clear your entire order history? This action cannot be undone.",
+    "clear": "Clear",
+    "phone_updated_successfully": "Phone number updated successfully"
 }

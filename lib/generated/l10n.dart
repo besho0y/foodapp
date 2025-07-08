@@ -2781,6 +2781,66 @@ class S {
       args: [],
     );
   }
+
+  /// `Clear Order History`
+  String get clear_order_history {
+    return Intl.message(
+      'Clear Order History',
+      name: 'clear_order_history',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Error`
+  String get error_message {
+    return Intl.message(
+      'Error',
+      name: 'error_message',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Order history cleared successfully`
+  String get order_history_cleared {
+    return Intl.message(
+      'Order history cleared successfully',
+      name: 'order_history_cleared',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Are you sure you want to clear your entire order history? This action cannot be undone.`
+  String get clear_history_confirmation {
+    return Intl.message(
+      'Are you sure you want to clear your entire order history? This action cannot be undone.',
+      name: 'clear_history_confirmation',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Clear`
+  String get clear {
+    return Intl.message(
+      'Clear',
+      name: 'clear',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Phone number updated successfully`
+  String get phone_updated_successfully {
+    return Intl.message(
+      'Phone number updated successfully',
+      name: 'phone_updated_successfully',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {

@@ -160,7 +160,12 @@ class MessageLookup extends MessageLookupByLibrary {
         "checkout": MessageLookupByLibrary.simpleMessage("Checkout"),
         "choose_payment_method":
             MessageLookupByLibrary.simpleMessage("Choose Payment Method"),
+        "clear": MessageLookupByLibrary.simpleMessage("Clear"),
         "clear_cart": MessageLookupByLibrary.simpleMessage("Clear Cart"),
+        "clear_history_confirmation": MessageLookupByLibrary.simpleMessage(
+            "Are you sure you want to clear your entire order history? This action cannot be undone."),
+        "clear_order_history":
+            MessageLookupByLibrary.simpleMessage("Clear Order History"),
         "comma_separated":
             MessageLookupByLibrary.simpleMessage("Comma Separated"),
         "confirm_exit": MessageLookupByLibrary.simpleMessage(
@@ -219,6 +224,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "enter_reference_number": MessageLookupByLibrary.simpleMessage(
             "Please enter the transfer reference number"),
         "error": MessageLookupByLibrary.simpleMessage("Error"),
+        "error_message": MessageLookupByLibrary.simpleMessage("Error"),
         "error_updating_order_status": m1,
         "existing_categories":
             MessageLookupByLibrary.simpleMessage("Existing Categories"),
@@ -305,6 +311,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "order": MessageLookupByLibrary.simpleMessage("order"),
         "order_error":
             MessageLookupByLibrary.simpleMessage("Error placing order"),
+        "order_history_cleared": MessageLookupByLibrary.simpleMessage(
+            "Order history cleared successfully"),
         "order_items": MessageLookupByLibrary.simpleMessage("Order Items"),
         "order_placed":
             MessageLookupByLibrary.simpleMessage("Order placed successfully!"),
@@ -347,6 +355,8 @@ class MessageLookup extends MessageLookupByLibrary {
             "Phone number must be 11 digits"),
         "phone_required":
             MessageLookupByLibrary.simpleMessage("Phone is required"),
+        "phone_updated_successfully": MessageLookupByLibrary.simpleMessage(
+            "Phone number updated successfully"),
         "phoneverfy": MessageLookupByLibrary.simpleMessage(
             "Phone number must be 11 digits"),
         "place_order": MessageLookupByLibrary.simpleMessage("Place Order"),

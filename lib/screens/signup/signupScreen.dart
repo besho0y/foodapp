@@ -6,6 +6,7 @@ import 'package:foodapp/layout/layout.dart';
 import 'package:foodapp/screens/login/loginScreen.dart';
 import 'package:foodapp/screens/signup/cubit.dart';
 import 'package:foodapp/screens/signup/states.dart';
+import 'package:foodapp/screens/terms/terms_screen.dart';
 import 'package:foodapp/shared/constants.dart';
 
 class Signupscreen extends StatefulWidget {
@@ -434,11 +435,18 @@ class _SignupscreenState extends State<Signupscreen> {
                                   ),
                                   SizedBox(width: 8.w),
                                   Expanded(
-                                    child: Text(
-                                      S.of(context).terms_and_conditions,
-                                      style: TextStyle(
-                                        color: secondaryTextColor,
-                                        fontSize: 14.sp,
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        navigateTo(context, const TermsScreen());
+                                      },
+                                      child: Text(
+                                        S.of(context).terms_and_conditions,
+                                        style: TextStyle(
+                                          color: primaryColor,
+                                          fontSize: 14.sp,
+                                          decoration: TextDecoration.underline,
+                                          decorationColor: primaryColor,
+                                        ),
                                       ),
                                     ),
                                   ),

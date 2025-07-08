@@ -4187,6 +4187,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
           return ItemListItem(
             item: item,
             onDelete: () => _deleteItem(cubit, restaurantId, item.id),
+            onEdit: () => _showEditItemDialog(cubit, restaurantId, item),
           );
         },
       );
@@ -6187,6 +6188,468 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
       ),
     );
   }
+
+  // Show edit item dialog
+  void _showEditItemDialog(AdminPanelCubit cubit, String restaurantId, Item item) {
+    // Create separate controllers for editing
+    final TextEditingController editItemNameController = TextEditingController(text: item.name);
+    final TextEditingController editItemNameArController = TextEditingController(text: item.nameAr);
+    final TextEditingController editItemDescriptionController = TextEditingController(text: item.description);
+    final TextEditingController editItemDescriptionArController = TextEditingController(text: item.descriptionAr);
+    final TextEditingController editItemPriceController = TextEditingController(text: item.price.toString());
+    final TextEditingController editItemCategoryController = TextEditingController(text: item.category);
+    
+    File? editItemImageFile;
+    List<String> editSelectedCategories = List.from(item.categories);
+    
+    // Get available menu categories for the restaurant
+    List<String> availableMenuCategories = [];
+    try {
+      availableMenuCategories = cubit.getMenuCategoriesForRestaurant(restaurantId);
+    } catch (e) {
+      print('Error getting menu categories: $e');
+      availableMenuCategories = ['All', 'Uncategorized'];
+    }
+
+    // Make sure categories are unique
+    availableMenuCategories = availableMenuCategories.toSet().toList();
+
+    // Add "All" as the first category if not present
+    if (!availableMenuCategories.contains("All")) {
+      availableMenuCategories.insert(0, "All");
+    }
+
+    // Remove any variations of "Uncategorized"
+    availableMenuCategories.removeWhere(
+      (category) => category.toLowerCase().contains("uncategorized"),
+    );
+
+    // Ensure the current category is in the list
+    if (!availableMenuCategories.contains(item.category)) {
+      availableMenuCategories.add(item.category);
+    }
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: Text('${S.of(context).Edit} ${S.of(context).admin_items}'),
+          content: SizedBox(
+            width: double.maxFinite,
+            height: MediaQuery.of(context).size.height * 0.7,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Item Name
+                  TextFormField(
+                    controller: editItemNameController,
+                    decoration: InputDecoration(
+                      labelText: S.of(context).item_name,
+                      labelStyle: TextStyle(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white
+                            : Colors.black,
+                      ),
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : Colors.black,
+                          width: 1.5,
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : Colors.black,
+                          width: 1.5,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : Colors.black,
+                          width: 2.0,
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 12.h),
+
+                  // Item Name Arabic
+                  TextFormField(
+                    controller: editItemNameArController,
+                    decoration: InputDecoration(
+                      labelText: '${S.of(context).item_name} (${S.of(context).arabic})',
+                      labelStyle: TextStyle(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white
+                            : Colors.black,
+                      ),
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : Colors.black,
+                          width: 1.5,
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : Colors.black,
+                          width: 1.5,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : Colors.black,
+                          width: 2.0,
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 12.h),
+
+                  // Item Description
+                  TextFormField(
+                    controller: editItemDescriptionController,
+                    maxLines: 3,
+                    decoration: InputDecoration(
+                      labelText: S.of(context).item_description,
+                      labelStyle: TextStyle(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white
+                            : Colors.black,
+                      ),
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : Colors.black,
+                          width: 1.5,
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : Colors.black,
+                          width: 1.5,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : Colors.black,
+                          width: 2.0,
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 12.h),
+
+                  // Item Description Arabic
+                  TextFormField(
+                    controller: editItemDescriptionArController,
+                    maxLines: 3,
+                    decoration: InputDecoration(
+                      labelText: '${S.of(context).item_description} (${S.of(context).arabic})',
+                      labelStyle: TextStyle(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white
+                            : Colors.black,
+                      ),
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : Colors.black,
+                          width: 1.5,
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : Colors.black,
+                          width: 1.5,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : Colors.black,
+                          width: 2.0,
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 12.h),
+
+                  // Item Price
+                  TextFormField(
+                    controller: editItemPriceController,
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      labelText: S.of(context).item_price,
+                      labelStyle: TextStyle(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white
+                            : Colors.black,
+                      ),
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : Colors.black,
+                          width: 1.5,
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : Colors.black,
+                          width: 1.5,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : Colors.black,
+                          width: 2.0,
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 12.h),
+
+                  // Category Dropdown
+                  DropdownButtonFormField<String>(
+                    value: availableMenuCategories.contains(editItemCategoryController.text)
+                        ? editItemCategoryController.text
+                        : availableMenuCategories.first,
+                    decoration: InputDecoration(
+                      labelText: S.of(context).category,
+                      labelStyle: TextStyle(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white
+                            : Colors.black,
+                      ),
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : Colors.black,
+                          width: 1.5,
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : Colors.black,
+                          width: 1.5,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : Colors.black,
+                          width: 2.0,
+                        ),
+                      ),
+                    ),
+                    items: availableMenuCategories.map((String category) {
+                      return DropdownMenuItem<String>(
+                        value: category,
+                        child: Text(
+                          category,
+                          style: TextStyle(
+                            color: Theme.of(context).brightness == Brightness.dark
+                                ? Colors.white
+                                : Colors.black,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                    onChanged: (String? newValue) {
+                      if (newValue != null) {
+                        setState(() {
+                          editItemCategoryController.text = newValue;
+                        });
+                      }
+                    },
+                  ),
+                  SizedBox(height: 12.h),
+
+                  // Image Selection
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Current Image Display
+                      if (item.img.isNotEmpty)
+                        Column(
+                          children: [
+                            const Text('Current Image:', style: TextStyle(fontWeight: FontWeight.bold)),
+                            SizedBox(height: 8.h),
+                            Container(
+                              height: 100.h,
+                              width: 100.w,
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.grey),
+                                borderRadius: BorderRadius.circular(8.r),
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(8.r),
+                                child: Image.network(
+                                  item.img,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return const Icon(Icons.error, color: Colors.red);
+                                  },
+                                ),
+                              ),
+                            ),
+                            SizedBox(height: 12.h),
+                          ],
+                        ),
+                      
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            try {
+                              final imageFile = await cubit.pickImage();
+                              if (imageFile != null) {
+                                setState(() {
+                                  editItemImageFile = imageFile;
+                                });
+                              }
+                            } catch (e) {
+                              print("Error selecting image: $e");
+                            }
+                          },
+                          child: Text(S.of(context).select_image),
+                        ),
+                      ),
+                      SizedBox(height: 8.h),
+                      Text(
+                        editItemImageFile != null
+                            ? '✅ ${S.of(context).image_selected}'
+                            : '📷 Keep current image',
+                        style: TextStyle(
+                          fontSize: 12.sp,
+                          color: editItemImageFile != null
+                              ? Colors.green
+                              : Colors.grey,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(
+                S.of(context).cancel,
+                style: TextStyle(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white
+                      : Colors.black,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                try {
+                  // Validate fields
+                  if (editItemNameController.text.trim().isEmpty ||
+                      editItemNameArController.text.trim().isEmpty ||
+                      editItemDescriptionController.text.trim().isEmpty ||
+                      editItemDescriptionArController.text.trim().isEmpty ||
+                      editItemPriceController.text.trim().isEmpty) {
+                    _showSnackBar(S.of(context).please_fill_all_fields,
+                        backgroundColor: Colors.red);
+                    return;
+                  }
+
+                  double price;
+                  try {
+                    price = double.parse(editItemPriceController.text.trim());
+                  } catch (e) {
+                    _showSnackBar('Please enter a valid price',
+                        backgroundColor: Colors.red);
+                    return;
+                  }
+
+                  // Show loading
+                  showDialog(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (loadingContext) => const Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                  );
+
+                  // Make sure we include the primary category in categories
+                  final allCategories = List<String>.from(editSelectedCategories);
+                  if (!allCategories.contains(editItemCategoryController.text) &&
+                      editItemCategoryController.text != "All") {
+                    allCategories.add(editItemCategoryController.text);
+                  }
+
+                  await cubit.editItem(
+                    restaurantId: restaurantId,
+                    itemId: item.id,
+                    name: editItemNameController.text.trim(),
+                    nameAr: editItemNameArController.text.trim(),
+                    description: editItemDescriptionController.text.trim(),
+                    descriptionAr: editItemDescriptionArController.text.trim(),
+                    price: price,
+                    category: editItemCategoryController.text.trim(),
+                    categories: allCategories,
+                    imageFile: editItemImageFile,
+                  );
+
+                  // Close loading dialog
+                  Navigator.pop(context);
+                  // Close edit dialog
+                  Navigator.pop(dialogContext);
+
+                  _showSnackBar('Item updated successfully',
+                      backgroundColor: Colors.green);
+                  
+                  // Refresh the admin panel
+                  await _refreshAdminPanel();
+                } catch (e) {
+                  // Close loading dialog
+                  Navigator.pop(context);
+                  _showSnackBar('Error updating item: $e',
+                      backgroundColor: Colors.red);
+                }
+              },
+              child: Text(S.of(context).UpdateProfile),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class RestaurantListItem extends StatelessWidget {
@@ -6301,8 +6764,9 @@ class RestaurantListItem extends StatelessWidget {
 class ItemListItem extends StatelessWidget {
   final Item item;
   final VoidCallback onDelete;
+  final VoidCallback onEdit;
 
-  const ItemListItem({Key? key, required this.item, required this.onDelete})
+  const ItemListItem({Key? key, required this.item, required this.onDelete, required this.onEdit})
       : super(key: key);
 
   @override
@@ -6382,9 +6846,20 @@ class ItemListItem extends StatelessWidget {
             ),
           ],
         ),
-        trailing: IconButton(
-          icon: const Icon(Icons.delete, color: Colors.red),
-          onPressed: onDelete,
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.edit, color: Colors.blue),
+              onPressed: onEdit,
+              tooltip: "Edit Item",
+            ),
+            IconButton(
+              icon: const Icon(Icons.delete, color: Colors.red),
+              onPressed: onDelete,
+              tooltip: "Delete Item",
+            ),
+          ],
         ),
       ),
     );

@@ -10,7 +10,6 @@ import 'package:foodapp/screens/admin%20panel/adminpanelscreen.dart';
 import 'package:foodapp/screens/favourits/cubit.dart';
 import 'package:foodapp/screens/login/loginScreen.dart';
 import 'package:foodapp/screens/profile/profileScreen.dart';
-import 'package:foodapp/screens/settingdetailsscreen/settingdetails.dart';
 import 'package:foodapp/screens/terms/terms_screen.dart';
 import 'package:foodapp/shared/constants.dart';
 import 'package:foodapp/shared/local_storage.dart';
@@ -189,24 +188,6 @@ class Settingsscreen extends StatelessWidget {
                 ),
               ),
             ),
-          GestureDetector(
-            onTap: () => navigateTo(context, const Settingdetails()),
-            child: Card(
-              child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 5.w),
-                child: Row(
-                  children: [
-                    const Icon(Icons.settings),
-                    SizedBox(width: 5.w),
-                    Text(
-                      S.of(context).settings,
-                      style: Theme.of(context).textTheme.labelLarge,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
 
           // Contact us is always shown
           GestureDetector(

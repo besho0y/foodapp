@@ -772,8 +772,8 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
                                                               .primaryBrown
                                                           : null,
                                                     ),
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
+                                                    maxLines: null,
+                                                    softWrap: true,
                                                   ),
                                                 ),
                                                 Expanded(

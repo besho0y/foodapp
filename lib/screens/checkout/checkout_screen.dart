@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -656,6 +657,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                 );
                                 return;
                               }
+
+                              // Check if user has a phone number before proceeding to payment step
+                              final profileCubit = ProfileCubit.get(context);
+                              if (profileCubit.user.phone.isEmpty) {
+                                _showPhoneNumberDialog(context);
+                                return;
+                              }
+
                               if (!mounted) return;
                               setState(() {
                                 _currentStep = 1;
@@ -856,19 +865,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         layoutCubit.calculateTotalPrice(promoDiscount: _promoDiscount);
     print('Total price: $totalPrice');
 
-    // Calculate total out-of-area fee for the order
-    double totalOutOfAreaFee = 0.0;
-    final restaurantGroups = groupItemsByRestaurant(layoutCubit.cartitems);
-    restaurantGroups.forEach((restaurantId, items) {
-      try {
-        Map<String, double> feeBreakdown =
-            _calculateDeliveryFeeBreakdownForRestaurant(
-                context, restaurantId, items.first.deliveryFee);
-        totalOutOfAreaFee += feeBreakdown['outOfAreaFee'] ?? 0.0;
-      } catch (e) {
-        print('Error calculating out-of-area fee for order: $e');
-      }
-    });
+    // Calculate total out-of-area fee for the order using the same method as displayed in checkout
+    Map<String, double> feeBreakdown =
+        layoutCubit.calculateDeliveryFeesWithAreaLogic(context);
+    double totalOutOfAreaFee = feeBreakdown['outOfAreaFee'] ?? 0.0;
     print('Total out-of-area fee for order: $totalOutOfAreaFee');
 
     // Create comprehensive order data
@@ -1997,6 +1997,161 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         ),
       );
     });
+  }
+
+  // Update phone number directly without state management delays
+  Future<void> _updatePhoneDirectly(
+      String phoneNumber, ProfileCubit profileCubit) async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) {
+      throw Exception('User not authenticated');
+    }
+
+    // Update the phone number in the user model immediately
+    profileCubit.user.phone = phoneNumber;
+
+    // Update in Firestore
+    await FirebaseFirestore.instance
+        .collection("users")
+        .doc(currentUser.uid)
+        .update({
+      'phone': phoneNumber,
+    });
+  }
+
+  // Show phone number dialog
+  void _showPhoneNumberDialog(BuildContext context) {
+    final phoneController = TextEditingController();
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              Icon(Icons.phone, color: Theme.of(context).primaryColor),
+              SizedBox(width: 8.w),
+              Text(S.of(context).Phone),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                S.of(context).phone_required,
+                style: TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
+              ),
+              SizedBox(height: 16.h),
+              TextField(
+                controller: phoneController,
+                keyboardType: TextInputType.phone,
+                decoration: InputDecoration(
+                  labelText: S.of(context).Phone,
+                  hintText: S.of(context).phone_hint,
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.phone),
+                ),
+                maxLength: 11,
+                onChanged: (value) {
+                  // Remove any non-digit characters
+                  final cleaned = value.replaceAll(RegExp(r'[^0-9]'), '');
+                  if (cleaned != value) {
+                    phoneController.text = cleaned;
+                    phoneController.selection = TextSelection.fromPosition(
+                      TextPosition(offset: cleaned.length),
+                    );
+                  }
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(S.of(context).cancel),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final phone = phoneController.text.trim();
+
+                if (phone.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(S.of(context).phone_required),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                  return;
+                }
+
+                if (phone.length != 11) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(S.of(context).phone_length_error),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                  return;
+                }
+
+                // Update user profile with phone number directly
+                try {
+                  // Show loading indicator
+                  showDialog(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (context) => const Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                  );
+
+                  final profileCubit = ProfileCubit.get(context);
+
+                  // Update phone number directly without state management delays
+                  await _updatePhoneDirectly(phone, profileCubit);
+
+                  // Close loading dialog
+                  Navigator.of(context).pop();
+
+                  // Close phone dialog
+                  Navigator.of(context).pop();
+
+                  // Show success message
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(S.of(context).phone_updated_successfully),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+
+                  // Now proceed to payment step
+                  if (mounted) {
+                    setState(() {
+                      _currentStep = 1;
+                    });
+                  }
+                } catch (e) {
+                  // Close loading dialog if it's open
+                  if (Navigator.canPop(context)) {
+                    Navigator.of(context).pop();
+                  }
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Failed to update phone number: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              },
+              child: Text(S.of(context).save),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   // Added missing method - Process Order

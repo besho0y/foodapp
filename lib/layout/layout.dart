@@ -107,14 +107,14 @@ class _LayoutState extends State<Layout> {
                                         : Colors.black),
                               ),
                             ),
-                            ElevatedButton(
-                              onPressed: () => Navigator.pop(context, true),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.red,
-                                foregroundColor: Colors.white,
-                              ),
-                              child: Text(S.of(context).yes),
-                            ),
+                                        ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color.fromARGB(255, 74, 26, 15),
+                foregroundColor: Colors.white,
+              ),
+              child: Text(S.of(context).yes),
+            ),
                           ],
                         ),
                       ) ??
@@ -285,6 +285,34 @@ class _LayoutState extends State<Layout> {
                               Text(cubit.titles(context)[cubit.currentindex]),
                           automaticallyImplyLeading:
                               false, // <<< Disable back arrow
+                          actions: cubit.currentindex ==
+                                  3 // Only show in settings screen (index 3)
+                              ? [
+                                  IconButton(
+                                    onPressed: () {
+                                      try {
+                                        cubit.changeLanguage();
+                                      } catch (e) {
+                                        print('Error changing language: $e');
+                                      }
+                                    },
+                                    icon: Icon(Icons.language, size: 25.sp),
+                                    tooltip: 'Toggle Language',
+                                  ),
+                                  IconButton(
+                                    onPressed: () {
+                                      try {
+                                        cubit.toggletheme();
+                                      } catch (e) {
+                                        print('Error toggling theme: $e');
+                                      }
+                                    },
+                                    icon: Icon(Icons.brightness_6_outlined,
+                                        size: 25.sp),
+                                    tooltip: 'Toggle Theme',
+                                  ),
+                                ]
+                              : null,
                         ),
                   floatingActionButton:
                       // Hide the cart button for admin user
