@@ -344,6 +344,14 @@ class Restuarantscubit extends Cubit<ResturantsStates> {
     }
   }
 
+  // Helper method to check if restaurant serves the selected area
+  bool _restaurantServesArea(Restuarants restaurant, String selectedArea) {
+    return restaurant.mainAreas.contains(selectedArea) ||
+        restaurant.secondaryAreas.contains(selectedArea) ||
+        restaurant.area == selectedArea ||
+        restaurant.areas.contains(selectedArea);
+  }
+
   // Filter restaurants by category (respecting the selected area)
   void filterRestaurants(Category category) {
     try {
@@ -364,10 +372,9 @@ class Restuarantscubit extends Cubit<ResturantsStates> {
           print("Showing all restaurants in $_selectedArea");
           // Apply area filter only
           _filteredRestaurants = _allRestuarants.where((restaurant) {
-            bool areaMatches = restaurant.mainAreas.contains(_selectedArea) ||
-                restaurant.secondaryAreas.contains(_selectedArea);
+            bool areaMatches = _restaurantServesArea(restaurant, _selectedArea);
             print(
-                "Restaurant ${restaurant.name}: mainAreas=${restaurant.mainAreas}, secondaryAreas=${restaurant.secondaryAreas}, areaMatches=$areaMatches");
+                "Restaurant ${restaurant.name}: mainAreas=${restaurant.mainAreas}, secondaryAreas=${restaurant.secondaryAreas}, area=${restaurant.area}, areas=${restaurant.areas}, areaMatches=$areaMatches");
             return areaMatches;
           }).toList();
         }
@@ -388,13 +395,12 @@ class Restuarantscubit extends Cubit<ResturantsStates> {
                 "Restaurant ${restaurant.name}: category=${restaurant.category}, categoryMatches=$categoryMatches (no area filter)");
             return categoryMatches;
           } else {
-            // Check both category and area
-            bool areaMatches = restaurant.area == _selectedArea ||
-                restaurant.areas.contains(_selectedArea);
+            // Check both category and area using the same logic as "All" category
+            bool areaMatches = _restaurantServesArea(restaurant, _selectedArea);
             bool finalMatch = categoryMatches && areaMatches;
 
             print(
-                "Restaurant ${restaurant.name}: category=${restaurant.category}, area=${restaurant.area}, areas=${restaurant.areas}, categoryMatches=$categoryMatches, areaMatches=$areaMatches, finalMatch=$finalMatch");
+                "Restaurant ${restaurant.name}: category=${restaurant.category}, mainAreas=${restaurant.mainAreas}, secondaryAreas=${restaurant.secondaryAreas}, area=${restaurant.area}, areas=${restaurant.areas}, categoryMatches=$categoryMatches, areaMatches=$areaMatches, finalMatch=$finalMatch");
             return finalMatch;
           }
         }).toList();

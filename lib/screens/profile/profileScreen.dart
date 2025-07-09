@@ -702,6 +702,7 @@ class _ProfilescreenState extends State<Profilescreen> {
     final emailController = TextEditingController(text: cubit.user.email);
     final phoneController = TextEditingController(text: cubit.user.phone);
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final formKey = GlobalKey<FormState>();
 
     showModalBottomSheet(
       context: context,
@@ -716,155 +717,160 @@ class _ProfilescreenState extends State<Profilescreen> {
           right: 20.w,
           top: 20.h,
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              S.of(context).UpdateProfile,
-              style: TextStyle(
-                fontSize: 18.sp,
-                fontWeight: FontWeight.bold,
+        child: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                S.of(context).UpdateProfile,
+                style: TextStyle(
+                  fontSize: 18.sp,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-            SizedBox(height: 20.h),
-            TextField(
-              controller: nameController,
-              style: TextStyle(
-                color: isDarkMode ? AppColors.darkText : Colors.black,
-              ),
-              decoration: InputDecoration(
-                labelText: S.of(context).Name,
-                labelStyle: TextStyle(color: Theme.of(context).primaryColor),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
+              SizedBox(height: 20.h),
+              TextFormField(
+                controller: nameController,
+                style: TextStyle(
+                  color: isDarkMode ? AppColors.darkText : Colors.black,
                 ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: const BorderSide(color: Colors.grey),
+                decoration: InputDecoration(
+                  labelText: S.of(context).Name,
+                  labelStyle: TextStyle(color: Theme.of(context).primaryColor),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                    borderSide: const BorderSide(color: Colors.grey),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                    borderSide: BorderSide(
+                        color: Theme.of(context).primaryColor, width: 2.0),
+                  ),
+                  filled: true,
+                  fillColor: isDarkMode ? Colors.black : Colors.grey.shade50,
+                  prefixIcon:
+                      Icon(Icons.person, color: Theme.of(context).primaryColor),
                 ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: BorderSide(
-                      color: Theme.of(context).primaryColor, width: 2.0),
-                ),
-                filled: true,
-                fillColor: isDarkMode ? Colors.black : Colors.grey.shade50,
-                prefixIcon:
-                    Icon(Icons.person, color: Theme.of(context).primaryColor),
-              ),
-            ),
-            SizedBox(height: 12.h),
-            TextField(
-              controller: emailController,
-              style: TextStyle(
-                color: isDarkMode ? AppColors.darkText : Colors.black,
-              ),
-              decoration: InputDecoration(
-                labelText: S.of(context).Email,
-                labelStyle: TextStyle(color: Theme.of(context).primaryColor),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: const BorderSide(color: Colors.grey),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: BorderSide(
-                      color: Theme.of(context).primaryColor, width: 2.0),
-                ),
-                filled: true,
-                fillColor: isDarkMode ? Colors.black : Colors.grey.shade50,
-                prefixIcon:
-                    Icon(Icons.email, color: Theme.of(context).primaryColor),
-              ),
-              enabled: false, // Email cannot be changed
-            ),
-            SizedBox(height: 12.h),
-            TextField(
-              controller: phoneController,
-              style: TextStyle(
-                color: isDarkMode ? AppColors.darkText : Colors.black,
-              ),
-              decoration: InputDecoration(
-                labelText: S.of(context).Phone,
-                labelStyle: TextStyle(color: Theme.of(context).primaryColor),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: const BorderSide(color: Colors.grey),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: BorderSide(
-                      color: Theme.of(context).primaryColor, width: 2.0),
-                ),
-                filled: true,
-                fillColor: isDarkMode ? Colors.black : Colors.grey.shade50,
-                prefixIcon:
-                    Icon(Icons.phone, color: Theme.of(context).primaryColor),
-              ),
-              keyboardType: TextInputType.phone,
-            ),
-            SizedBox(height: 20.h),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () async {
-                  if (nameController.text.trim().isEmpty ||
-                      phoneController.text.trim().isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(S.of(context).Pleasefill)),
-                    );
-                    return;
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return S.of(context).Pleasefill;
                   }
-
-                  // Validate phone number
-                  if (phoneController.text.trim().length != 11) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(S.of(context).phoneverfy)),
-                    );
-                    return;
-                  }
-
-                  // Show loading indicator
-                  showDialog(
-                    context: context,
-                    barrierDismissible: false,
-                    builder: (context) => const Center(
-                      child: CircularProgressIndicator(),
-                    ),
-                  );
-
-                  // Update profile
-                  await ProfileCubit.get(context).updateUserProfile(
-                    name: nameController.text.trim(),
-                    phone: phoneController.text.trim(),
-                  );
-
-                  // Close loading indicator
-                  Navigator.of(context).pop();
-
-                  // Close bottom sheet
-                  Navigator.pop(context);
-
-                  // Show success message
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(S.of(context).Profileupdatedsuccessfully),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
+                  return null;
                 },
-                child: Text(S.of(context).UpdateProfile),
               ),
-            ),
-            SizedBox(height: 20.h),
-          ],
+              SizedBox(height: 12.h),
+              TextFormField(
+                controller: emailController,
+                style: TextStyle(
+                  color: isDarkMode ? AppColors.darkText : Colors.black,
+                ),
+                decoration: InputDecoration(
+                  labelText: S.of(context).Email,
+                  labelStyle: TextStyle(color: Theme.of(context).primaryColor),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                    borderSide: const BorderSide(color: Colors.grey),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                    borderSide: BorderSide(
+                        color: Theme.of(context).primaryColor, width: 2.0),
+                  ),
+                  filled: true,
+                  fillColor: isDarkMode ? Colors.black : Colors.grey.shade50,
+                  prefixIcon:
+                      Icon(Icons.email, color: Theme.of(context).primaryColor),
+                ),
+                enabled: false, // Email cannot be changed
+              ),
+              SizedBox(height: 12.h),
+              TextFormField(
+                controller: phoneController,
+                style: TextStyle(
+                  color: isDarkMode ? AppColors.darkText : Colors.black,
+                ),
+                decoration: InputDecoration(
+                  labelText: S.of(context).Phone,
+                  labelStyle: TextStyle(color: Theme.of(context).primaryColor),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                    borderSide: const BorderSide(color: Colors.grey),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                    borderSide: BorderSide(
+                        color: Theme.of(context).primaryColor, width: 2.0),
+                  ),
+                  filled: true,
+                  fillColor: isDarkMode ? Colors.black : Colors.grey.shade50,
+                  prefixIcon:
+                      Icon(Icons.phone, color: Theme.of(context).primaryColor),
+                ),
+                keyboardType: TextInputType.phone,
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return S.of(context).Pleasefill;
+                  }
+                  if (value.trim().length != 11) {
+                    return S.of(context).phoneverfy;
+                  }
+                  return null;
+                },
+              ),
+              SizedBox(height: 20.h),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    if (formKey.currentState!.validate()) {
+                      // Show loading indicator
+                      showDialog(
+                        context: context,
+                        barrierDismissible: false,
+                        builder: (context) => const Center(
+                          child: CircularProgressIndicator(),
+                        ),
+                      );
+
+                      // Update profile
+                      await ProfileCubit.get(context).updateUserProfile(
+                        name: nameController.text.trim(),
+                        phone: phoneController.text.trim(),
+                      );
+
+                      // Close loading indicator
+                      Navigator.of(context).pop();
+
+                      // Close bottom sheet
+                      Navigator.pop(context);
+
+                      // Show success message
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content:
+                              Text(S.of(context).Profileupdatedsuccessfully),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                    }
+                  },
+                  child: Text(S.of(context).UpdateProfile),
+                ),
+              ),
+              SizedBox(height: 20.h),
+            ],
+          ),
         ),
       ),
     );

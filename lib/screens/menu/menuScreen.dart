@@ -522,21 +522,22 @@ class _MenuscreenState extends State<Menuscreen> {
                           dot(),
                           // Delivery fee
                           Text(
-                            "${widget.deliveryprice} ${S.of(context).egp}",
+                            "${widget.deliveryprice} ${S.of(context).egp} ",
                             style: TextStyle(
                               color: Colors.green,
                               fontSize: 12.sp,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
+                          Icon(Icons.delivery_dining, size: 18.sp),
                           // Out-of-area fee (only show if it exists and > 0)
-                          if (widget.outOfAreaFee != null && 
-                              widget.outOfAreaFee!.isNotEmpty && 
+                          if (widget.outOfAreaFee != null &&
+                              widget.outOfAreaFee!.isNotEmpty &&
                               widget.outOfAreaFee != "0" &&
                               double.tryParse(widget.outOfAreaFee!) != null &&
                               double.parse(widget.outOfAreaFee!) > 0) ...[
                             Text(
-                              " + ${widget.outOfAreaFee} ${S.of(context).egp}",
+                              " + ${widget.outOfAreaFee} ${S.of(context).egp} *",
                               style: TextStyle(
                                 color: Colors.orange,
                                 fontSize: 12.sp,
@@ -545,14 +546,15 @@ class _MenuscreenState extends State<Menuscreen> {
                             ),
                           ],
                           dot(),
-                          Icon(Icons.delivery_dining, size: 18.sp),
+
                           const Spacer(),
                           // Reviews button
                           TextButton.icon(
                             onPressed: () {
                               navigateTo(
                                 context,
-                                Reviewsscreen(restaurantId: widget.restaurantId),
+                                Reviewsscreen(
+                                    restaurantId: widget.restaurantId),
                               );
                             },
                             icon: const Icon(Icons.star_rate,
@@ -562,10 +564,10 @@ class _MenuscreenState extends State<Menuscreen> {
                               style: TextStyle(fontSize: 12.sp),
                             ),
                             style: TextButton.styleFrom(
-                              foregroundColor:
-                                  Theme.of(context).brightness == Brightness.dark
-                                      ? Colors.white
-                                      : Colors.black87,
+                              foregroundColor: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.white
+                                  : Colors.black87,
                               padding: EdgeInsets.symmetric(
                                 horizontal: 8.w,
                                 vertical: 0,
@@ -575,8 +577,8 @@ class _MenuscreenState extends State<Menuscreen> {
                         ],
                       ),
                       // Second row: Out-of-area label (only if fee exists)
-                      if (widget.outOfAreaFee != null && 
-                          widget.outOfAreaFee!.isNotEmpty && 
+                      if (widget.outOfAreaFee != null &&
+                          widget.outOfAreaFee!.isNotEmpty &&
                           widget.outOfAreaFee != "0" &&
                           double.tryParse(widget.outOfAreaFee!) != null &&
                           double.parse(widget.outOfAreaFee!) > 0) ...[
