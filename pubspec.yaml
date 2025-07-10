@@ -60,7 +60,7 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   animated_toggle_switch: ^0.8.5
-  firebase_app_check: ^0.2.2+7
+  # firebase_app_check: ^0.2.2+7
   video_player: ^2.10.0
   flutter_native_splash: ^2.4.6
   cached_network_image: ^3.4.0
