@@ -8,6 +8,7 @@ import 'package:foodapp/screens/favourits/states.dart';
 import 'package:foodapp/screens/resturants/cubit.dart';
 import 'package:foodapp/screens/resturants/states.dart';
 import 'package:foodapp/shared/colors.dart';
+import 'package:foodapp/shared/optimized_image.dart';
 import 'package:foodapp/widgets/restaurantbox.dart';
 
 class Resturantscreen extends StatefulWidget {
@@ -113,36 +114,9 @@ class _ResturantscreenState extends State<Resturantscreen> {
                                   ),
                                   child: ClipRRect(
                                     borderRadius: BorderRadius.circular(20.r),
-                                    child: Image.network(
-                                      banner.imageUrl,
-                                      fit: BoxFit.cover,
-                                      loadingBuilder:
-                                          (context, child, loadingProgress) {
-                                        if (loadingProgress == null)
-                                          return child;
-                                        return Center(
-                                          child: CircularProgressIndicator(
-                                            value: loadingProgress
-                                                        .expectedTotalBytes !=
-                                                    null
-                                                ? loadingProgress
-                                                        .cumulativeBytesLoaded /
-                                                    loadingProgress
-                                                        .expectedTotalBytes!
-                                                : null,
-                                          ),
-                                        );
-                                      },
-                                      errorBuilder:
-                                          (context, error, stackTrace) {
-                                        return Container(
-                                          color: Colors.grey.shade300,
-                                          child: const Center(
-                                            child: Icon(Icons.error,
-                                                color: Colors.grey),
-                                          ),
-                                        );
-                                      },
+                                    child: BannerImageWidget(
+                                      imageUrl: banner.imageUrl,
+                                      borderRadius: BorderRadius.circular(20.r),
                                     ),
                                   ),
                                 );
@@ -194,7 +168,10 @@ class _ResturantscreenState extends State<Resturantscreen> {
                                               offset: const Offset(3, 1),
                                             )
                                           ]),
-                                      child: _buildCategoryImage(category.img),
+                                      child: CategoryImageWidget(
+                                        imageUrl: category.img,
+                                        size: 50.w,
+                                      ),
                                     ),
                                     SizedBox(height: 6.h),
                                     Flexible(
@@ -253,145 +230,5 @@ class _ResturantscreenState extends State<Resturantscreen> {
     );
   }
 
-  Widget _buildCategoryImage(String imageUrl) {
-    try {
-      print("Building category image for URL: $imageUrl");
 
-      if (imageUrl.isEmpty) {
-        // Empty URL - use default icon
-        return Icon(
-          Icons.category,
-          size: 35.sp,
-          color: Theme.of(context).brightness == Brightness.dark
-              ? Colors.orange
-              : Colors.white,
-        );
-      }
-
-      if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
-        // Network image from Firebase Storage
-        return ClipOval(
-          child: Image.network(
-            imageUrl,
-            fit: BoxFit.cover,
-            width: 50.w,
-            height: 50.h,
-            loadingBuilder: (context, child, loadingProgress) {
-              if (loadingProgress == null) return child;
-              return Center(
-                child: CircularProgressIndicator(
-                  value: loadingProgress.expectedTotalBytes != null
-                      ? loadingProgress.cumulativeBytesLoaded /
-                          loadingProgress.expectedTotalBytes!
-                      : null,
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    Theme.of(context).brightness == Brightness.dark
-                        ? Colors.orange
-                        : Colors.white,
-                  ),
-                ),
-              );
-            },
-            errorBuilder: (context, error, stackTrace) {
-              print("Error loading network category image '$imageUrl': $error");
-              // Fallback to asset image or icon
-              return _getFallbackCategoryImage(imageUrl);
-            },
-          ),
-        );
-      } else if (imageUrl.startsWith('assets/')) {
-        // Asset image
-        return ClipOval(
-          child: Image.asset(
-            imageUrl,
-            fit: BoxFit.cover,
-            width: 48.w,
-            height: 48.h,
-            errorBuilder: (context, error, stackTrace) {
-              print("Error loading asset category image '$imageUrl': $error");
-              // Fallback to default icon
-              return Icon(
-                Icons.category,
-                size: 30.sp,
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? Colors.orange
-                    : Colors.white,
-              );
-            },
-          ),
-        );
-      } else {
-        // Unknown format - try as asset first, then fallback
-        return ClipOval(
-          child: Image.asset(
-            imageUrl.startsWith('assets/')
-                ? imageUrl
-                : 'assets/images/categories/$imageUrl',
-            fit: BoxFit.cover,
-            width: 48.w,
-            height: 48.h,
-            errorBuilder: (context, error, stackTrace) {
-              print("Error loading category image '$imageUrl': $error");
-              return _getFallbackCategoryImage(imageUrl);
-            },
-          ),
-        );
-      }
-    } catch (e) {
-      print("Exception in _buildCategoryImage for '$imageUrl': $e");
-      return _getFallbackCategoryImage(imageUrl);
-    }
-  }
-
-  Widget _getFallbackCategoryImage(String originalUrl) {
-    // Try to determine appropriate fallback based on the original URL or use generic icon
-    try {
-      // Extract category name from URL to find appropriate asset
-      final String categoryName = _extractCategoryNameFromUrl(originalUrl);
-      final String assetPath = 'assets/images/categories/$categoryName.png';
-
-      return ClipOval(
-        child: Image.asset(
-          assetPath,
-          fit: BoxFit.cover,
-          width: 48.w,
-          height: 48.h,
-          errorBuilder: (context, error, stackTrace) {
-            // Final fallback - generic category icon
-            return Icon(
-              Icons.restaurant_menu,
-              size: 30.sp,
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? Colors.orange
-                  : Colors.white,
-            );
-          },
-        ),
-      );
-    } catch (e) {
-      // Ultimate fallback
-      return Icon(
-        Icons.category,
-        size: 30.sp,
-        color: Theme.of(context).brightness == Brightness.dark
-            ? Colors.orange
-            : Colors.white,
-      );
-    }
-  }
-
-  String _extractCategoryNameFromUrl(String url) {
-    try {
-      if (url.contains('/')) {
-        final parts = url.split('/');
-        final fileName = parts.last;
-        // Remove file extension
-        return fileName.split('.').first.toLowerCase();
-      }
-      return url.toLowerCase();
-    } catch (e) {
-      return 'default';
-    }
-  }
 }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 
@@ -96,6 +97,9 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
   final TextEditingController _areaNameController = TextEditingController();
   final TextEditingController _areaNameArController = TextEditingController();
 
+  // Real-time orders listener
+  StreamSubscription<QuerySnapshot>? _ordersListener;
+
   @override
   void initState() {
     super.initState();
@@ -121,7 +125,13 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
       // Fetch orders but don't await - the method has its own mounted checks
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
-          _fetchAllOrders();
+          // Start real-time listener if we're on the orders tab by default
+          if (_selectedTabIndex == 3) {
+            _startOrdersListener();
+          } else {
+            // For other tabs, fetch orders once without listener
+            _fetchAllOrders();
+          }
         }
       });
 
@@ -145,6 +155,9 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
   @override
   void dispose() {
     try {
+      // Stop the real-time orders listener
+      _stopOrdersListener();
+
       _pageController.dispose();
       _restaurantNameController.dispose();
       _restaurantNameArController.dispose();
@@ -223,6 +236,70 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
       // Show error to user
       _showSnackBar('Error loading orders: $e', backgroundColor: Colors.red);
     }
+  }
+
+  // Start real-time orders listener
+  void _startOrdersListener() {
+    _stopOrdersListener(); // Stop any existing listener
+    print('🔄 Starting real-time orders listener');
+
+    _ordersListener = FirebaseFirestore.instance
+        .collection('orders')
+        .orderBy('date', descending: true)
+        .limit(100)
+        .snapshots()
+        .listen(
+      (QuerySnapshot snapshot) {
+        if (mounted && _selectedTabIndex == 3) {
+          // Only update if on orders tab (index 3)
+          print(
+              '📊 Real-time orders update received - ${snapshot.docs.length} orders');
+          _updateOrdersFromSnapshot(snapshot);
+        }
+      },
+      onError: (error) {
+        print('❌ Error in orders listener: $error');
+        if (mounted) {
+          _showSnackBar('Error listening for order updates',
+              backgroundColor: Colors.red);
+        }
+      },
+    );
+  }
+
+  // Stop real-time orders listener
+  void _stopOrdersListener() {
+    if (_ordersListener != null) {
+      print('⏹️ Stopping real-time orders listener');
+      _ordersListener?.cancel();
+      _ordersListener = null;
+    }
+  }
+
+  // Update orders list from Firestore snapshot
+  void _updateOrdersFromSnapshot(QuerySnapshot snapshot) {
+    if (!mounted) return;
+
+    setState(() {
+      allOrders = snapshot.docs
+          .map((doc) {
+            try {
+              final data = doc.data() as Map<String, dynamic>?;
+              if (data == null || data.isEmpty) {
+                print('Empty order document: ${doc.id}');
+                return null;
+              }
+              return app_models.Order.fromJson(data);
+            } catch (e) {
+              print('Error parsing order ${doc.id}: $e');
+              return null;
+            }
+          })
+          .where((order) => order != null)
+          .cast<app_models.Order>()
+          .toList();
+      isLoadingOrders = false;
+    });
   }
 
   void _showSnackBar(String message, {Color? backgroundColor}) {
@@ -561,6 +638,15 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
       onTap: () {
         if (mounted) {
           setState(() {
+            // Handle listener based on tab selection
+            if (_selectedTabIndex == 3 && index != 3) {
+              // Leaving orders tab - stop listener
+              _stopOrdersListener();
+            } else if (_selectedTabIndex != 3 && index == 3) {
+              // Entering orders tab - start listener
+              _startOrdersListener();
+            }
+
             _selectedTabIndex = index;
             _pageController.animateToPage(
               index,
@@ -1640,6 +1726,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
         return FutureBuilder<QuerySnapshot>(
           future: FirebaseFirestore.instance
               .collection('restaurants_categories')
+              .orderBy('createdAt', descending: true)
               .get(),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
@@ -2021,6 +2108,172 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
       print("❌ User error message: $errorMessage");
       _showSnackBar(errorMessage, backgroundColor: Colors.red);
       print("=== RESTAURANT CATEGORY ADDITION FAILED ===");
+    }
+  }
+
+  // Check if current user is admin
+  bool _isCurrentUserAdmin() {
+    const adminUserId = "yzPSwbiWTgXywHPVyBXhjfZGjR42";
+    final currentUser = FirebaseAuth.instance.currentUser;
+    return currentUser?.uid == adminUserId;
+  }
+
+  // Show clear orders confirmation dialog
+  Future<void> _showClearOrdersDialog() async {
+    final bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              const Icon(Icons.warning, color: Colors.red),
+              const SizedBox(width: 8),
+              Text(S.of(context).clear_order_history),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                S.of(context).clear_history_confirmation,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'This action will permanently ${S.of(context).delete} ${allOrders.length} orders and cannot be undone.',
+                style: const TextStyle(color: Colors.red),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                '⚠️ This is a destructive action that will:',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+              Text(
+                  '• ${S.of(context).delete} all order data from the database'),
+              const Text('• Remove order history permanently'),
+              Text('• ${S.of(context).clear} admin order management'),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: Text(S.of(context).cancel),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+              ),
+              child: Text(
+                S.of(context).clear_order_history,
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirm == true && mounted) {
+      await _clearAllOrders();
+    }
+  }
+
+  // Clear all orders from Firestore and local state
+  Future<void> _clearAllOrders() async {
+    if (!mounted) return;
+
+    try {
+      // Show loading dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext dialogContext) {
+          return Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const CircularProgressIndicator(),
+                const SizedBox(height: 16),
+                Text(
+                  '${S.of(context).clear}...',
+                  style: const TextStyle(color: Colors.white),
+                ),
+              ],
+            ),
+          );
+        },
+      );
+
+      print('🗑️ === STARTING CLEAR ALL ORDERS ===');
+
+      // Get all orders from Firestore
+      final QuerySnapshot ordersSnapshot =
+          await FirebaseFirestore.instance.collection('orders').get();
+
+      print('📊 Found ${ordersSnapshot.docs.length} orders to delete');
+
+      // Delete orders in batches to avoid Firestore limits
+      const int batchSize = 500; // Firestore batch limit
+      final List<QueryDocumentSnapshot> docs = ordersSnapshot.docs;
+
+      for (int i = 0; i < docs.length; i += batchSize) {
+        final batch = FirebaseFirestore.instance.batch();
+        final end = (i + batchSize < docs.length) ? i + batchSize : docs.length;
+
+        for (int j = i; j < end; j++) {
+          batch.delete(docs[j].reference);
+        }
+
+        await batch.commit();
+        print('✅ Deleted batch ${(i ~/ batchSize) + 1} (${end - i} orders)');
+      }
+
+      // Clear local orders list
+      if (mounted) {
+        setState(() {
+          allOrders.clear();
+        });
+      }
+
+      // Close loading dialog
+      if (mounted && Navigator.canPop(context)) {
+        Navigator.of(context).pop();
+      }
+
+      print('✅ === ALL ORDERS CLEARED SUCCESSFULLY ===');
+
+      // Show success message
+      if (mounted) {
+        _showSnackBar(
+          '${ordersSnapshot.docs.length} ${S.of(context).order_history_cleared}',
+          backgroundColor: Colors.green,
+        );
+      }
+
+      // Refresh the OrderCubit to sync with other parts of the app
+      try {
+        final orderCubit = OrderCubit.get(context);
+        await orderCubit.forceRefreshOrders();
+      } catch (e) {
+        print('Error refreshing OrderCubit after clear: $e');
+      }
+    } catch (e) {
+      print('❌ Error clearing orders: $e');
+
+      // Close loading dialog if still open
+      if (mounted && Navigator.canPop(context)) {
+        Navigator.of(context).pop();
+      }
+
+      // Show error message
+      if (mounted) {
+        _showSnackBar(
+          'Error: $e',
+          backgroundColor: Colors.red,
+        );
+      }
     }
   }
 
@@ -2913,18 +3166,40 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                       ),
                     ),
                   ),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      try {
-                        _fetchAllOrders();
-                      } catch (e) {
-                        print('Error in refresh orders: $e');
-                        _showSnackBar('Error refreshing orders',
-                            backgroundColor: Colors.red);
-                      }
-                    },
-                    icon: const Icon(Icons.refresh),
-                    label: Text(S.of(context).refresh),
+                  Row(
+                    children: [
+                      // Clear Orders Button (Admin Only)
+                      if (_isCurrentUserAdmin())
+                        Container(
+                          margin: EdgeInsets.only(right: 8.w),
+                          child: ElevatedButton.icon(
+                            onPressed: allOrders.isNotEmpty
+                                ? _showClearOrdersDialog
+                                : null,
+                            icon: const Icon(Icons.clear_all,
+                                color: Colors.white),
+                            label: Text(S.of(context).clear,
+                                style: const TextStyle(color: Colors.white)),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red,
+                              disabledBackgroundColor: Colors.grey,
+                            ),
+                          ),
+                        ),
+                      // Refresh Button
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          try {
+                            _fetchAllOrders();
+                          } catch (e) {
+                            print('Error in refresh orders: $e');
+                            _showSnackBar('Error', backgroundColor: Colors.red);
+                          }
+                        },
+                        icon: const Icon(Icons.refresh),
+                        label: Text(S.of(context).refresh),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -2967,7 +3242,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                               _fetchAllOrders();
                             } catch (e) {
                               print('Error refreshing orders: $e');
-                              _showSnackBar('Error refreshing orders',
+                              _showSnackBar('Error',
                                   backgroundColor: Colors.red);
                             }
                           },
@@ -2986,8 +3261,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                         await _fetchAllOrders();
                       } catch (e) {
                         print('Error in pull to refresh: $e');
-                        _showSnackBar('Error refreshing orders',
-                            backgroundColor: Colors.red);
+                        _showSnackBar('Error', backgroundColor: Colors.red);
                       }
                     },
                     child: ListView.builder(
@@ -6190,22 +6464,30 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
   }
 
   // Show edit item dialog
-  void _showEditItemDialog(AdminPanelCubit cubit, String restaurantId, Item item) {
+  void _showEditItemDialog(
+      AdminPanelCubit cubit, String restaurantId, Item item) {
     // Create separate controllers for editing
-    final TextEditingController editItemNameController = TextEditingController(text: item.name);
-    final TextEditingController editItemNameArController = TextEditingController(text: item.nameAr);
-    final TextEditingController editItemDescriptionController = TextEditingController(text: item.description);
-    final TextEditingController editItemDescriptionArController = TextEditingController(text: item.descriptionAr);
-    final TextEditingController editItemPriceController = TextEditingController(text: item.price.toString());
-    final TextEditingController editItemCategoryController = TextEditingController(text: item.category);
-    
+    final TextEditingController editItemNameController =
+        TextEditingController(text: item.name);
+    final TextEditingController editItemNameArController =
+        TextEditingController(text: item.nameAr);
+    final TextEditingController editItemDescriptionController =
+        TextEditingController(text: item.description);
+    final TextEditingController editItemDescriptionArController =
+        TextEditingController(text: item.descriptionAr);
+    final TextEditingController editItemPriceController =
+        TextEditingController(text: item.price.toString());
+    final TextEditingController editItemCategoryController =
+        TextEditingController(text: item.category);
+
     File? editItemImageFile;
     List<String> editSelectedCategories = List.from(item.categories);
-    
+
     // Get available menu categories for the restaurant
     List<String> availableMenuCategories = [];
     try {
-      availableMenuCategories = cubit.getMenuCategoriesForRestaurant(restaurantId);
+      availableMenuCategories =
+          cubit.getMenuCategoriesForRestaurant(restaurantId);
     } catch (e) {
       print('Error getting menu categories: $e');
       availableMenuCategories = ['All', 'Uncategorized'];
@@ -6283,7 +6565,8 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                   TextFormField(
                     controller: editItemNameArController,
                     decoration: InputDecoration(
-                      labelText: '${S.of(context).item_name} (${S.of(context).arabic})',
+                      labelText:
+                          '${S.of(context).item_name} (${S.of(context).arabic})',
                       labelStyle: TextStyle(
                         color: Theme.of(context).brightness == Brightness.dark
                             ? Colors.white
@@ -6361,7 +6644,8 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                     controller: editItemDescriptionArController,
                     maxLines: 3,
                     decoration: InputDecoration(
-                      labelText: '${S.of(context).item_description} (${S.of(context).arabic})',
+                      labelText:
+                          '${S.of(context).item_description} (${S.of(context).arabic})',
                       labelStyle: TextStyle(
                         color: Theme.of(context).brightness == Brightness.dark
                             ? Colors.white
@@ -6436,7 +6720,8 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
 
                   // Category Dropdown
                   DropdownButtonFormField<String>(
-                    value: availableMenuCategories.contains(editItemCategoryController.text)
+                    value: availableMenuCategories
+                            .contains(editItemCategoryController.text)
                         ? editItemCategoryController.text
                         : availableMenuCategories.first,
                     decoration: InputDecoration(
@@ -6477,9 +6762,10 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                         child: Text(
                           category,
                           style: TextStyle(
-                            color: Theme.of(context).brightness == Brightness.dark
-                                ? Colors.white
-                                : Colors.black,
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.white
+                                    : Colors.black,
                           ),
                         ),
                       );
@@ -6502,7 +6788,8 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                       if (item.img.isNotEmpty)
                         Column(
                           children: [
-                            const Text('Current Image:', style: TextStyle(fontWeight: FontWeight.bold)),
+                            const Text('Current Image:',
+                                style: TextStyle(fontWeight: FontWeight.bold)),
                             SizedBox(height: 8.h),
                             Container(
                               height: 100.h,
@@ -6517,7 +6804,8 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                                   item.img,
                                   fit: BoxFit.cover,
                                   errorBuilder: (context, error, stackTrace) {
-                                    return const Icon(Icons.error, color: Colors.red);
+                                    return const Icon(Icons.error,
+                                        color: Colors.red);
                                   },
                                 ),
                               ),
@@ -6525,7 +6813,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                             SizedBox(height: 12.h),
                           ],
                         ),
-                      
+
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
@@ -6607,8 +6895,10 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                   );
 
                   // Make sure we include the primary category in categories
-                  final allCategories = List<String>.from(editSelectedCategories);
-                  if (!allCategories.contains(editItemCategoryController.text) &&
+                  final allCategories =
+                      List<String>.from(editSelectedCategories);
+                  if (!allCategories
+                          .contains(editItemCategoryController.text) &&
                       editItemCategoryController.text != "All") {
                     allCategories.add(editItemCategoryController.text);
                   }
@@ -6633,7 +6923,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
 
                   _showSnackBar('Item updated successfully',
                       backgroundColor: Colors.green);
-                  
+
                   // Refresh the admin panel
                   await _refreshAdminPanel();
                 } catch (e) {
@@ -6766,7 +7056,11 @@ class ItemListItem extends StatelessWidget {
   final VoidCallback onDelete;
   final VoidCallback onEdit;
 
-  const ItemListItem({Key? key, required this.item, required this.onDelete, required this.onEdit})
+  const ItemListItem(
+      {Key? key,
+      required this.item,
+      required this.onDelete,
+      required this.onEdit})
       : super(key: key);
 
   @override

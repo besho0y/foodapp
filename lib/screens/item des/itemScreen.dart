@@ -4,6 +4,7 @@ import 'package:flutter_styled_toast/flutter_styled_toast.dart';
 import 'package:foodapp/generated/l10n.dart';
 import 'package:foodapp/layout/cubit.dart';
 import 'package:foodapp/shared/constants.dart';
+import 'package:foodapp/shared/optimized_image.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class Itemscreen extends StatefulWidget {
@@ -153,211 +154,6 @@ class _ItemscreenState extends State<Itemscreen> {
     );
   }
 
-  // Helper method to get the right image widget
-  Widget _getImageWidget(String? imageUrl) {
-    try {
-      // Handle null or empty image URL
-      if (imageUrl == null || imageUrl.isEmpty) {
-        return Container(
-          color: Colors.grey[300],
-          child: Center(
-            child: Icon(
-              Icons.no_food,
-              size: 50.sp,
-              color: Colors.grey[600],
-            ),
-          ),
-        );
-      }
-
-      if (imageUrl.startsWith('http')) {
-        // Network image with error handling
-        return Image.network(
-          imageUrl,
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) {
-            print("Error loading item image: $error");
-            // Use a placeholder container instead of missing asset image
-            return Container(
-              color: Colors.grey[300],
-              child: Center(
-                child: Icon(
-                  Icons.restaurant,
-                  size: 50.sp,
-                  color: Colors.grey[600],
-                ),
-              ),
-            );
-          },
-          loadingBuilder: (context, child, loadingProgress) {
-            if (loadingProgress == null) return child;
-            return Center(
-              child: CircularProgressIndicator(
-                value: loadingProgress.expectedTotalBytes != null
-                    ? loadingProgress.cumulativeBytesLoaded /
-                        (loadingProgress.expectedTotalBytes ?? 1)
-                    : null,
-              ),
-            );
-          },
-        );
-      } else if (imageUrl.startsWith('assets/')) {
-        // Asset image
-        return Image.asset(
-          imageUrl,
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) {
-            print("Error loading asset image: $error");
-            return Container(
-              color: Colors.grey[300],
-              child: Center(
-                child: Icon(
-                  Icons.restaurant,
-                  size: 50.sp,
-                  color: Colors.grey[600],
-                ),
-              ),
-            );
-          },
-        );
-      } else {
-        // Default fallback for any other case
-        return Container(
-          color: Colors.grey[300],
-          child: Center(
-            child: Icon(
-              Icons.restaurant,
-              size: 50.sp,
-              color: Colors.grey[600],
-            ),
-          ),
-        );
-      }
-    } catch (e) {
-      print("Error handling item image: $e");
-      return Container(
-        color: Colors.grey[300],
-        child: Center(
-          child: Icon(
-            Icons.restaurant,
-            size: 50.sp,
-            color: Colors.grey[600],
-          ),
-        ),
-      );
-    }
-  }
-
-  // Helper method for related item images
-  Widget _getRelatedItemImage(String? imageUrl) {
-    try {
-      // Handle null or empty image URL
-      if (imageUrl == null || imageUrl.isEmpty) {
-        return Container(
-          height: 80.h,
-          width: 120.w,
-          color: Colors.grey[300],
-          child: Center(
-            child: Icon(
-              Icons.no_food,
-              size: 30.sp,
-              color: Colors.grey[600],
-            ),
-          ),
-        );
-      }
-
-      if (imageUrl.startsWith('http')) {
-        return Image.network(
-          imageUrl,
-          height: 80.h,
-          width: 120.w,
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) {
-            print("Error loading related item image: $error");
-            return Container(
-              height: 80.h,
-              width: 120.w,
-              color: Colors.grey[300],
-              child: Center(
-                child: Icon(
-                  Icons.restaurant,
-                  size: 30.sp,
-                  color: Colors.grey[600],
-                ),
-              ),
-            );
-          },
-          loadingBuilder: (context, child, loadingProgress) {
-            if (loadingProgress == null) return child;
-            return Container(
-              height: 80.h,
-              width: 120.w,
-              color: Colors.grey[200],
-              child: Center(
-                child: CircularProgressIndicator(
-                  value: loadingProgress.expectedTotalBytes != null
-                      ? loadingProgress.cumulativeBytesLoaded /
-                          (loadingProgress.expectedTotalBytes ?? 1)
-                      : null,
-                ),
-              ),
-            );
-          },
-        );
-      } else if (imageUrl.startsWith('assets/')) {
-        return Image.asset(
-          imageUrl,
-          height: 80.h,
-          width: 120.w,
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) {
-            print("Error loading asset image: $error");
-            return Container(
-              height: 80.h,
-              width: 120.w,
-              color: Colors.grey[300],
-              child: Center(
-                child: Icon(
-                  Icons.restaurant,
-                  size: 30.sp,
-                  color: Colors.grey[600],
-                ),
-              ),
-            );
-          },
-        );
-      } else {
-        return Container(
-          height: 80.h,
-          width: 120.w,
-          color: Colors.grey[300],
-          child: Center(
-            child: Icon(
-              Icons.restaurant,
-              size: 30.sp,
-              color: Colors.grey[600],
-            ),
-          ),
-        );
-      }
-    } catch (e) {
-      print("Error handling related item image: $e");
-      return Container(
-        height: 80.h,
-        width: 120.w,
-        color: Colors.grey[300],
-        child: Center(
-          child: Icon(
-            Icons.restaurant,
-            size: 30.sp,
-            color: Colors.grey[600],
-          ),
-        ),
-      );
-    }
-  }
-
   // Add WhatsApp functionality
   Future<void> _openWhatsApp() async {
     const phoneNumber = '+201557301515';
@@ -413,7 +209,11 @@ class _ItemscreenState extends State<Itemscreen> {
                           SizedBox(
                             height: 300.h,
                             width: double.infinity,
-                            child: _getImageWidget(widget.img),
+                            child: ItemImageWidget(
+                              imageUrl: widget.img,
+                              width: double.infinity,
+                              height: 300.h,
+                            ),
                           ),
                           Positioned(
                             top: 40.h,
@@ -553,8 +353,11 @@ class _ItemscreenState extends State<Itemscreen> {
                                                     BorderRadius.circular(
                                                   10.r,
                                                 ),
-                                                child: _getRelatedItemImage(
-                                                    item.img),
+                                                child: ItemImageWidget(
+                                                  imageUrl: item.img,
+                                                  width: 120.w,
+                                                  height: 80.h,
+                                                ),
                                               ),
                                               SizedBox(height: 5.h),
                                               Text(

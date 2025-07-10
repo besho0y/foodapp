@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_paymob/flutter_paymob.dart';
 
 class PayMobService {
+  static bool _isInitialized = false;
+  static String? _initializationError;
+
   // Initialize the PayMob service
   static void initialize() {
     try {
@@ -26,10 +29,25 @@ class PayMobService {
         // The package requires this parameter but we only process card payments.
         walletIntegrationId: 0,
       );
+
+      _isInitialized = true;
+      _initializationError = null;
       print("✅ PayMob initialized successfully");
     } catch (e) {
+      _isInitialized = false;
+      _initializationError = e.toString();
       print("❌ Error initializing PayMob: $e");
     }
+  }
+
+  // Check if PayMob is properly initialized
+  static bool isInitialized() {
+    return _isInitialized;
+  }
+
+  // Get initialization error if any
+  static String? getInitializationError() {
+    return _initializationError;
   }
 
   // Process payment with card
@@ -39,6 +57,14 @@ class PayMobService {
     String? currency,
   }) async {
     print("💳 === Starting PayMob Card Payment ===");
+
+    // Check if PayMob is initialized
+    if (!_isInitialized) {
+      final error = _initializationError ?? "PayMob not initialized";
+      print("❌ PayMob not initialized: $error");
+      return _createErrorResponse(
+          "Payment service not available. Please try again later.");
+    }
 
     // Validate inputs with null safety
     final safeCurrency = currency ?? "EGP";

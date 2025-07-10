@@ -4,6 +4,7 @@ import 'package:foodapp/generated/l10n.dart';
 import 'package:foodapp/models/resturant.dart';
 import 'package:foodapp/screens/menu/menuScreen.dart';
 import 'package:foodapp/shared/constants.dart';
+import 'package:foodapp/shared/optimized_image.dart';
 
 class RestaurantBox extends StatelessWidget {
   final Restuarants restaurant;
@@ -48,7 +49,11 @@ class RestaurantBox extends StatelessWidget {
             ClipRRect(
               borderRadius:
                   const BorderRadius.vertical(top: Radius.circular(13)),
-              child: _buildRestaurantImage(restaurant.img),
+              child: RestaurantImageWidget(
+                imageUrl: restaurant.img,
+                height: 85.h,
+                width: double.infinity,
+              ),
             ),
             SizedBox(height: 5.h),
             Padding(
@@ -87,60 +92,5 @@ class RestaurantBox extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  Widget _buildRestaurantImage(String imageUrl) {
-    try {
-      if (imageUrl.startsWith('http')) {
-        return Image.network(
-          imageUrl,
-          fit: BoxFit.cover,
-          height: 85.h,
-          width: double.infinity,
-          errorBuilder: (context, error, stackTrace) {
-            print("Error loading network image: $error");
-            return Image.asset(
-              'assets/images/light.PNG',
-              fit: BoxFit.cover,
-              height: 85.h,
-              width: double.infinity,
-            );
-          },
-          loadingBuilder: (context, child, loadingProgress) {
-            if (loadingProgress == null) return child;
-            return Center(
-              child: CircularProgressIndicator(
-                value: loadingProgress.expectedTotalBytes != null
-                    ? loadingProgress.cumulativeBytesLoaded /
-                        loadingProgress.expectedTotalBytes!
-                    : null,
-              ),
-            );
-          },
-        );
-      } else if (imageUrl.startsWith('assets/')) {
-        return Image.asset(
-          imageUrl,
-          fit: BoxFit.cover,
-          height: 85.h,
-          width: double.infinity,
-        );
-      } else {
-        return Image.asset(
-          'assets/images/light.PNG',
-          fit: BoxFit.cover,
-          height: 85.h,
-          width: double.infinity,
-        );
-      }
-    } catch (e) {
-      print("Error handling image: $e");
-      return Image.asset(
-        'assets/images/light.PNG',
-        fit: BoxFit.cover,
-        height: 85.h,
-        width: double.infinity,
-      );
-    }
   }
 }

@@ -8,6 +8,7 @@ import 'package:foodapp/screens/favourits/cubit.dart';
 import 'package:foodapp/screens/favourits/states.dart';
 import 'package:foodapp/screens/item%20des/itemScreen.dart';
 import 'package:foodapp/shared/constants.dart';
+import 'package:foodapp/shared/optimized_image.dart';
 
 Widget itemcard(context, bool fromFavourites, Item model, dynamic items) {
   var cubit = Favouritecubit.get(context);
@@ -74,15 +75,10 @@ Widget itemcard(context, bool fromFavourites, Item model, dynamic items) {
               // Image Section
               ClipRRect(
                 borderRadius: BorderRadius.circular(10.r),
-                child: Container(
+                child: ItemImageWidget(
+                  imageUrl: model.img,
                   width: 100.w,
                   height: 100.h,
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      fit: BoxFit.cover,
-                      image: _getImageProvider(model.img),
-                    ),
-                  ),
                 ),
               ),
               SizedBox(width: 12.w),
@@ -186,21 +182,4 @@ Widget itemcard(context, bool fromFavourites, Item model, dynamic items) {
       ),
     ),
   );
-}
-
-// Helper function to get the correct image provider
-ImageProvider _getImageProvider(String imageUrl) {
-  try {
-    if (imageUrl.startsWith('http')) {
-      return NetworkImage(imageUrl);
-    } else if (imageUrl.startsWith('assets/')) {
-      return AssetImage(imageUrl);
-    } else {
-      // Default fallback image
-      return const AssetImage('assets/images/light.PNG');
-    }
-  } catch (e) {
-    print("Error creating image provider: $e");
-    return const AssetImage('assets/images/light.PNG');
-  }
 }

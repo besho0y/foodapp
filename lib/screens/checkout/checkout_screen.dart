@@ -2204,6 +2204,98 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     }
   }
 
+  // Show dialog when payment service is unavailable
+  void _showPaymentServiceUnavailableDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              const Icon(Icons.error_outline, color: Colors.orange),
+              SizedBox(width: 8.w),
+              const Text('Payment Service Unavailable'),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'The card payment service is currently unavailable. Please try one of the following alternatives:',
+                style: TextStyle(fontSize: 14.sp),
+              ),
+              SizedBox(height: 12.h),
+              // Alternative options
+              _buildAlternativeOption(
+                icon: Icons.payments_outlined,
+                title: 'Cash on Delivery',
+                description: 'Pay when your order arrives',
+              ),
+              SizedBox(height: 8.h),
+              _buildAlternativeOption(
+                icon: Icons.mobile_friendly,
+                title: 'InstaPay',
+                description: 'Transfer via mobile banking',
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                // Switch to cash on delivery
+                setState(() {
+                  paymentMethod = 'cash';
+                });
+              },
+              child: const Text('Use Cash on Delivery'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Build alternative payment option widget
+  Widget _buildAlternativeOption({
+    required IconData icon,
+    required String title,
+    required String description,
+  }) {
+    return Row(
+      children: [
+        Icon(icon, size: 20.sp, color: Colors.grey[600]),
+        SizedBox(width: 8.w),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              Text(
+                description,
+                style: TextStyle(
+                  fontSize: 12.sp,
+                  color: Colors.grey[600],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   // Process card payment with PayMob
   Future<void> _processCardPayment(BuildContext context) async {
     if (isProcessingPayment) return;
@@ -2219,6 +2311,23 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
       print('💳 === CHECKOUT: Starting card payment ===');
       print('💰 Amount: $totalPrice EGP');
+
+      // Check if PayMob is initialized before processing payment
+      if (!PayMobService.isInitialized()) {
+        final error =
+            PayMobService.getInitializationError() ?? "Service not available";
+        print('❌ PayMob not initialized: $error');
+
+        if (mounted) {
+          setState(() {
+            isProcessingPayment = false;
+          });
+
+          // Show error dialog with fallback options
+          _showPaymentServiceUnavailableDialog(context);
+        }
+        return;
+      }
 
       // Process payment with PayMob (PayMob handles its own UI)
       final paymentResult = await PayMobService.processCardPayment(

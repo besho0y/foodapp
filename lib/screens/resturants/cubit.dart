@@ -282,7 +282,10 @@ class Restuarantscubit extends Cubit<ResturantsStates> {
 
       final QuerySnapshot categoriesSnapshot;
       try {
-        categoriesSnapshot = await categoriesRef.get();
+        // Fetch categories ordered by creation date (newest first)
+        categoriesSnapshot = await categoriesRef
+            .orderBy('createdAt', descending: false)
+            .get();
         print("Successfully connected to Firebase");
       } catch (e) {
         print("Firebase connection error: $e");

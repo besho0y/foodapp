@@ -1,7 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -57,6 +56,9 @@ void main() async {
 
   // Initialize Firebase Messaging Service
   FirebaseMessagingService.initialize();
+
+  // Initialize PayMob Service
+  PayMobService.initialize();
 
   // Initialize Bloc Observer
   Bloc.observer = MyBlocObserver();
