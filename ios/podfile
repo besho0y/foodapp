@@ -10,8 +10,8 @@ project 'Runner', {
 }
 
 def flutter_installation
-  flutter_root = File.expand_path(File.join(_dir_, '..', 'flutter'))
-  generated_xcode_build_settings = File.expand_path(File.join(_dir_, 'Flutter', 'Generated.xcconfig'))
+  flutter_root = File.expand_path(File.join(__dir__, '..', 'flutter'))
+  generated_xcode_build_settings = File.expand_path(File.join(__dir__, 'Flutter', 'Generated.xcconfig'))
 
   raise "Generated.xcconfig must exist. Run 'flutter pub get' and 'flutter build ios' first." unless File.exist?(generated_xcode_build_settings)
 
