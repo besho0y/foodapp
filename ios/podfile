@@ -28,5 +28,5 @@ require File.expand_path(File.join(flutter_installation, 'packages', 'flutter_to
 flutter_ios_podfile_setup
 
 target 'Runner' do
-  flutter_install_all_ios_pods File.dirname(File.realpath(_FILE_))
+  flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
 end
