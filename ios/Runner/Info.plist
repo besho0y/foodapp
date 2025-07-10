@@ -9,9 +9,8 @@
 				<string>Editor</string>
 				<key>CFBundleURLSchemes</key>
 				<array>
-					<!-- TODO Replace this value: -->
 					<!-- Copied from GoogleService-Info.plist key REVERSED_CLIENT_ID -->
-					<string>com.googleusercontent.apps.861823949799-vc35cprkp249096uujjn0vvnmcvjppkn</string>
+					<string>com.googleusercontent.apps.167788515229-9g1qj525itr1najit2mj6t78ommj53eq</string>
 				</array>
 			</dict>
 		</array>
@@ -45,7 +44,6 @@
 		<string>This app needs access to location when in the background to show your position on the map.</string>
 		<key>LSApplicationQueriesSchemes</key>
 		<array>
-			<string>google-maps</string>
 		</array>
 		<key>UILaunchStoryboardName</key>
 		<string>LaunchScreen</string>

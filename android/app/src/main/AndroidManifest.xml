@@ -21,9 +21,7 @@
         android:hardwareAccelerated="true"
         android:largeHeap="true"
         android:icon="@mipmap/ic_launcher">
-        <meta-data
-            android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyDHZomR5ozaTualggVoaq5Z2fZwVnBvh_w"/>
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -89,13 +87,6 @@
             <action android:name="android.intent.action.VIEW" />
             <data android:scheme="http" />
         </intent>
-        <intent>
-            <action android:name="android.intent.action.VIEW" />
-            <data android:scheme="geo" />
-        </intent>
-        <intent>
-            <action android:name="android.intent.action.VIEW" />
-            <data android:scheme="google.navigation" />
-        </intent>
+
     </queries>
 </manifest>
