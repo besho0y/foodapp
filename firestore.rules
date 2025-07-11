@@ -70,6 +70,16 @@ service cloud.firestore {
       allow write: if isAdmin(); // Only admin can add/delete banners
     }
     
+    // Admin tokens collection - only admin can read/write
+    match /admin_tokens/{tokenId} {
+      allow read, write: if isAdmin();
+    }
+    
+    // Admin notifications collection - only admin can read/write
+    match /admin_notifications/{notificationId} {
+      allow read, write: if isAdmin();
+    }
+    
     // Default rule - allow admin access to other collections
     match /{document=**} {
       allow read, write: if isAdmin();

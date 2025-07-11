@@ -1,6 +1,7 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_styled_toast/flutter_styled_toast.dart';
+import 'package:foodapp/shared/admin_notification_service.dart';
 
 class FirebaseMessagingService {
   static final FirebaseMessaging _firebaseMessaging =
@@ -41,9 +42,11 @@ class FirebaseMessagingService {
       print('🔔 Step 3: Setting up message handlers...');
       _setupMessageHandlers();
 
-      // Step 4: Listen for token refresh
+      // Step 4: Listen for token refresh and update admin token if needed
       _firebaseMessaging.onTokenRefresh.listen((newToken) {
         print('🔄 FCM Token refreshed: $newToken');
+        // Update admin token if current user is admin
+        AdminNotificationService.updateAdminToken();
       });
 
       print('✅ Firebase Messaging initialized successfully');
@@ -94,7 +97,7 @@ class FirebaseMessagingService {
     // Show a visual toast notification
     if (_context != null) {
       showToast(
-        'New message received',
+        message.notification?.title ?? 'New message received',
         context: _context!,
         duration: const Duration(seconds: 3),
         backgroundColor: Colors.green,
@@ -158,6 +161,16 @@ class FirebaseMessagingService {
       print('✅ Unsubscribed from topic: $topic');
     } catch (e) {
       print('❌ Error unsubscribing from topic $topic: $e');
+    }
+  }
+
+  // Delete token (for logout)
+  static Future<void> deleteToken() async {
+    try {
+      await _firebaseMessaging.deleteToken();
+      print('✅ FCM token deleted');
+    } catch (e) {
+      print('❌ Error deleting FCM token: $e');
     }
   }
 }

@@ -16,6 +16,7 @@ import 'package:foodapp/screens/profile/cubit.dart';
 import 'package:foodapp/screens/resturants/cubit.dart';
 import 'package:foodapp/screens/signup/cubit.dart';
 import 'package:foodapp/screens/splash/splash_screen.dart';
+import 'package:foodapp/shared/admin_notification_service.dart';
 import 'package:foodapp/shared/blocObserver.dart';
 import 'package:foodapp/shared/firebase_messaging_service.dart';
 import 'package:foodapp/shared/paymob_service.dart';
@@ -56,6 +57,9 @@ void main() async {
 
   // Initialize Firebase Messaging Service
   FirebaseMessagingService.initialize();
+
+  // Initialize Admin Notification Service
+  AdminNotificationService.initialize();
 
   // Initialize PayMob Service
   PayMobService.initialize();
