@@ -9,10 +9,10 @@ class OrderCardAdmin extends StatefulWidget {
   final Function(String, String) onStatusChange; // Callback for status change
 
   const OrderCardAdmin({
-    Key? key,
+    super.key,
     required this.model,
     required this.onStatusChange,
-  }) : super(key: key);
+  });
 
   @override
   State<OrderCardAdmin> createState() => _OrderCardAdminState();
@@ -36,7 +36,7 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
   @override
   void initState() {
     super.initState();
-    calculatedTotal = _calculateTotal();
+    calculatedTotal = _calculateItemsTotal();
     currentStatus = widget.model.status;
     _fetchUserPhoneNumber();
   }
@@ -86,35 +86,144 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
     }
   }
 
-  double _calculateTotal() {
+  double _calculateItemsTotal() {
     final model = widget.model;
-    if (model.calculateTotal != null) {
-      // If model has a calculateTotal method
-      return model.calculateTotal();
-    } else {
-      // Manual calculation as a fallback
-      double total = 0.0;
-      for (var item in model.items) {
+
+    print('🔢 CALCULATING ITEMS TOTAL - Order ID: ${model.id}');
+    print('📦 Number of items: ${model.items.length}');
+
+    double total = 0.0;
+    try {
+      for (int i = 0; i < model.items.length; i++) {
+        var item = model.items[i];
         double price = 0.0;
         int quantity = 1;
 
+        print('  Item $i: ${item.toString()}');
+
         if (item is Map) {
-          var itemPrice = item['price'];
+          print('    Item is Map');
+          // Try different possible price field names
+          var itemPrice = item['price'] ?? item['itemPrice'] ?? item['cost'];
+          print('    Raw price data: $itemPrice (${itemPrice.runtimeType})');
+
           if (itemPrice is int) {
             price = itemPrice.toDouble();
           } else if (itemPrice is double) {
             price = itemPrice;
+          } else if (itemPrice is String) {
+            price = double.tryParse(itemPrice) ?? 0.0;
           }
 
-          quantity = item['quantity'] ?? 1;
-        } else if (item.price != null) {
-          price = item.price;
-          quantity = item.quantity ?? 1;
+          // Try different possible quantity field names
+          var itemQuantity =
+              item['quantity'] ?? item['qty'] ?? item['count'] ?? 1;
+          print(
+              '    Raw quantity data: $itemQuantity (${itemQuantity.runtimeType})');
+
+          if (itemQuantity is int) {
+            quantity = itemQuantity;
+          } else if (itemQuantity is String) {
+            quantity = int.tryParse(itemQuantity) ?? 1;
+          }
+        } else {
+          print('    Item is Object');
+          // Try accessing as object properties safely
+          try {
+            price = (item.price ?? 0.0).toDouble();
+            quantity = item.quantity ?? 1;
+            print(
+                '    Object price: ${item.price}, quantity: ${item.quantity}');
+          } catch (e) {
+            print('    Error accessing item properties: $e');
+            // Continue with default values
+            price = 0.0;
+            quantity = 1;
+          }
         }
 
-        total += price * quantity;
+        double itemTotal = price * quantity;
+        total += itemTotal;
+
+        print(
+            '    Final: price=$price, quantity=$quantity, itemTotal=$itemTotal');
       }
-      return total;
+
+      print('💰 FINAL ITEMS TOTAL: $total');
+    } catch (e) {
+      print('❌ Error calculating items total: $e');
+      return 0.0;
+    }
+    return total;
+  }
+
+  double _getDeliveryFee() {
+    final model = widget.model;
+
+    try {
+      // Calculate delivery fee as: total - items total
+      double itemsTotal = _calculateItemsTotal();
+      double orderTotal = model.total ?? 0.0;
+
+      // Get discount if available
+      double discount = 0.0;
+      try {
+        discount = model.promoDiscount ?? 0.0;
+      } catch (e) {
+        discount = 0.0;
+      }
+
+      // Get out of area fee if available
+      double outOfAreaFee = 0.0;
+      try {
+        outOfAreaFee = model.outOfAreaFee ?? 0.0;
+      } catch (e) {
+        outOfAreaFee = 0.0;
+      }
+
+      double deliveryFee = orderTotal - itemsTotal + discount - outOfAreaFee;
+
+      print('🚚 DELIVERY FEE CALCULATION - Order ID: ${model.id}');
+      print('  Order Total: $orderTotal');
+      print('  Items Total: $itemsTotal');
+      print('  Discount: $discount');
+      print('  Out of Area Fee: $outOfAreaFee');
+      print('  Calculated Delivery Fee: $deliveryFee (before clamping)');
+
+      // Ensure delivery fee is not negative
+      double finalDeliveryFee = deliveryFee < 0 ? 0.0 : deliveryFee;
+      print('  Final Delivery Fee: $finalDeliveryFee');
+
+      return finalDeliveryFee;
+    } catch (e) {
+      print('❌ Error calculating delivery fee: $e');
+      return 0.0;
+    }
+  }
+
+  bool _hasDiscount() {
+    try {
+      return widget.model.promoDiscount != null &&
+          widget.model.promoDiscount! > 0;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  double _getDiscount() {
+    try {
+      return widget.model.promoDiscount ?? 0.0;
+    } catch (e) {
+      return 0.0;
+    }
+  }
+
+  double _getOriginalPrice() {
+    try {
+      final model = widget.model;
+      return (model.total ?? 0.0) + (model.promoDiscount ?? 0.0);
+    } catch (e) {
+      return widget.model.total ?? 0.0;
     }
   }
 
@@ -523,8 +632,7 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
                                   // Show original price if discount available
-                                  if (model.hasDiscount != null &&
-                                      model.hasDiscount())
+                                  if (model.hasDiscount())
                                     Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
@@ -686,11 +794,22 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
                                         }
                                         quantity = item['quantity'] ?? 1;
                                         comment = item['comment'];
-                                      } else if (item.name != null) {
-                                        itemName = item.name;
-                                        itemPrice = item.price;
-                                        quantity = item.quantity ?? 1;
-                                        comment = item.comment;
+                                      } else {
+                                        try {
+                                          itemName =
+                                              item.name ?? 'Unknown item';
+                                          itemPrice =
+                                              item.price?.toDouble() ?? 0.0;
+                                          quantity = item.quantity ?? 1;
+                                          comment = item.comment;
+                                        } catch (e) {
+                                          print(
+                                              'Error accessing item properties: $e');
+                                          itemName = 'Unknown item';
+                                          itemPrice = 0.0;
+                                          quantity = 1;
+                                          comment = null;
+                                        }
                                       }
 
                                       return Column(
@@ -883,7 +1002,7 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
                                         children: [
                                           // Items subtotal
                                           Text(
-                                            "${S.of(context).items}: ${calculatedTotal.toStringAsFixed(2)} ${S.of(context).egp}",
+                                            "${S.of(context).items}: ${_calculateItemsTotal().toStringAsFixed(2)} ${S.of(context).egp}",
                                             style: TextStyle(
                                               fontSize:
                                                   smallScreen ? 10.sp : 11.sp,
@@ -891,9 +1010,9 @@ class _OrderCardAdminState extends State<OrderCardAdmin> {
                                             ),
                                           ),
                                           SizedBox(height: 2.h),
-                                          // Delivery fee (calculated as total - items - out of area fee)
+                                          // Delivery fee (using proper calculation)
                                           Text(
-                                            "${S.of(context).delivery_fee}: ${(model.total - calculatedTotal - (model.outOfAreaFee ?? 0.0)).toStringAsFixed(2)} ${S.of(context).egp}",
+                                            "${S.of(context).delivery_fee}: ${_getDeliveryFee().toStringAsFixed(2)} ${S.of(context).egp}",
                                             style: TextStyle(
                                               fontSize:
                                                   smallScreen ? 10.sp : 11.sp,

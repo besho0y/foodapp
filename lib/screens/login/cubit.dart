@@ -32,67 +32,82 @@ class Logincubit extends Cubit<LoginStates> {
     FirebaseAuth.instance
         .signInWithEmailAndPassword(email: email, password: password)
         .then((value) async {
-          emit(LoginSuccessState());
+      emit(LoginSuccessState());
 
-          // Save user login state
-          await LocalStorageService.saveUserLogin(value.user!.uid, email);
+      // Save user login state
+      await LocalStorageService.saveUserLogin(value.user!.uid, email);
 
-          // Load user data before navigation
-          ProfileCubit profileCubit = ProfileCubit.get(context);
-          profileCubit.getuserdata();
+      // Load user data before navigation
+      ProfileCubit profileCubit = ProfileCubit.get(context);
+      profileCubit.getuserdata();
 
-          // Initialize favorites after login
-          try {
-            Favouritecubit favCubit = Favouritecubit.get(context);
-            await favCubit.initializeFavoriteIds();
-            await favCubit.loadFavourites();
-          } catch (e) {
-            print("Error initializing favorites after login: $e");
-          }
+      // Initialize favorites after login
+      try {
+        Favouritecubit favCubit = Favouritecubit.get(context);
+        await favCubit.initializeFavoriteIds();
+        await favCubit.loadFavourites();
+      } catch (e) {
+        print("Error initializing favorites after login: $e");
+      }
 
-          // Navigate to the Layout
-          navigateAndFinish(context, const Layout());
+      // Navigate to the Layout
+      navigateAndFinish(context, const Layout());
 
-          // After navigation, ensure we're on the first tab
-          Future.delayed(const Duration(milliseconds: 100), () {
-            if (navigatorKey.currentContext != null) {
-              final layoutCubit = Layoutcubit.get(navigatorKey.currentContext!);
-              layoutCubit.changenavbar(0); // Change to the first tab
-            }
-          });
-        })
-        .catchError((error) {
-          emit(LoginErrorlState());
-          String errorMessage = "An error occurred";
+      // After navigation, ensure we're on the first tab
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (navigatorKey.currentContext != null) {
+          final layoutCubit = Layoutcubit.get(navigatorKey.currentContext!);
+          layoutCubit.changenavbar(0); // Change to the first tab
+        }
+      });
+    }).catchError((error) {
+      emit(LoginErrorlState());
+      String errorMessage = "An error occurred";
 
-          if (error is FirebaseAuthException) {
-            switch (error.code) {
-              case 'user-not-found':
-                errorMessage = "No user found with this email";
-                break;
-              case 'wrong-password':
-                errorMessage = "Wrong password provided";
-                break;
-              case 'invalid-email':
-                errorMessage = "Invalid email address";
-                break;
-              case 'user-disabled':
-                errorMessage = "This account has been disabled";
-                break;
-              default:
-                errorMessage = error.message ?? "An error occurred";
-            }
-          }
+      if (error is FirebaseAuthException) {
+        switch (error.code) {
+          case 'user-not-found':
+            errorMessage = "No user found with this email";
+            break;
+          case 'wrong-password':
+            errorMessage = "Wrong password provided";
+            break;
+          case 'invalid-email':
+            errorMessage = "Invalid email address";
+            break;
+          case 'user-disabled':
+            errorMessage = "This account has been disabled";
+            break;
+          case 'too-many-requests':
+            errorMessage = "Too many failed attempts. Please try again later";
+            break;
+          case 'operation-not-allowed':
+            errorMessage = "Email/password accounts are not enabled";
+            break;
+          default:
+            errorMessage = error.message ?? "Authentication failed";
+        }
+      } else {
+        // Handle other types of errors including type casting errors
+        print("Auth Error Details: $error");
+        if (error.toString().contains('PigeonUserDetails') ||
+            error.toString().contains('List<Object?>')) {
+          errorMessage =
+              "Authentication service temporarily unavailable. Please try again.";
+        } else {
+          errorMessage = "An unexpected error occurred";
+        }
+      }
 
-          showToast(
-            errorMessage,
-            context: context,
-            duration: const Duration(seconds: 1),
-            backgroundColor: Colors.red,
-            textStyle: const TextStyle(color: Colors.white, fontSize: 16.0),
-            position: StyledToastPosition.bottom,
-          );
-        });
+      showToast(
+        errorMessage,
+        context: context,
+        duration: const Duration(seconds: 3),
+        backgroundColor: Colors.red,
+        textStyle: const TextStyle(color: Colors.white, fontSize: 16.0),
+        position: StyledToastPosition.bottom,
+      );
+    });
   }
 
   // Check if Google Sign-In is configured properly
@@ -104,12 +119,9 @@ class Logincubit extends Cubit<LoginStates> {
       );
       print("Available sign-in methods: $methods");
 
-      // Check if GoogleSignIn supports authentication
-      if (GoogleSignIn.instance.supportsAuthenticate()) {
-        return true;
-      }
-
-      return false;
+      // Try to initialize GoogleSignIn to check if it's configured
+      final GoogleSignIn googleSignIn = GoogleSignIn();
+      return true; // If we can create an instance, it's likely configured
     } catch (e) {
       print("Google Sign-In configuration error: $e");
       if (context != null) {
@@ -140,15 +152,20 @@ class Logincubit extends Cubit<LoginStates> {
 
     try {
       // Initialize and authenticate with Google Sign-In
-      await GoogleSignIn.instance.initialize();
-      final GoogleSignInAccount googleSignInAccount = await GoogleSignIn
-          .instance
-          .authenticate();
+      final GoogleSignIn googleSignIn = GoogleSignIn();
+      final GoogleSignInAccount? googleSignInAccount =
+          await googleSignIn.signIn();
+
+      if (googleSignInAccount == null) {
+        // User canceled the sign-in
+        emit(LoginErrorlState());
+        return;
+      }
 
       try {
         // Get authentication tokens
         final GoogleSignInAuthentication googleSignInAuthentication =
-            googleSignInAccount.authentication;
+            await googleSignInAccount.authentication;
 
         // Create Firebase credential
         final AuthCredential credential = GoogleAuthProvider.credential(
@@ -156,8 +173,8 @@ class Logincubit extends Cubit<LoginStates> {
         );
 
         // Sign in to Firebase
-        final UserCredential userCredential = await FirebaseAuth.instance
-            .signInWithCredential(credential);
+        final UserCredential userCredential =
+            await FirebaseAuth.instance.signInWithCredential(credential);
 
         final User? user = userCredential.user;
 
@@ -174,12 +191,12 @@ class Logincubit extends Cubit<LoginStates> {
                 .collection('users')
                 .doc(user.uid)
                 .set({
-                  'name': user.displayName ?? '',
-                  'email': user.email ?? '',
-                  'phone': user.phoneNumber ?? '',
-                  'uid': user.uid,
-                  'orderIds': [],
-                });
+              'name': user.displayName ?? '',
+              'email': user.email ?? '',
+              'phone': user.phoneNumber ?? '',
+              'uid': user.uid,
+              'orderIds': [],
+            });
           }
 
           // Save user login state
@@ -221,8 +238,34 @@ class Logincubit extends Cubit<LoginStates> {
         print("Firebase Authentication Error: $authError");
         emit(LoginErrorlState());
         if (context != null) {
+          String errorMessage = "Google Sign-In failed";
+
+          // Handle specific Firebase Auth errors
+          if (authError.toString().contains('PigeonUserDetails') ||
+              authError.toString().contains('List<Object?>')) {
+            errorMessage =
+                "Authentication service temporarily unavailable. Please try again.";
+          } else if (authError is FirebaseAuthException) {
+            switch (authError.code) {
+              case 'account-exists-with-different-credential':
+                errorMessage = "Account exists with different sign-in method";
+                break;
+              case 'invalid-credential':
+                errorMessage = "Invalid Google credentials";
+                break;
+              case 'operation-not-allowed':
+                errorMessage = "Google Sign-In is not enabled";
+                break;
+              case 'user-disabled':
+                errorMessage = "This account has been disabled";
+                break;
+              default:
+                errorMessage = authError.message ?? "Google Sign-In failed";
+            }
+          }
+
           showToast(
-            "Firebase Auth Error: ${authError.toString().substring(0, math.min(100, authError.toString().length))}",
+            errorMessage,
             context: context,
             duration: const Duration(seconds: 3),
             backgroundColor: Colors.red,
@@ -252,8 +295,8 @@ class Logincubit extends Cubit<LoginStates> {
     try {
       // Get Apple Sign In credentials
       final appleProvider = AppleAuthProvider();
-      final UserCredential userCredential = await FirebaseAuth.instance
-          .signInWithProvider(appleProvider);
+      final UserCredential userCredential =
+          await FirebaseAuth.instance.signInWithProvider(appleProvider);
 
       final User? user = userCredential.user;
 
@@ -270,12 +313,12 @@ class Logincubit extends Cubit<LoginStates> {
               .collection('users')
               .doc(user.uid)
               .set({
-                'name': user.displayName ?? '',
-                'email': user.email ?? '',
-                'phone': user.phoneNumber ?? '',
-                'uid': user.uid,
-                'orderIds': [],
-              });
+            'name': user.displayName ?? '',
+            'email': user.email ?? '',
+            'phone': user.phoneNumber ?? '',
+            'uid': user.uid,
+            'orderIds': [],
+          });
         }
 
         // Save user login state

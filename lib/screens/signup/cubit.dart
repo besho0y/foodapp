@@ -121,12 +121,9 @@ class Signupcubit extends Cubit<SignupStates> {
       );
       print("Available sign-in methods: $methods");
 
-      // Check if GoogleSignIn supports authentication
-      if (GoogleSignIn.instance.supportsAuthenticate()) {
-        return true;
-      }
-
-      return false;
+      // Try to initialize GoogleSignIn to check if it's configured
+      final GoogleSignIn googleSignIn = GoogleSignIn();
+      return true; // If we can create an instance, it's likely configured
     } catch (e) {
       print("Google Sign-In configuration error: $e");
       if (context != null) {
@@ -157,15 +154,20 @@ class Signupcubit extends Cubit<SignupStates> {
 
     try {
       // Initialize and authenticate with Google Sign-In
-      await GoogleSignIn.instance.initialize();
-      final GoogleSignInAccount googleSignInAccount = await GoogleSignIn
-          .instance
-          .authenticate();
+      final GoogleSignIn googleSignIn = GoogleSignIn();
+      final GoogleSignInAccount? googleSignInAccount =
+          await googleSignIn.signIn();
+
+      if (googleSignInAccount == null) {
+        // User canceled the sign-in
+        emit(CreateUserErrorState());
+        return;
+      }
 
       try {
         // Get authentication tokens
         final GoogleSignInAuthentication googleSignInAuthentication =
-            googleSignInAccount.authentication;
+            await googleSignInAccount.authentication;
 
         // Create Firebase credential
         final AuthCredential credential = GoogleAuthProvider.credential(
@@ -173,8 +175,8 @@ class Signupcubit extends Cubit<SignupStates> {
         );
 
         // Sign in to Firebase
-        final UserCredential userCredential = await FirebaseAuth.instance
-            .signInWithCredential(credential);
+        final UserCredential userCredential =
+            await FirebaseAuth.instance.signInWithCredential(credential);
 
         final User? user = userCredential.user;
 
@@ -191,12 +193,12 @@ class Signupcubit extends Cubit<SignupStates> {
                 .collection('users')
                 .doc(user.uid)
                 .set({
-                  'name': user.displayName ?? '',
-                  'email': user.email ?? '',
-                  'phone': user.phoneNumber ?? '',
-                  'uid': user.uid,
-                  'orderIds': [],
-                });
+              'name': user.displayName ?? '',
+              'email': user.email ?? '',
+              'phone': user.phoneNumber ?? '',
+              'uid': user.uid,
+              'orderIds': [],
+            });
           }
 
           // Save user login state

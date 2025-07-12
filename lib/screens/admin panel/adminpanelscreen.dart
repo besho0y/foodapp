@@ -27,7 +27,7 @@ import 'package:foodapp/widgets/ordercard_admin.dart';
 import 'package:image_picker/image_picker.dart';
 
 class AdminPanelScreen extends StatefulWidget {
-  const AdminPanelScreen({Key? key}) : super(key: key);
+  const AdminPanelScreen({super.key});
 
   @override
   State<AdminPanelScreen> createState() => _AdminPanelScreenState();
@@ -1236,7 +1236,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                                                 ],
                                               ),
                                             );
-                                          }).toList(),
+                                          }),
                                           SizedBox(height: 8.h),
                                         ],
                                       );
@@ -3148,170 +3148,169 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
     }
 
     return SafeArea(
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: EdgeInsets.all(16.r),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
-                      S.of(context).admin_orders,
-                      style: TextStyle(
-                        fontSize: 18.sp,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  Row(
-                    children: [
-                      // Clear Orders Button (Admin Only)
-                      if (_isCurrentUserAdmin())
-                        Container(
-                          margin: EdgeInsets.only(right: 8.w),
-                          child: ElevatedButton.icon(
-                            onPressed: allOrders.isNotEmpty
-                                ? _showClearOrdersDialog
-                                : null,
-                            icon: const Icon(Icons.clear_all,
-                                color: Colors.white),
-                            label: Text(S.of(context).clear,
-                                style: const TextStyle(color: Colors.white)),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.red,
-                              disabledBackgroundColor: Colors.grey,
-                            ),
-                          ),
-                        ),
-                      // Refresh Button
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          try {
-                            _fetchAllOrders();
-                          } catch (e) {
-                            print('Error in refresh orders: $e');
-                            _showSnackBar('Error', backgroundColor: Colors.red);
-                          }
-                        },
-                        icon: const Icon(Icons.refresh),
-                        label: Text(S.of(context).refresh),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              SizedBox(height: 16.h),
-              if (isLoadingOrders)
-                const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(40.0),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        CircularProgressIndicator(),
-                        SizedBox(height: 16),
-                        Text("Loading orders..."),
-                      ],
-                    ),
-                  ),
-                )
-              else if (allOrders.isEmpty)
-                Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(40.r),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.receipt_long,
-                            size: 70.sp, color: Colors.grey),
-                        SizedBox(height: 20.h),
-                        Text(
-                          S.of(context).no_orders_found,
-                          style: TextStyle(
-                            fontSize: 20.sp,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        SizedBox(height: 16.h),
-                        ElevatedButton(
-                          onPressed: () {
-                            try {
-                              _fetchAllOrders();
-                            } catch (e) {
-                              print('Error refreshing orders: $e');
-                              _showSnackBar('Error',
-                                  backgroundColor: Colors.red);
-                            }
-                          },
-                          child: Text(S.of(context).refresh),
-                        ),
-                      ],
-                    ),
-                  ),
-                )
-              else
-                SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.7,
-                  child: RefreshIndicator(
-                    onRefresh: () async {
-                      try {
-                        await _fetchAllOrders();
-                      } catch (e) {
-                        print('Error in pull to refresh: $e');
-                        _showSnackBar('Error', backgroundColor: Colors.red);
-                      }
-                    },
-                    child: ListView.builder(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      shrinkWrap: true,
-                      itemCount: allOrders.length,
-                      itemBuilder: (context, index) {
-                        if (index < 0 || index >= allOrders.length) {
-                          return const SizedBox.shrink();
-                        }
-
-                        try {
-                          final order = allOrders[index];
-
-                          return OrderCardAdmin(
-                            model: order,
-                            onStatusChange: (orderId, newStatus) async {
-                              await _handleOrderStatusChange(
-                                  orderCubit, orderId, newStatus, index);
-                            },
-                          );
-                        } catch (e) {
-                          print('Error rendering order at index $index: $e');
-                          return Card(
-                            margin: EdgeInsets.symmetric(vertical: 4.h),
-                            child: ListTile(
-                              leading:
-                                  const Icon(Icons.error, color: Colors.red),
-                              title: const Text('Error loading order'),
-                              subtitle: Text('Index: $index'),
-                              trailing: IconButton(
-                                icon: const Icon(Icons.delete),
-                                onPressed: () {
-                                  if (mounted && index < allOrders.length) {
-                                    setState(() {
-                                      allOrders.removeAt(index);
-                                    });
-                                  }
-                                },
-                              ),
-                            ),
-                          );
-                        }
-                      },
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header with title and buttons
+          Padding(
+            padding: EdgeInsets.all(16.r),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    S.of(context).admin_orders,
+                    style: TextStyle(
+                      fontSize: 18.sp,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
-            ],
+                Row(
+                  children: [
+                    // Clear Orders Button (Admin Only)
+                    if (_isCurrentUserAdmin())
+                      Container(
+                        margin: EdgeInsets.only(right: 8.w),
+                        child: ElevatedButton.icon(
+                          onPressed: allOrders.isNotEmpty
+                              ? _showClearOrdersDialog
+                              : null,
+                          icon:
+                              const Icon(Icons.clear_all, color: Colors.white),
+                          label: Text(S.of(context).clear,
+                              style: const TextStyle(color: Colors.white)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                            disabledBackgroundColor: Colors.grey,
+                          ),
+                        ),
+                      ),
+                    // Refresh Button
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        try {
+                          _fetchAllOrders();
+                        } catch (e) {
+                          print('Error in refresh orders: $e');
+                          _showSnackBar('Error', backgroundColor: Colors.red);
+                        }
+                      },
+                      icon: const Icon(Icons.refresh),
+                      label: Text(S.of(context).refresh),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
+
+          // Content area
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16.r),
+              child: _buildOrdersContent(orderCubit),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOrdersContent(OrderCubit? orderCubit) {
+    if (isLoadingOrders) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text("Loading orders..."),
+          ],
         ),
+      );
+    }
+
+    if (allOrders.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.receipt_long, size: 70.sp, color: Colors.grey),
+            SizedBox(height: 20.h),
+            Text(
+              S.of(context).no_orders_found,
+              style: TextStyle(
+                fontSize: 20.sp,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: 16.h),
+            ElevatedButton(
+              onPressed: () {
+                try {
+                  _fetchAllOrders();
+                } catch (e) {
+                  print('Error refreshing orders: $e');
+                  _showSnackBar('Error', backgroundColor: Colors.red);
+                }
+              },
+              child: Text(S.of(context).refresh),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: () async {
+        try {
+          await _fetchAllOrders();
+        } catch (e) {
+          print('Error in pull to refresh: $e');
+          _showSnackBar('Error', backgroundColor: Colors.red);
+        }
+      },
+      child: ListView.builder(
+        physics: const AlwaysScrollableScrollPhysics(),
+        itemCount: allOrders.length,
+        itemBuilder: (context, index) {
+          if (index < 0 || index >= allOrders.length) {
+            return const SizedBox.shrink();
+          }
+
+          try {
+            final order = allOrders[index];
+
+            return OrderCardAdmin(
+              model: order,
+              onStatusChange: (orderId, newStatus) async {
+                await _handleOrderStatusChange(
+                    orderCubit, orderId, newStatus, index);
+              },
+            );
+          } catch (e) {
+            print('Error rendering order at index $index: $e');
+            return Card(
+              margin: EdgeInsets.symmetric(vertical: 4.h),
+              child: ListTile(
+                leading: const Icon(Icons.error, color: Colors.red),
+                title: const Text('Error loading order'),
+                subtitle: Text('Index: $index'),
+                trailing: IconButton(
+                  icon: const Icon(Icons.delete),
+                  onPressed: () {
+                    if (mounted && index < allOrders.length) {
+                      setState(() {
+                        allOrders.removeAt(index);
+                      });
+                    }
+                  },
+                ),
+              ),
+            );
+          }
+        },
       ),
     );
   }
@@ -6948,11 +6947,11 @@ class RestaurantListItem extends StatelessWidget {
   final VoidCallback? onEdit;
 
   const RestaurantListItem({
-    Key? key,
+    super.key,
     required this.restaurant,
     required this.onDelete,
     this.onEdit,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -7057,11 +7056,10 @@ class ItemListItem extends StatelessWidget {
   final VoidCallback onEdit;
 
   const ItemListItem(
-      {Key? key,
+      {super.key,
       required this.item,
       required this.onDelete,
-      required this.onEdit})
-      : super(key: key);
+      required this.onEdit});
 
   @override
   Widget build(BuildContext context) {
