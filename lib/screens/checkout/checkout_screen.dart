@@ -16,7 +16,7 @@ import 'package:foodapp/shared/paymob_service.dart';
 import 'package:uuid/uuid.dart';
 
 class CheckoutScreen extends StatefulWidget {
-  const CheckoutScreen({Key? key}) : super(key: key);
+  const CheckoutScreen({super.key});
 
   @override
   State<CheckoutScreen> createState() => _CheckoutScreenState();
@@ -205,20 +205,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
       print("🛒 Found cart item from restaurant: ${cartItem.restaurantName}");
 
-      // For now, if restaurant not found in cubit, assume it's an out-of-area delivery and add default fee
+      // If restaurant not found in cubit, don't charge out-of-area fee
       if (userArea != 'Cairo' && userArea != 'All' && userArea.isNotEmpty) {
-        double defaultOutOfAreaFee =
-            20.0; // Default out of area fee when restaurant not found
+        print("⚠️ Restaurant not found in cubit - no out-of-area fee charged");
+        print("💰 BREAKDOWN: Base=$baseDeliveryFee, OutOfArea=0.0");
         print(
-            "⚠️ Restaurant not found in cubit - applying default out-of-area fee");
-        print(
-            "💰 BREAKDOWN: Base=$baseDeliveryFee, OutOfArea=$defaultOutOfAreaFee");
-        print(
-            "💳 === CHECKOUT CALCULATION COMPLETE (DEFAULT OUT-OF-AREA): Base=$baseDeliveryFee, OutOfArea=$defaultOutOfAreaFee ===\n");
-        return {
-          'baseFee': baseDeliveryFee,
-          'outOfAreaFee': defaultOutOfAreaFee
-        };
+            "💳 === CHECKOUT CALCULATION COMPLETE (RESTAURANT NOT FOUND): Base=$baseDeliveryFee, OutOfArea=0.0 ===\n");
+        return {'baseFee': baseDeliveryFee, 'outOfAreaFee': 0.0};
       }
 
       print(
@@ -285,7 +278,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     print(
         "   FINAL RESULT: Restaurant serves user area = $restaurantServesUserArea");
 
-    // Force debug for specific cases
+    // Log debug info but don't force calculation
     if (outOfAreaFee != '0' && restaurantServesUserArea) {
       print(
           "🚨 ALERT: Out-of-area fee is '$outOfAreaFee' but restaurant appears to serve user area!");
@@ -293,9 +286,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       print(
           "🚨 Primary match: '$restaurantArea' == '$userArea' = ${restaurantArea == userArea}");
       print("🚨 Areas list match: ${restaurantAreas.contains(userArea)}");
-      print("🚨 Forcing out-of-area calculation for debugging...");
-      restaurantServesUserArea =
-          false; // TEMPORARY: Force out-of-area calculation
+      print(
+          "🚨 Keeping restaurant serves user area as TRUE - no out-of-area fee will be charged");
     }
 
     if (restaurantServesUserArea) {
@@ -320,13 +312,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           print(
               "💰 Successfully parsed out-of-area fee: $outOfAreaFeeAmount EGP");
         } else {
-          print("⚠️ Clean out-of-area fee is empty, using default");
-          outOfAreaFeeAmount = 20.0; // Default out of area fee
+          print("⚠️ Clean out-of-area fee is empty, using 0.0");
+          outOfAreaFeeAmount = 0.0; // No out-of-area fee if empty
         }
       } catch (e) {
         print("❌ Error parsing out-of-area fee: $e");
-        outOfAreaFeeAmount = 20.0; // Default out of area fee
-        print("💰 Using default out-of-area fee: $outOfAreaFeeAmount EGP");
+        outOfAreaFeeAmount = 0.0; // No out-of-area fee if error
+        print(
+            "💰 Using 0.0 out-of-area fee due to parsing error: $outOfAreaFeeAmount EGP");
       }
 
       print(
@@ -1427,7 +1420,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         ),
                       ),
                     );
-                  }).toList(),
+                  }),
                   SizedBox(height: 16.h),
                   // Add new address button
                   SizedBox(

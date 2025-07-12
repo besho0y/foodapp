@@ -750,13 +750,11 @@ class Layoutcubit extends Cubit<Layoutstates> {
           print('❌ Error parsing restaurant out-of-area fee: $e');
         }
 
-        // If no specific out-of-area fee is set, use default
+        // Use the restaurant's specific out-of-area fee (even if 0)
+        print(
+            '💰 Using RESTAURANT-SPECIFIC out-of-area fee: $outOfAreaFee EGP');
         if (outOfAreaFee == 0) {
-          outOfAreaFee = 20.0; // Default out-of-area fee
-          print('💰 Using DEFAULT out-of-area fee: $outOfAreaFee EGP');
-        } else {
-          print(
-              '💰 Using RESTAURANT-SPECIFIC out-of-area fee: $outOfAreaFee EGP');
+          print('💰 Restaurant has 0 out-of-area fee - no extra charge');
         }
 
         print('=== END OUT-OF-AREA FEE CALCULATION ===\n');

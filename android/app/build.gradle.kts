@@ -30,6 +30,14 @@ android {
     buildTypes {
         release {
             signingConfig = signingConfigs.getByName("debug")
+            // Explicitly disable both minification and resource shrinking
+            isMinifyEnabled = false
+            isShrinkResources = false
+            // Keep proguard rules for future use
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
 }

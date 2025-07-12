@@ -10,6 +10,10 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <uses-permission android:name="android.permission.VIBRATE"/>
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <!-- Additional permissions for release builds -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
     <uses-feature android:name="android.hardware.camera" android:required="false"/>
     <uses-feature android:name="android.hardware.camera.autofocus" android:required="false"/>
 
@@ -58,6 +62,30 @@
             </intent-filter>
         </service>
         
+        <!-- Custom Firebase Messaging Service for better token handling -->
+        <service
+            android:name="io.flutter.plugins.firebase.messaging.FlutterFirebaseMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+        
+        <!-- Boot completed receiver for Firebase -->
+        <receiver
+            android:name="com.google.firebase.iid.FirebaseInstanceIdReceiver"
+            android:exported="true"
+            android:permission="com.google.android.c2dm.permission.SEND">
+            <intent-filter>
+                <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+            </intent-filter>
+        </receiver>
+        
+        <!-- Firebase Auto-Init receiver -->
+        <receiver
+            android:name="com.google.firebase.iid.FirebaseInstanceIdInternalReceiver"
+            android:exported="false" />
+        
         <!-- Firebase Messaging default notification icon -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_icon"
@@ -71,7 +99,18 @@
         <!-- Firebase Messaging default notification channel -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
-            android:value="high_importance_channel" />
+            android:value="admin_orders" />
+            
+        <!-- Enable auto-init for Firebase -->
+        <meta-data
+            android:name="firebase_messaging_auto_init_enabled"
+            android:value="true" />
+            
+        <!-- Enable auto-init for Firebase Analytics -->
+        <meta-data
+            android:name="firebase_analytics_collection_enabled"
+            android:value="true" />
+            
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

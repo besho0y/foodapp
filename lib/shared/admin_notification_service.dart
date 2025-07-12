@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -24,10 +25,42 @@ class AdminNotificationService {
   // Track initialization state
   bool _isInitialized = false;
 
+  /// Manual test function for debugging
+  static Future<void> debugTestAdminToken() async {
+    print('🔔 === MANUAL ADMIN TOKEN TEST ===');
+    try {
+      final currentUser = FirebaseAuth.instance.currentUser;
+      print('👤 Current user: ${currentUser?.uid ?? 'null'}');
+
+      if (currentUser != null && currentUser.uid == adminUserId) {
+        final instance = AdminNotificationService._instance;
+        print('🔔 Manually saving admin token...');
+        await instance._saveAdminToken();
+
+        print('🔔 Manually checking if token exists...');
+        final token = await getAdminToken();
+        print(
+            '🔔 Manual check result: ${token != null ? 'TOKEN EXISTS' : 'NO TOKEN'}');
+
+        if (token != null) {
+          print('✅ Manual test: Admin token is working correctly');
+        } else {
+          print('❌ Manual test: Admin token is NOT working');
+        }
+      } else {
+        print('❌ Manual test: Current user is not admin');
+      }
+    } catch (e) {
+      print('❌ Manual test error: $e');
+    }
+    print('🔔 === MANUAL TEST END ===');
+  }
+
   /// Initialize the admin notification service
   /// This should be called when the app starts
   static Future<void> initialize() async {
     print('🔔 === INITIALIZING ADMIN NOTIFICATION SERVICE ===');
+    print('🔔 Build Mode: ${kDebugMode ? 'DEBUG' : 'RELEASE'}');
 
     try {
       final instance = AdminNotificationService._instance;
@@ -47,9 +80,22 @@ class AdminNotificationService {
             '✅ Admin token saved successfully: ${savedToken != null ? 'YES' : 'NO'}');
         if (savedToken != null) {
           print('🔑 Token preview: ${savedToken.substring(0, 20)}...');
+        } else {
+          print(
+              '❌ WARNING: Admin token was not saved! Notifications will not work!');
+          print('🔔 Attempting manual retry...');
+          await debugTestAdminToken();
         }
       } else {
         print('👤 Current user is not admin');
+
+        // Add listener for when user logs in as admin
+        FirebaseAuth.instance.authStateChanges().listen((user) async {
+          if (user != null && user.uid == adminUserId) {
+            print('🔔 Admin user just logged in, saving token...');
+            await instance._saveAdminToken();
+          }
+        });
       }
 
       // Always start listening for new orders (to send notifications to admin)
@@ -67,12 +113,22 @@ class AdminNotificationService {
   /// Save admin FCM token to Firestore
   Future<void> _saveAdminToken() async {
     try {
+      print('🔔 === ADMIN TOKEN SAVE PROCESS START ===');
+      print('🔔 Platform: ${defaultTargetPlatform.toString()}');
+      print('🔔 Is Web: $kIsWeb');
       print('🔔 Getting FCM token...');
+
       final token = await _messaging.getToken();
       print('🔔 FCM token received: ${token != null ? 'YES' : 'NO'}');
 
       if (token != null) {
+        print('🔔 Token length: ${token.length}');
+        print(
+            '🔔 Token preview: ${token.substring(0, math.min(30, token.length))}...');
         print('🔔 Saving admin token to Firestore...');
+        print('🔔 Admin User ID: $adminUserId');
+
+        // Try to save with more detailed error handling
         await _firestore.collection('admin_tokens').doc(adminUserId).set({
           'token': token,
           'userId': adminUserId,
@@ -80,15 +136,65 @@ class AdminNotificationService {
           'deviceInfo': {
             'platform': defaultTargetPlatform.toString(),
             'isWeb': kIsWeb,
-          }
-        });
+            'buildMode': kDebugMode ? 'debug' : 'release',
+          },
+          'tokenLength': token.length,
+          'timestamp': DateTime.now().toIso8601String(),
+        }, SetOptions(merge: true));
 
-        print('✅ Admin FCM token saved: ${token.substring(0, 20)}...');
+        print('✅ Admin FCM token saved successfully');
+        print('🔔 === ADMIN TOKEN SAVE PROCESS COMPLETE ===');
+
+        // Verify the save by reading it back
+        await Future.delayed(Duration(seconds: 1));
+        final doc =
+            await _firestore.collection('admin_tokens').doc(adminUserId).get();
+        if (doc.exists) {
+          final data = doc.data();
+          print('✅ VERIFICATION: Token found in Firestore');
+          print(
+              '🔔 Stored token preview: ${data?['token']?.substring(0, 30)}...');
+          print('🔔 Build mode: ${data?['deviceInfo']?['buildMode']}');
+        } else {
+          print('❌ VERIFICATION FAILED: Token not found in Firestore');
+        }
       } else {
-        print('❌ No FCM token received');
+        print('❌ No FCM token received - this is the problem!');
+        print('❌ Trying to get token again...');
+
+        // Try again with explicit permission request
+        await _messaging.requestPermission(
+          alert: true,
+          badge: true,
+          sound: true,
+        );
+
+        final retryToken = await _messaging.getToken();
+        print('🔔 Retry token: ${retryToken != null ? 'YES' : 'NO'}');
+
+        if (retryToken != null) {
+          print('✅ Got token on retry, saving...');
+          await _firestore.collection('admin_tokens').doc(adminUserId).set({
+            'token': retryToken,
+            'userId': adminUserId,
+            'updatedAt': FieldValue.serverTimestamp(),
+            'deviceInfo': {
+              'platform': defaultTargetPlatform.toString(),
+              'isWeb': kIsWeb,
+              'buildMode': kDebugMode ? 'debug' : 'release',
+            },
+            'retryAttempt': true,
+            'timestamp': DateTime.now().toIso8601String(),
+          }, SetOptions(merge: true));
+          print('✅ Admin FCM token saved on retry');
+        }
       }
-    } catch (e) {
+      print('🔔 === ADMIN TOKEN SAVE PROCESS END ===');
+    } catch (e, stackTrace) {
+      print('❌ === ADMIN TOKEN SAVE ERROR ===');
       print('❌ Error saving admin token: $e');
+      print('❌ Stack trace: $stackTrace');
+      print('❌ === END ERROR ===');
       rethrow;
     }
   }

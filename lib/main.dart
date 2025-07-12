@@ -1,5 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -47,8 +48,19 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Firebase
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  print('🔔 === APP STARTUP ===');
+  print('🔔 Build Mode: ${kDebugMode ? 'DEBUG' : 'RELEASE'}');
+
+  // Initialize Firebase with error handling
+  try {
+    print('🔔 Initializing Firebase...');
+    await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform);
+    print('✅ Firebase initialized successfully');
+  } catch (e) {
+    print('❌ Error initializing Firebase: $e');
+    rethrow;
+  }
 
   // TEMPORARY: Clear cart storage to fix the two items issue
   final prefs = await SharedPreferences.getInstance();
@@ -56,13 +68,34 @@ void main() async {
   print('Cleared cart storage on app startup');
 
   // Initialize Firebase Messaging Service
-  FirebaseMessagingService.initialize();
+  try {
+    print('🔔 Initializing Firebase Messaging...');
+    await FirebaseMessagingService.initialize();
+    print('✅ Firebase Messaging initialized');
+  } catch (e) {
+    print('❌ Error initializing Firebase Messaging: $e');
+    // Don't rethrow - continue app startup
+  }
 
   // Initialize Admin Notification Service
-  AdminNotificationService.initialize();
+  try {
+    print('🔔 Initializing Admin Notification Service...');
+    await AdminNotificationService.initialize();
+    print('✅ Admin Notification Service initialized');
+  } catch (e) {
+    print('❌ Error initializing Admin Notification Service: $e');
+    // Don't rethrow - continue app startup
+  }
 
   // Initialize PayMob Service
-  PayMobService.initialize();
+  try {
+    print('🔔 Initializing PayMob Service...');
+    PayMobService.initialize();
+    print('✅ PayMob Service initialized');
+  } catch (e) {
+    print('❌ Error initializing PayMob Service: $e');
+    // Don't rethrow - continue app startup
+  }
 
   // Initialize Bloc Observer
   Bloc.observer = MyBlocObserver();
@@ -73,6 +106,9 @@ void main() async {
   // Check if user has selected location
   bool hasSelectedLocation = prefs.getBool('hasSelectedLocation') ?? false;
   String selectedArea = prefs.getString('selectedArea') ?? 'Cairo';
+
+  print('🔔 Starting app with language: ${isArabic ? 'Arabic' : 'English'}');
+  print('🔔 Selected area: $selectedArea');
 
   runApp(
     MyApp(
