@@ -9,10 +9,15 @@ workflows:
     scripts:
       - name: Install Flutter dependencies
         script: |
+          flutter clean
           flutter packages pub get
-      - name: Install CocoaPods dependencies
+      - name: Update CocoaPods and install dependencies
         script: |
-          cd ios && pod install
+          sudo gem install cocoapods
+          cd ios
+          pod repo update
+          pod deintegrate
+          pod install
       - name: Build iOS app
         script: |
           flutter build ios --release --no-codesign
