@@ -48,7 +48,8 @@ Widget itemcard(context, bool fromFavourites, Item model, dynamic items) {
             restaurantId: restaurant?.id ?? '',
             restaurantName: restaurant?.name ?? '',
             restaurantNameAr: restaurant?.nameAr ?? '',
-            deliveryFee: restaurant?.deliveryFee ?? '0',
+            deliveryFee: restaurant?.deliveryFee ??
+                '30', // Pass base fee, location-based calculation will handle out-of-area fees
           ),
         );
       },
@@ -143,6 +144,15 @@ Widget itemcard(context, bool fromFavourites, Item model, dynamic items) {
                           ),
                         ),
                         BlocBuilder<Favouritecubit, FavouriteState>(
+                          buildWhen: (previous, current) {
+                            // Only rebuild if the state actually changed in a meaningful way
+                            // and not just from loading states
+                            if (current is FavouriteLoadingState) return false;
+                            if (previous is FavouriteLoadingState &&
+                                current is FavouriteLoadedState) return true;
+                            if (current is FavouriteLoadedState) return true;
+                            return false;
+                          },
                           builder: (context, state) {
                             // Update the model's favorite status based on cubit's cache
                             model.isfavourite = cubit.isFavorite(model.id);

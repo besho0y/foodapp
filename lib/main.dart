@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
@@ -148,17 +149,60 @@ class MyApp extends StatelessWidget {
             // Initialize with user's selected area
             cubit.initializeWithUserArea(selectedArea);
             // Initialization is handled in constructor
-            print("Creating restaurant cubit instance...");
+            print("✅ Creating restaurant cubit instance...");
             return cubit;
           },
         ),
         BlocProvider(
           create: (context) {
             final cubit = Favouritecubit();
-            // Initialize favorite IDs first, then load favorites
+            print('🔄 === EARLY FAVORITES INITIALIZATION ===');
+
+            // Initialize favorite IDs first
             cubit.initializeFavoriteIds().then((_) {
-              cubit.loadFavourites();
+              print('✅ Favorite IDs initialized on app start');
+
+              // Only load favorites if user is logged in
+              if (FirebaseAuth.instance.currentUser != null) {
+                print('👤 User is logged in, scheduling favorites loading...');
+
+                // Delay favorites loading to let restaurant data load first
+                Future.delayed(const Duration(milliseconds: 1000), () {
+                  print('🔄 Loading favorites after restaurant data...');
+
+                  // Check if restaurant data is available before loading favorites
+                  final currentContext = navigatorKey.currentContext;
+                  if (currentContext != null) {
+                    try {
+                      final restaurantCubit =
+                          Restuarantscubit.get(currentContext);
+                      print(
+                          '📊 Restaurant cubit has ${restaurantCubit.restaurants.length} restaurants available');
+
+                      if (restaurantCubit.restaurants.isNotEmpty) {
+                        print(
+                            '✅ Restaurant data available, loading favorites...');
+                      } else {
+                        print(
+                            '⚠️ Restaurant data not ready yet, favorites will use Firebase fallback');
+                      }
+                    } catch (e) {
+                      print('⚠️ Could not access restaurant cubit: $e');
+                    }
+                  }
+
+                  cubit.loadFavourites().catchError((error) {
+                    print(
+                        "❌ Error loading favorites during delayed startup: $error");
+                  });
+                });
+              } else {
+                print('❌ No user logged in, skipping favorites loading');
+              }
+            }).catchError((error) {
+              print("❌ Error initializing favorites on app start: $error");
             });
+
             return cubit;
           },
         ),

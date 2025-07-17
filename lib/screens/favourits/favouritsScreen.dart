@@ -1,17 +1,63 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:foodapp/generated/l10n.dart';
+import 'package:foodapp/models/resturant.dart';
 import 'package:foodapp/screens/favourits/cubit.dart';
 import 'package:foodapp/screens/favourits/states.dart';
+import 'package:foodapp/screens/resturants/cubit.dart';
 import 'package:foodapp/shared/auth_helper.dart';
 import 'package:foodapp/shared/colors.dart';
 import 'package:foodapp/widgets/itemcard.dart';
 
-class FavouritsScreen extends StatelessWidget {
+class FavouritsScreen extends StatefulWidget {
   const FavouritsScreen({super.key});
+
+  @override
+  State<FavouritsScreen> createState() => _FavouritsScreenState();
+}
+
+class _FavouritsScreenState extends State<FavouritsScreen> {
+  bool _hasInitialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Enhanced initialization for better direct navigation handling
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (AuthHelper.isUserLoggedIn() && !_hasInitialized) {
+        final cubit = Favouritecubit.get(context);
+
+        print("🔄 Favorites screen opened");
+        print("📝 Favorites cubit has ${cubit.favourites.length} favorites");
+
+        // Always try to load favorites when screen opens
+        // The cubit will handle whether to use cached data or reload
+        cubit.loadFavourites().then((_) {
+          print("✅ Favorites loading completed on screen open");
+        }).catchError((error) {
+          print("❌ Error loading favorites on screen open: $error");
+          // Show error message and reload option
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Text(
+                    'Error loading favorites. Tap reload to try again.'),
+                backgroundColor: Colors.orange,
+                action: SnackBarAction(
+                  label: 'Reload',
+                  onPressed: () => cubit.reloadFavorites(),
+                ),
+                duration: const Duration(seconds: 5),
+              ),
+            );
+          }
+        });
+
+        _hasInitialized = true;
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +98,18 @@ class FavouritsScreen extends StatelessWidget {
       );
     }
 
-    return BlocBuilder<Favouritecubit, FavouriteState>(
+    return BlocConsumer<Favouritecubit, FavouriteState>(
+      listener: (context, state) {
+        // Handle any side effects here if needed
+        if (state is FavouriteErrorState) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.error),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      },
       builder: (context, state) {
         var cubit = Favouritecubit.get(context);
 
@@ -82,6 +139,34 @@ class FavouritsScreen extends StatelessWidget {
                     Text(
                       S.of(context).no_favorites,
                       style: Theme.of(context).textTheme.bodyLarge,
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: 10.h),
+                    Text(
+                      'Start adding items to your favorites to see them here!',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Colors.grey,
+                          ),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: 20.h),
+                    // Enhanced reload button for better UX
+                    ElevatedButton.icon(
+                      onPressed: () async {
+                        print("🔄 Manual reload favorites triggered");
+                        await cubit.reloadFavorites();
+                      },
+                      icon: Icon(
+                        Icons.refresh,
+                        size: 18.sp,
+                      ),
+                      label: const Text('Reload Favorites'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).primaryColor,
+                        foregroundColor: Colors.white,
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 20.w, vertical: 12.h),
+                      ),
                     ),
                   ],
                 ),
@@ -101,11 +186,28 @@ class FavouritsScreen extends StatelessWidget {
                 physics: const AlwaysScrollableScrollPhysics(),
                 itemCount: cubit.favourites.length,
                 itemBuilder: (context, index) {
+                  // Get restaurant information from Restuarantscubit for proper location-based calculation
+                  final restaurantCubit = Restuarantscubit.get(context);
+                  final favoriteItem = cubit.favourites[index];
+
+                  // Find the restaurant that contains this item
+                  Restuarants? restaurant;
+                  try {
+                    restaurant = restaurantCubit.restaurants.firstWhere(
+                      (r) =>
+                          r.menuItems.any((item) => item.id == favoriteItem.id),
+                    );
+                  } catch (e) {
+                    print(
+                        "Restaurant not found for favorite item ${favoriteItem.id}");
+                    restaurant = null;
+                  }
+
                   return itemcard(
                     context,
                     true,
-                    cubit.favourites[index],
-                    null,
+                    favoriteItem,
+                    restaurant != null ? [restaurant] : null,
                   );
                 },
               ),
@@ -113,63 +215,6 @@ class FavouritsScreen extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-
-  void _showDebugInfo(BuildContext context) {
-    // Get user ID and favorites data from Firestore
-    final currentUser = FirebaseAuth.instance.currentUser;
-    if (currentUser == null) {
-      _showDebugDialog(
-          context, "Not logged in", "No user is currently logged in.");
-      return;
-    }
-
-    FirebaseFirestore.instance
-        .collection('users')
-        .doc(currentUser.uid)
-        .get()
-        .then((userDoc) {
-      if (!userDoc.exists || userDoc.data() == null) {
-        _showDebugDialog(context, "User Not Found",
-            "User document doesn't exist in Firestore.");
-        return;
-      }
-
-      final userData = userDoc.data()!;
-      final favourites = userData['favourites'] ?? [];
-      final addresses = userData['addresses'] ?? [];
-
-      String message = """
-User ID: ${currentUser.uid}
-
-Favourites IDs (${favourites.length}): 
-${favourites.join('\n')}
-
-Addresses (${addresses.length})
-""";
-
-      _showDebugDialog(context, "User Data", message);
-    }).catchError((error) {
-      _showDebugDialog(context, "Error", "Failed to load user data: $error");
-    });
-  }
-
-  void _showDebugDialog(BuildContext context, String title, String message) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(title),
-        content: SingleChildScrollView(
-          child: Text(message),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Close"),
-          ),
-        ],
-      ),
     );
   }
 }

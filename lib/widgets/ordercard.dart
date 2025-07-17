@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:foodapp/generated/l10n.dart';
+import 'package:foodapp/layout/cubit.dart';
+import 'package:foodapp/screens/checkout/checkout_screen.dart';
+import 'package:foodapp/screens/profile/cubit.dart';
 import 'package:foodapp/shared/colors.dart';
 
 class OrderCard extends StatefulWidget {
   final dynamic model; // Order model
 
-  const OrderCard({Key? key, required this.model}) : super(key: key);
+  const OrderCard({super.key, required this.model});
 
   @override
   State<OrderCard> createState() => _OrderCardState();
@@ -55,6 +58,149 @@ class _OrderCardState extends State<OrderCard> {
     }
   }
 
+  // Reorder functionality
+  void _reorderItems(BuildContext context) async {
+    try {
+      print('🔄 === STARTING REORDER ===');
+
+      final layoutCubit = Layoutcubit.get(context);
+      final profileCubit = ProfileCubit.get(context);
+      final model = widget.model;
+
+      print('📝 Reordering ${model.items.length} items');
+      print('📍 Order address: ${model.address}');
+
+      // Clear current cart
+      layoutCubit.clearCart();
+      print('🗑️ Cart cleared');
+
+      // Convert order items back to CartItem format and add to cart
+      for (var item in model.items) {
+        try {
+          String itemName = '';
+          String itemNameAr = '';
+          double itemPrice = 0.0;
+          int quantity = 1;
+          String? comment;
+          String restaurantId = '';
+          String restaurantName = '';
+          String restaurantNameAr = '';
+          String deliveryFee = '30.0'; // Default delivery fee
+          String img = '';
+
+          // Handle both Map and object formats
+          if (item is Map) {
+            itemName = item['name'] ?? 'Unknown item';
+            itemNameAr = item['nameAr'] ?? item['namear'] ?? itemName;
+
+            // Handle both int and double price formats
+            var price = item['price'];
+            if (price is int) {
+              itemPrice = price.toDouble();
+            } else if (price is double) {
+              itemPrice = price;
+            }
+
+            quantity = item['quantity'] ?? 1;
+            comment = item['comment'];
+            restaurantId = item['restaurantId'] ?? '';
+            restaurantName = item['restaurantName'] ?? '';
+            restaurantNameAr = item['restaurantNameAr'] ?? '';
+            deliveryFee = item['deliveryFee'] ?? '30.0';
+            img = item['img'] ?? '';
+          } else {
+            // Handle object format
+            itemName = item.name ?? 'Unknown item';
+            itemNameAr = item.nameAr ?? itemName;
+            itemPrice = item.price ?? 0.0;
+            quantity = item.quantity ?? 1;
+            comment = item.comment;
+            restaurantId = item.restaurantId ?? '';
+            restaurantName = item.restaurantName ?? '';
+            restaurantNameAr = item.restaurantNameAr ?? '';
+            deliveryFee = item.deliveryFee ?? '30.0';
+            img = item.img ?? '';
+          }
+
+          // Ensure we have required fields
+          if (itemName.isEmpty) {
+            print('⚠️ Skipping item with empty name');
+            continue;
+          }
+
+          // Generate unique restaurant ID if missing
+          if (restaurantId.isEmpty) {
+            restaurantId = 'reorder_${DateTime.now().millisecondsSinceEpoch}';
+          }
+
+          print('➕ Adding item: $itemName (x$quantity) from $restaurantName');
+
+          // Add item to cart
+          layoutCubit.addToCart(
+            context: context,
+            name: itemName,
+            nameAr: itemNameAr,
+            price: itemPrice,
+            quantity: quantity,
+            img: img,
+            comment: comment,
+            restaurantId: restaurantId,
+            restaurantName: restaurantName,
+            restaurantNameAr: restaurantNameAr,
+            deliveryFee: deliveryFee,
+          );
+        } catch (itemError) {
+          print('❌ Error adding item to cart: $itemError');
+          // Continue with other items
+        }
+      }
+
+      print('✅ All items added to cart');
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+              '${layoutCubit.cartitems.length} items added to cart for reorder'),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+
+      // Navigate to checkout screen
+      if (layoutCubit.cartitems.isNotEmpty) {
+        print(
+            '🛒 Navigating to checkout with ${layoutCubit.cartitems.length} items');
+
+        // Navigate to checkout
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const CheckoutScreen(),
+          ),
+        );
+      } else {
+        print('❌ No items were added to cart');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Unable to add items to cart. Please try again.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+
+      print('🔄 === REORDER COMPLETED ===');
+    } catch (e) {
+      print('❌ Error during reorder: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error reordering items. Please try again.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final model = widget.model;
@@ -73,7 +219,7 @@ class _OrderCardState extends State<OrderCard> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   SizedBox(
-                    width: 225.w,
+                    width: 180.w,
                     child: Text(
                       model.address != null && model.address['address'] != null
                           ? "${model.address['address']}"
@@ -83,11 +229,44 @@ class _OrderCardState extends State<OrderCard> {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  SizedBox(width: 10.w),
+                  SizedBox(width: 8.w),
                   Expanded(
                     child: Text(
                       _formatDate(model.date),
                       style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                  ),
+                  SizedBox(width: 8.w),
+                  // Compact reorder button at the top
+                  SizedBox(
+                    height: 32.h,
+                    child: ElevatedButton.icon(
+                      onPressed: () => _reorderItems(context),
+                      icon: Icon(
+                        Icons.refresh,
+                        size: 14.sp,
+                      ),
+                      label: Text(
+                        'Reorder',
+                        style: TextStyle(
+                          fontSize: 11.sp,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor:
+                            Theme.of(context).brightness == Brightness.dark
+                                ? Colors.brown.shade900
+                                : Theme.of(context).primaryColor,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(6.r),
+                        ),
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 8.w, vertical: 0),
+                        elevation: 1,
+                        minimumSize: Size(0, 32.h),
+                      ),
                     ),
                   ),
                 ],
