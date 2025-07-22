@@ -29,9 +29,7 @@ class Logincubit extends Cubit<LoginStates> {
     required BuildContext context,
   }) {
     emit(LoginLoadingState());
-    FirebaseAuth.instance
-        .signInWithEmailAndPassword(email: email, password: password)
-        .then((value) async {
+    FirebaseAuth.instance.signInWithEmailAndPassword(email: email, password: password).then((value) async {
       emit(LoginSuccessState());
 
       // Save user login state
@@ -90,10 +88,8 @@ class Logincubit extends Cubit<LoginStates> {
       } else {
         // Handle other types of errors including type casting errors
         print("Auth Error Details: $error");
-        if (error.toString().contains('PigeonUserDetails') ||
-            error.toString().contains('List<Object?>')) {
-          errorMessage =
-              "Authentication service temporarily unavailable. Please try again.";
+        if (error.toString().contains('PigeonUserDetails') || error.toString().contains('List<Object?>')) {
+          errorMessage = "Authentication service temporarily unavailable. Please try again.";
         } else {
           errorMessage = "An unexpected error occurred";
         }
@@ -120,7 +116,7 @@ class Logincubit extends Cubit<LoginStates> {
       print("Available sign-in methods: $methods");
 
       // Try to initialize GoogleSignIn to check if it's configured
-      final GoogleSignIn googleSignIn = GoogleSignIn();
+      final GoogleSignIn googleSignIn = GoogleSignIn.instance;
       return true; // If we can create an instance, it's likely configured
     } catch (e) {
       print("Google Sign-In configuration error: $e");
@@ -152,20 +148,12 @@ class Logincubit extends Cubit<LoginStates> {
 
     try {
       // Initialize and authenticate with Google Sign-In
-      final GoogleSignIn googleSignIn = GoogleSignIn();
-      final GoogleSignInAccount? googleSignInAccount =
-          await googleSignIn.signIn();
-
-      if (googleSignInAccount == null) {
-        // User canceled the sign-in
-        emit(LoginErrorlState());
-        return;
-      }
+      final GoogleSignIn googleSignIn = GoogleSignIn.instance;
+      final GoogleSignInAccount googleSignInAccount = await googleSignIn.authenticate();
 
       try {
         // Get authentication tokens
-        final GoogleSignInAuthentication googleSignInAuthentication =
-            await googleSignInAccount.authentication;
+        final GoogleSignInAuthentication googleSignInAuthentication = googleSignInAccount.authentication;
 
         // Create Firebase credential
         final AuthCredential credential = GoogleAuthProvider.credential(
@@ -173,24 +161,17 @@ class Logincubit extends Cubit<LoginStates> {
         );
 
         // Sign in to Firebase
-        final UserCredential userCredential =
-            await FirebaseAuth.instance.signInWithCredential(credential);
+        final UserCredential userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
 
         final User? user = userCredential.user;
 
         if (user != null) {
           // Check if user exists in Firestore
-          final userDoc = await FirebaseFirestore.instance
-              .collection('users')
-              .doc(user.uid)
-              .get();
+          final userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
 
           if (!userDoc.exists) {
             // Create user in Firestore if they don't exist
-            await FirebaseFirestore.instance
-                .collection('users')
-                .doc(user.uid)
-                .set({
+            await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
               'name': user.displayName ?? '',
               'email': user.email ?? '',
               'phone': user.phoneNumber ?? '',
@@ -241,10 +222,8 @@ class Logincubit extends Cubit<LoginStates> {
           String errorMessage = "Google Sign-In failed";
 
           // Handle specific Firebase Auth errors
-          if (authError.toString().contains('PigeonUserDetails') ||
-              authError.toString().contains('List<Object?>')) {
-            errorMessage =
-                "Authentication service temporarily unavailable. Please try again.";
+          if (authError.toString().contains('PigeonUserDetails') || authError.toString().contains('List<Object?>')) {
+            errorMessage = "Authentication service temporarily unavailable. Please try again.";
           } else if (authError is FirebaseAuthException) {
             switch (authError.code) {
               case 'account-exists-with-different-credential':
@@ -295,24 +274,17 @@ class Logincubit extends Cubit<LoginStates> {
     try {
       // Get Apple Sign In credentials
       final appleProvider = AppleAuthProvider();
-      final UserCredential userCredential =
-          await FirebaseAuth.instance.signInWithProvider(appleProvider);
+      final UserCredential userCredential = await FirebaseAuth.instance.signInWithProvider(appleProvider);
 
       final User? user = userCredential.user;
 
       if (user != null) {
         // Check if user exists in Firestore
-        final userDoc = await FirebaseFirestore.instance
-            .collection('users')
-            .doc(user.uid)
-            .get();
+        final userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
 
         if (!userDoc.exists) {
           // Create user in Firestore if they don't exist
-          await FirebaseFirestore.instance
-              .collection('users')
-              .doc(user.uid)
-              .set({
+          await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
             'name': user.displayName ?? '',
             'email': user.email ?? '',
             'phone': user.phoneNumber ?? '',

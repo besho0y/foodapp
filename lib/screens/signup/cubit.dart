@@ -30,8 +30,7 @@ class Signupcubit extends Cubit<SignupStates> {
     emit(RegisterLoadingState());
 
     try {
-      UserCredential value = await FirebaseAuth.instance
-          .createUserWithEmailAndPassword(email: email, password: password);
+      UserCredential value = await FirebaseAuth.instance.createUserWithEmailAndPassword(email: email, password: password);
 
       User? user = value.user;
       if (user != null) {
@@ -75,10 +74,7 @@ class Signupcubit extends Cubit<SignupStates> {
     );
 
     try {
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(uid)
-          .set(userModel.tomap());
+      await FirebaseFirestore.instance.collection('users').doc(uid).set(userModel.tomap());
 
       emit(CreateUserSuccessState());
 
@@ -122,7 +118,7 @@ class Signupcubit extends Cubit<SignupStates> {
       print("Available sign-in methods: $methods");
 
       // Try to initialize GoogleSignIn to check if it's configured
-      final GoogleSignIn googleSignIn = GoogleSignIn();
+      final GoogleSignIn googleSignIn = GoogleSignIn.instance;
       return true; // If we can create an instance, it's likely configured
     } catch (e) {
       print("Google Sign-In configuration error: $e");
@@ -154,20 +150,12 @@ class Signupcubit extends Cubit<SignupStates> {
 
     try {
       // Initialize and authenticate with Google Sign-In
-      final GoogleSignIn googleSignIn = GoogleSignIn();
-      final GoogleSignInAccount? googleSignInAccount =
-          await googleSignIn.signIn();
-
-      if (googleSignInAccount == null) {
-        // User canceled the sign-in
-        emit(CreateUserErrorState());
-        return;
-      }
+      final GoogleSignIn googleSignIn = GoogleSignIn.instance;
+      final GoogleSignInAccount googleSignInAccount = await googleSignIn.authenticate();
 
       try {
         // Get authentication tokens
-        final GoogleSignInAuthentication googleSignInAuthentication =
-            await googleSignInAccount.authentication;
+        final GoogleSignInAuthentication googleSignInAuthentication = googleSignInAccount.authentication;
 
         // Create Firebase credential
         final AuthCredential credential = GoogleAuthProvider.credential(
@@ -175,24 +163,17 @@ class Signupcubit extends Cubit<SignupStates> {
         );
 
         // Sign in to Firebase
-        final UserCredential userCredential =
-            await FirebaseAuth.instance.signInWithCredential(credential);
+        final UserCredential userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
 
         final User? user = userCredential.user;
 
         if (user != null) {
           // Check if user exists in Firestore
-          final userDoc = await FirebaseFirestore.instance
-              .collection('users')
-              .doc(user.uid)
-              .get();
+          final userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
 
           if (!userDoc.exists) {
             // Create user in Firestore if they don't exist
-            await FirebaseFirestore.instance
-                .collection('users')
-                .doc(user.uid)
-                .set({
+            await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
               'name': user.displayName ?? '',
               'email': user.email ?? '',
               'phone': user.phoneNumber ?? '',
