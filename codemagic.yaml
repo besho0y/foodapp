@@ -1,7 +1,8 @@
 workflows:
-  ios-workflow:
-    name: iOS Workflow
+  ios-basic:
+    name: iOS Basic Build (No Code Signing)
     max_build_duration: 60
+    instance_type: mac_mini_m1
     environment:
       flutter: stable
       xcode: latest
@@ -10,29 +11,29 @@ workflows:
       - name: Install Flutter dependencies
         script: |
           flutter clean
-          flutter packages pub get
-      - name: Update CocoaPods and install dependencies
+          flutter pub get
+      - name: Install CocoaPods dependencies
         script: |
-          sudo gem install cocoapods
           cd ios
-          rm -rf Pods
-          rm -f Podfile.lock
-          pod repo update
-          pod deintegrate
-          pod install --repo-update --verbose
-      - name: Build iOS app
+          pod install
+      - name: Build iOS app (unsigned)
         script: |
+          # Build without code signing for testing
           flutter build ios --release --no-codesign
+      - name: Create unsigned IPA
+        script: |
+          cd build/ios/iphoneos
+          mkdir -p Payload
+          cp -r Runner.app Payload/
+          zip -r ../../../Runner-unsigned.ipa Payload/
     artifacts:
+      - Runner-unsigned.ipa
       - build/ios/iphoneos/Runner.app
       - flutter_drive.log
     publishing:
       email:
         recipients:
-          - user@example.com
-      slack:
-        channel: '#builds'
-        notify_on_build_start: true
+          - your-email@example.com
         notify:
           success: true
-          failure: true 
+          failure: true

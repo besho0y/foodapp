@@ -1,0 +1,47 @@
+workflows:
+  ios-development:
+    name: iOS Development Build
+    max_build_duration: 120
+    instance_type: mac_mini_m1
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+      vars:
+        APP_ID: com.besho0y.foodapp
+    scripts:
+      - name: Set up keychain
+        script: |
+          keychain initialize
+      - name: Fetch signing files
+        script: |
+          app-store-connect fetch-signing-files $APP_ID \
+            --type IOS_APP_DEVELOPMENT \
+            --create
+      - name: Set up signing certificate
+        script: |
+          keychain add-certificates
+      - name: Set up code signing settings
+        script: |
+          xcode-project use-profiles
+      - name: Install dependencies
+        script: |
+          flutter clean
+          flutter pub get
+          cd ios && pod install
+      - name: Build for development
+        script: |
+          # Explicitly use flutter build (not shorebird)
+          /usr/local/bin/flutter build ipa \
+            --release \
+            --export-options-plist=ios/ExportOptions.plist
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      email:
+        recipients:
+          - your-email@example.com
+        notify:
+          success: true
+          failure: true
