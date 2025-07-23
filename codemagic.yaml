@@ -1,6 +1,73 @@
 workflows:
   ios-workflow:
-    name: iOS Workflow
+    name: iOS Workflow (Signed)
+    max_build_duration: 60
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+      vars:
+        # Add your app-specific variables here
+        BUNDLE_ID: "com.besho0y.foodapp" # Replace with your actual bundle ID
+        APP_NAME: "Food Delivery App"
+    scripts:
+      - name: Install Flutter dependencies
+        script: |
+          flutter clean
+          flutter packages pub get
+      - name: Update CocoaPods and install dependencies
+        script: |
+          sudo gem install cocoapods
+          cd ios
+          rm -rf Pods
+          rm -f Podfile.lock
+          pod repo update
+          pod deintegrate
+          pod install --repo-update --verbose
+      - name: Set up code signing
+        script: |
+          # This will automatically configure code signing
+          xcode-project use-profiles
+      - name: Build iOS app
+        script: |
+          # Build the iOS app for release
+          flutter build ios --release
+      - name: Build .ipa file for testing
+        script: |
+          # Try to create signed .ipa file for ad-hoc distribution
+          if xcode-project build-ipa \
+            --workspace ios/Runner.xcworkspace \
+            --scheme Runner \
+            --archive-directory build/ios/archive \
+            --export-directory build/ios/ipa \
+            --export-method ad-hoc; then
+            echo "Successfully created signed .ipa"
+          else
+            echo "Signed build failed, creating unsigned .ipa for manual signing"
+            # Create unsigned .ipa as fallback
+            mkdir -p build/ios/ipa
+            cd build/ios/iphoneos
+            mkdir -p Payload
+            cp -r Runner.app Payload/
+            zip -r ../ipa/Runner-unsigned.ipa Payload/
+            rm -rf Payload
+          fi
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - build/ios/archive/Runner.xcarchive
+      - build/ios/iphoneos/Runner.app
+      - flutter_drive.log
+    publishing:      
+      # Email notification with .ipa file
+      email:
+        recipients:
+          - user@example.com # Replace with your email
+        notify:
+          success: true
+          failure: true
+
+  ios-simple:
+    name: iOS Simple (Unsigned)
     max_build_duration: 60
     environment:
       flutter: stable
@@ -20,19 +87,29 @@ workflows:
           pod repo update
           pod deintegrate
           pod install --repo-update --verbose
-      - name: Build iOS app
+      - name: Build iOS app (unsigned)
         script: |
+          # Build the iOS app without code signing
           flutter build ios --release --no-codesign
+      - name: Create .ipa file
+        script: |
+          # Create unsigned .ipa file for testing
+          mkdir -p build/ios/ipa
+          cd build/ios/iphoneos
+          mkdir -p Payload
+          cp -r Runner.app Payload/
+          zip -r ../ipa/Runner-unsigned.ipa Payload/
+          rm -rf Payload
+          echo "Created unsigned .ipa file: build/ios/ipa/Runner-unsigned.ipa"
     artifacts:
+      - build/ios/ipa/*.ipa
       - build/ios/iphoneos/Runner.app
       - flutter_drive.log
-    publishing:
+    publishing:      
+      # Email notification with .ipa file
       email:
         recipients:
-          - user@example.com
-      slack:
-        channel: '#builds'
-        notify_on_build_start: true
+          - user@example.com # Replace with your email
         notify:
           success: true
           failure: true 
