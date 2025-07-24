@@ -49,6 +49,8 @@
 	<key>NSMicrophoneUsageDescription</key>
 	<string>This app needs access to microphone for audio recording.</string>
 	<key>LSApplicationQueriesSchemes</key>
+	<key>CFBundleIconName</key>
+    <string>AppIcon</string>
 	<array>
 	</array>
 		<key>UILaunchStoryboardName</key>
@@ -79,5 +81,6 @@
 		</array>
 		<key>UIStatusBarHidden</key>
 		<false/>
+
 	</dict>
 </plist>
