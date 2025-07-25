@@ -66,7 +66,7 @@ class DefaultFirebaseOptions {
     storageBucket: 'foodapp-94323.firebasestorage.app',
     androidClientId: '167788515229-6s8fcelioth4l868l2ho93djb0tekeoj.apps.googleusercontent.com',
     iosClientId: '167788515229-9g1qj525itr1najit2mj6t78ommj53eq.apps.googleusercontent.com',
-    iosBundleId: 'com.example.foodapp',
+    iosBundleId: 'com.besho0y.foodapp',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
@@ -77,7 +77,7 @@ class DefaultFirebaseOptions {
     storageBucket: 'foodapp-94323.firebasestorage.app',
     androidClientId: '167788515229-6s8fcelioth4l868l2ho93djb0tekeoj.apps.googleusercontent.com',
     iosClientId: '167788515229-9g1qj525itr1najit2mj6t78ommj53eq.apps.googleusercontent.com',
-    iosBundleId: 'com.example.foodapp',
+    iosBundleId: 'com.besho0y.foodapp',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
