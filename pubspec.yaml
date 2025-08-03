@@ -129,6 +129,7 @@ flutter:
 flutter_intl:
   enabled: true
   generate: true
+  deferred_loading: false
 
 flutter_launcher_icons:
   android: "ic_launcher"

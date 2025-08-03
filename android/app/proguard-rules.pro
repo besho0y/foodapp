@@ -26,3 +26,11 @@
 -keep class io.flutter.view.**  { *; }
 -keep class io.flutter.**  { *; }
 -keep class io.flutter.plugins.**  { *; } 
+# Keep Flutter deferred components references (even if not used)
+-keep class io.flutter.embedding.engine.deferredcomponents.** { *; }
+
+# Keep all classes from Play Core Common
+-keep class com.google.android.play.core.** { *; }
+# Flutter deferred components fix
+-keep class io.flutter.embedding.engine.deferredcomponents.** { *; }
+-dontwarn com.google.android.play.core.**

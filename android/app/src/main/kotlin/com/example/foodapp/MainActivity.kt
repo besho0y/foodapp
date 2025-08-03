@@ -1,4 +1,4 @@
-package com.example.foodapp
+package com.besho0y.foodapp
 
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
