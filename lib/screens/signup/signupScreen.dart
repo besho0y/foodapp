@@ -53,8 +53,7 @@ class _SignupscreenState extends State<Signupscreen> {
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
                 child: Padding(
-                  padding:
-                      EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
+                  padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
                   child: Column(
                     children: [
                       // Logo or illustration
@@ -148,38 +147,43 @@ class _SignupscreenState extends State<Signupscreen> {
                           ),
                           SizedBox(width: 20.w),
                           // Apple button
-                          Container(
-                            width: 120.w,
-                            height: 50.h,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12.r),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.05),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Image.asset(
-                                  "assets/images/signinLogos/apple.png",
-                                  width: 24.w,
-                                  height: 24.h,
-                                ),
-                                SizedBox(width: 8.w),
-                                Text(
-                                  S.of(context).apple,
-                                  style: TextStyle(
-                                    color: textColor,
-                                    fontSize: 14.sp,
-                                    fontWeight: FontWeight.w500,
+                          GestureDetector(
+                            onTap: () {
+                              cubit.signinwithapple(context: context);
+                            },
+                            child: Container(
+                              width: 120.w,
+                              height: 50.h,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(12.r),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.05),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 2),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Image.asset(
+                                    "assets/images/signinLogos/apple.png",
+                                    width: 24.w,
+                                    height: 24.h,
+                                  ),
+                                  SizedBox(width: 8.w),
+                                  Text(
+                                    S.of(context).apple,
+                                    style: TextStyle(
+                                      color: textColor,
+                                      fontSize: 14.sp,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ],
@@ -241,18 +245,15 @@ class _SignupscreenState extends State<Signupscreen> {
                                 decoration: InputDecoration(
                                   labelText: S.of(context).Name,
                                   hintText: S.of(context).enter_full_name,
-                                  labelStyle: const TextStyle(
-                                      color: secondaryTextColor),
-                                  prefixIcon: const Icon(Icons.person,
-                                      color: primaryColor),
+                                  labelStyle: const TextStyle(color: secondaryTextColor),
+                                  prefixIcon: const Icon(Icons.person, color: primaryColor),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12.r),
                                     borderSide: BorderSide.none,
                                   ),
                                   filled: true,
                                   fillColor: Colors.grey[100],
-                                  contentPadding:
-                                      EdgeInsets.symmetric(vertical: 16.h),
+                                  contentPadding: EdgeInsets.symmetric(vertical: 16.h),
                                 ),
                                 validator: (value) {
                                   if (value != null && value.isNotEmpty) {
@@ -270,18 +271,15 @@ class _SignupscreenState extends State<Signupscreen> {
                                 decoration: InputDecoration(
                                   labelText: S.of(context).Email,
                                   hintText: S.of(context).enter_email,
-                                  labelStyle: const TextStyle(
-                                      color: secondaryTextColor),
-                                  prefixIcon: const Icon(Icons.email_outlined,
-                                      color: primaryColor),
+                                  labelStyle: const TextStyle(color: secondaryTextColor),
+                                  prefixIcon: const Icon(Icons.email_outlined, color: primaryColor),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12.r),
                                     borderSide: BorderSide.none,
                                   ),
                                   filled: true,
                                   fillColor: Colors.grey[100],
-                                  contentPadding:
-                                      EdgeInsets.symmetric(vertical: 16.h),
+                                  contentPadding: EdgeInsets.symmetric(vertical: 16.h),
                                 ),
                                 validator: (value) {
                                   if (value != null && value.isNotEmpty) {
@@ -299,19 +297,15 @@ class _SignupscreenState extends State<Signupscreen> {
                                 decoration: InputDecoration(
                                   labelText: S.of(context).Phone,
                                   hintText: S.of(context).enter_phone,
-                                  labelStyle: const TextStyle(
-                                      color: secondaryTextColor),
-                                  prefixIcon: const Icon(
-                                      Icons.phone_iphone_outlined,
-                                      color: primaryColor),
+                                  labelStyle: const TextStyle(color: secondaryTextColor),
+                                  prefixIcon: const Icon(Icons.phone_iphone_outlined, color: primaryColor),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12.r),
                                     borderSide: BorderSide.none,
                                   ),
                                   filled: true,
                                   fillColor: Colors.grey[100],
-                                  contentPadding:
-                                      EdgeInsets.symmetric(vertical: 16.h),
+                                  contentPadding: EdgeInsets.symmetric(vertical: 16.h),
                                 ),
                                 validator: (value) {
                                   if (value != null && value.isNotEmpty) {
@@ -333,19 +327,15 @@ class _SignupscreenState extends State<Signupscreen> {
                                 decoration: InputDecoration(
                                   labelText: S.of(context).password,
                                   hintText: S.of(context).create_password,
-                                  labelStyle: const TextStyle(
-                                      color: secondaryTextColor),
+                                  labelStyle: const TextStyle(color: secondaryTextColor),
                                   prefixIcon: const Icon(Icons.lock_outline),
                                   suffixIcon: IconButton(
                                     icon: Icon(
-                                      _isPasswordVisible
-                                          ? Icons.visibility
-                                          : Icons.visibility_off,
+                                      _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
                                     ),
                                     onPressed: () {
                                       setState(() {
-                                        _isPasswordVisible =
-                                            !_isPasswordVisible;
+                                        _isPasswordVisible = !_isPasswordVisible;
                                       });
                                     },
                                   ),
@@ -355,8 +345,7 @@ class _SignupscreenState extends State<Signupscreen> {
                                   ),
                                   filled: true,
                                   fillColor: Colors.grey[100],
-                                  contentPadding:
-                                      EdgeInsets.symmetric(vertical: 16.h),
+                                  contentPadding: EdgeInsets.symmetric(vertical: 16.h),
                                 ),
                                 validator: (value) {
                                   if (value != null && value.isNotEmpty) {
@@ -378,19 +367,15 @@ class _SignupscreenState extends State<Signupscreen> {
                                 decoration: InputDecoration(
                                   labelText: S.of(context).confirm_password,
                                   hintText: S.of(context).confirm_password,
-                                  labelStyle: const TextStyle(
-                                      color: secondaryTextColor),
+                                  labelStyle: const TextStyle(color: secondaryTextColor),
                                   prefixIcon: const Icon(Icons.lock_outline),
                                   suffixIcon: IconButton(
                                     icon: Icon(
-                                      _isConfirmPasswordVisible
-                                          ? Icons.visibility
-                                          : Icons.visibility_off,
+                                      _isConfirmPasswordVisible ? Icons.visibility : Icons.visibility_off,
                                     ),
                                     onPressed: () {
                                       setState(() {
-                                        _isConfirmPasswordVisible =
-                                            !_isConfirmPasswordVisible;
+                                        _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
                                       });
                                     },
                                   ),
@@ -400,8 +385,7 @@ class _SignupscreenState extends State<Signupscreen> {
                                   ),
                                   filled: true,
                                   fillColor: Colors.grey[100],
-                                  contentPadding:
-                                      EdgeInsets.symmetric(vertical: 16.h),
+                                  contentPadding: EdgeInsets.symmetric(vertical: 16.h),
                                 ),
                                 validator: (value) {
                                   if (value != null && value.isNotEmpty) {
@@ -410,9 +394,7 @@ class _SignupscreenState extends State<Signupscreen> {
                                     }
                                     return S.of(context).passwords_not_match;
                                   }
-                                  return S
-                                      .of(context)
-                                      .password_confirm_required;
+                                  return S.of(context).password_confirm_required;
                                 },
                               ),
                               SizedBox(height: 16.h),
@@ -428,8 +410,7 @@ class _SignupscreenState extends State<Signupscreen> {
                                       onChanged: (value) {},
                                       activeColor: primaryColor,
                                       shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(4.r),
+                                        borderRadius: BorderRadius.circular(4.r),
                                       ),
                                     ),
                                   ),

@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:crypto/crypto.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -14,6 +16,7 @@ import 'package:foodapp/screens/profile/cubit.dart';
 import 'package:foodapp/shared/constants.dart';
 import 'package:foodapp/shared/local_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 class Logincubit extends Cubit<LoginStates> {
   Logincubit() : super(LoginInitialState());
@@ -269,12 +272,92 @@ class Logincubit extends Cubit<LoginStates> {
     }
   }
 
+  /// Generates a cryptographically secure random nonce, to be included in a
+  /// credential request.
+  String generateNonce([int length = 32]) {
+    final charset = '0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._';
+    final random = math.Random.secure();
+    return List.generate(length, (_) => charset[random.nextInt(charset.length)]).join();
+  }
+
+  /// Returns the sha256 hash of [input] in hex notation.
+  String sha256ofString(String input) {
+    final bytes = utf8.encode(input);
+    final digest = sha256.convert(bytes);
+    return digest.toString();
+  }
+
   Future<void> signinwithapple({BuildContext? context}) async {
     emit(LoginLoadingState());
+    print("Starting Apple Sign-In");
+
+    // Check if Apple Sign-In is available on this device
     try {
-      // Get Apple Sign In credentials
-      final appleProvider = AppleAuthProvider();
-      final UserCredential userCredential = await FirebaseAuth.instance.signInWithProvider(appleProvider);
+      final isAvailable = await SignInWithApple.isAvailable();
+      if (!isAvailable) {
+        emit(LoginErrorlState());
+        if (context != null) {
+          showToast(
+            "Apple Sign-In is not available on this device",
+            context: context,
+            duration: const Duration(seconds: 3),
+            backgroundColor: Colors.amber,
+            textStyle: const TextStyle(color: Colors.black, fontSize: 16.0),
+            position: StyledToastPosition.bottom,
+          );
+        }
+        return;
+      }
+    } catch (e) {
+      print("Error checking Apple Sign-In availability: $e");
+      emit(LoginErrorlState());
+      if (context != null) {
+        showToast(
+          "Apple Sign-In is not supported",
+          context: context,
+          duration: const Duration(seconds: 3),
+          backgroundColor: Colors.amber,
+          textStyle: const TextStyle(color: Colors.black, fontSize: 16.0),
+          position: StyledToastPosition.bottom,
+        );
+      }
+      return;
+    }
+
+    try {
+      // To prevent replay attacks with the credential returned from Apple, we
+      // include a nonce in the credential request. When signing in with
+      // Firebase, the nonce in the id token returned by Apple, is expected to
+      // match the sha256 hash of `rawNonce`.
+      final rawNonce = generateNonce();
+      final nonce = sha256ofString(rawNonce);
+      print("Generated nonce successfully");
+
+      // Request credential for the currently signed in Apple account.
+      print("Requesting Apple Sign-In credential");
+      final appleCredential = await SignInWithApple.getAppleIDCredential(
+        scopes: [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+        nonce: nonce,
+      );
+      print("Successfully received Apple credential");
+      print("Apple Sign-In Credential: ${appleCredential.familyName} ${appleCredential.givenName} ${appleCredential.email}");
+
+      // Create an `OAuthCredential` from the credential returned by Apple.
+      print("Creating OAuth credential");
+      final oauthCredential = OAuthProvider("apple.com").credential(
+        idToken: appleCredential.identityToken,
+        rawNonce: rawNonce,
+      );
+      print("OAuth credential created successfully");
+
+      // Sign in the user with Firebase. If the nonce we generated earlier does
+      // not match the nonce in `appleCredential.identityToken`, sign in will fail.
+      print("Signing in with Firebase");
+      final UserCredential userCredential = await FirebaseAuth.instance.signInWithCredential(oauthCredential);
+      print("Firebase sign-in successful");
 
       final User? user = userCredential.user;
 
@@ -284,9 +367,15 @@ class Logincubit extends Cubit<LoginStates> {
 
         if (!userDoc.exists) {
           // Create user in Firestore if they don't exist
+          // For Apple Sign-In, use the name from appleCredential if displayName is null
+          String displayName = user.displayName ?? '';
+          if (displayName.isEmpty && appleCredential.givenName != null && appleCredential.familyName != null) {
+            displayName = '${appleCredential.givenName} ${appleCredential.familyName}';
+          }
+
           await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-            'name': user.displayName ?? '',
-            'email': user.email ?? '',
+            'name': displayName,
+            'email': user.email ?? appleCredential.email ?? '',
             'phone': user.phoneNumber ?? '',
             'uid': user.uid,
             'orderIds': [],
@@ -294,7 +383,7 @@ class Logincubit extends Cubit<LoginStates> {
         }
 
         // Save user login state
-        await LocalStorageService.saveUserLogin(user.uid, user.email ?? '');
+        await LocalStorageService.saveUserLogin(user.uid, user.email ?? appleCredential.email ?? '');
 
         emit(LoginSuccessState());
 
@@ -309,7 +398,7 @@ class Logincubit extends Cubit<LoginStates> {
             await favCubit.initializeFavoriteIds();
             await favCubit.loadFavourites();
           } catch (e) {
-            print("Error initializing favorites after Google sign-in: $e");
+            print("Error initializing favorites after Apple sign-in: $e");
           }
 
           // Navigate to the Layout
@@ -322,16 +411,56 @@ class Logincubit extends Cubit<LoginStates> {
               layoutCubit.changenavbar(0); // Change to the first tab
             }
           });
+          print("Apple Sign-In successful, user: ${user.uid}");
         }
+        print("Apple Sign-In successful, user: ${user.uid}");
       } else {
+        print("Apple Sign-In is null after sign-in");
+        showToast(
+          'Unknown error occurred during Apple Sign-In',
+          context: context,
+          duration: const Duration(seconds: 3),
+          backgroundColor: Colors.red,
+          textStyle: const TextStyle(color: Colors.white, fontSize: 16.0),
+          position: StyledToastPosition.bottom,
+        );
         throw Exception("Firebase user is null after sign-in");
       }
     } catch (error) {
       print("Apple Sign-In Error: $error");
       emit(LoginErrorlState());
       if (context != null) {
+        String errorMessage = "Apple Sign-In failed";
+
+        if (error is FirebaseAuthException) {
+          switch (error.code) {
+            case 'invalid-credential':
+              errorMessage = "Invalid Apple credentials";
+              break;
+            case 'operation-not-allowed':
+              errorMessage = "Apple Sign-In is not enabled";
+              break;
+            case 'user-disabled':
+              errorMessage = "This account has been disabled";
+              break;
+            default:
+              errorMessage = error.message ?? "Apple Sign-In failed";
+          }
+        } else if (error is SignInWithAppleAuthorizationException) {
+          errorMessage = "Apple Sign-In failed";
+        } else {
+          // Handle other types of errors
+          if (error.toString().contains("1000") || error.toString().contains("AuthorizationError")) {
+            errorMessage = "Apple Sign-In is not properly configured for this app";
+          } else if (error.toString().contains("not handled") || error.toString().contains("notHandled")) {
+            errorMessage = "Apple Sign-In is not supported on this device or app configuration";
+          } else {
+            errorMessage = "Apple Sign-In failed: ${error.toString()}";
+          }
+        }
+
         showToast(
-          "Apple Sign-In Error",
+          errorMessage,
           context: context,
           duration: const Duration(seconds: 3),
           backgroundColor: Colors.red,

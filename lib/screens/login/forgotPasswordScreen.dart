@@ -1,4 +1,3 @@
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -46,14 +45,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       print('🔧 App configuration:');
       print('  App name: ${auth.app.name}');
       print('  Project ID: ${auth.app.options.projectId}');
-      print(
-          '  Auth domain: ${auth.app.options.authDomain ?? 'Not configured'}');
+      print('  Auth domain: ${auth.app.options.authDomain ?? 'Not configured'}');
 
       // Test 6: Check if authDomain is properly configured
       final authDomain = auth.app.options.authDomain;
       if (authDomain == null || authDomain.isEmpty) {
-        print(
-            '⚠️ WARNING: Auth domain is not configured - this might cause password reset issues');
+        print('⚠️ WARNING: Auth domain is not configured - this might cause password reset issues');
       }
 
       print('✅ === FIREBASE AUTH CONFIGURATION TEST COMPLETED ===');
@@ -140,36 +137,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     return null;
   }
 
-  // Check network connectivity
-  Future<bool> _checkConnectivity() async {
-    try {
-      final connectivityResult = await Connectivity().checkConnectivity();
-      if (connectivityResult == ConnectivityResult.none) {
-        return false;
-      }
-      return true;
-    } catch (e) {
-      print('Error checking connectivity: $e');
-      return true; // Assume connected if check fails
-    }
-  }
-
   Future<void> _resetPassword() async {
     print('🔄 === FORGOT PASSWORD: Starting reset process ===');
 
     if (!_formKey.currentState!.validate()) {
       print('❌ Form validation failed');
-      return;
-    }
-
-    // Check network connectivity first
-    final hasConnection = await _checkConnectivity();
-    if (!hasConnection) {
-      print('❌ No internet connection');
-      if (mounted) {
-        _showErrorMessage(
-            'No internet connection. Please check your network and try again.');
-      }
       return;
     }
 
@@ -186,15 +158,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       // Add timeout to prevent hanging
       await Future.any([
         FirebaseAuth.instance.sendPasswordResetEmail(email: email),
-        Future.delayed(const Duration(seconds: 30),
-            () => throw Exception('Request timeout - please try again')),
+        Future.delayed(const Duration(seconds: 30), () => throw Exception('Request timeout - please try again')),
       ]);
 
       print('✅ Password reset email sent successfully');
 
       if (mounted) {
-        _showSuccessMessage(
-            'Password reset email sent! Please check your inbox and spam folder.');
+        _showSuccessMessage('Password reset email sent! Please check your inbox and spam folder.');
 
         // Wait a bit before navigating back
         await Future.delayed(const Duration(seconds: 1));
@@ -208,32 +178,25 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       String message = 'An error occurred while sending the reset email';
       switch (e.code) {
         case 'user-not-found':
-          message =
-              'No account found with this email address. Please check your email or sign up for a new account.';
+          message = 'No account found with this email address. Please check your email or sign up for a new account.';
           break;
         case 'invalid-email':
-          message =
-              'The email address is not valid. Please enter a correct email address.';
+          message = 'The email address is not valid. Please enter a correct email address.';
           break;
         case 'too-many-requests':
-          message =
-              'Too many password reset requests. Please wait a few minutes before trying again.';
+          message = 'Too many password reset requests. Please wait a few minutes before trying again.';
           break;
         case 'user-disabled':
-          message =
-              'This account has been disabled. Please contact support for assistance.';
+          message = 'This account has been disabled. Please contact support for assistance.';
           break;
         case 'operation-not-allowed':
-          message =
-              'Password reset is not enabled for this app. Please contact support.';
+          message = 'Password reset is not enabled for this app. Please contact support.';
           break;
         case 'weak-password':
-          message =
-              'The password is too weak. Please choose a stronger password.';
+          message = 'The password is too weak. Please choose a stronger password.';
           break;
         default:
-          message =
-              e.message ?? 'An unexpected error occurred. Please try again.';
+          message = e.message ?? 'An unexpected error occurred. Please try again.';
       }
 
       if (mounted) {
@@ -244,11 +207,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
       String message = 'An unexpected error occurred';
       if (e.toString().contains('timeout')) {
-        message =
-            'The request timed out. Please check your internet connection and try again.';
+        message = 'The request timed out. Please check your internet connection and try again.';
       } else if (e.toString().contains('network')) {
-        message =
-            'Network error. Please check your internet connection and try again.';
+        message = 'Network error. Please check your internet connection and try again.';
       } else {
         message = 'Failed to send reset email. Please try again later.';
       }
@@ -411,18 +372,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         decoration: InputDecoration(
                           labelText: 'Email Address',
                           hintText: 'Enter your email',
-                          labelStyle:
-                              const TextStyle(color: secondaryTextColor),
-                          prefixIcon: const Icon(Icons.email_outlined,
-                              color: primaryColor),
+                          labelStyle: const TextStyle(color: secondaryTextColor),
+                          prefixIcon: const Icon(Icons.email_outlined, color: primaryColor),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12.r),
                             borderSide: BorderSide.none,
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12.r),
-                            borderSide:
-                                const BorderSide(color: primaryColor, width: 2),
+                            borderSide: const BorderSide(color: primaryColor, width: 2),
                           ),
                           filled: true,
                           fillColor: Colors.grey[100],
@@ -501,8 +459,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.info_outline,
-                            color: Colors.blue[600], size: 20.sp),
+                        Icon(Icons.info_outline, color: Colors.blue[600], size: 20.sp),
                         SizedBox(width: 8.w),
                         Text(
                           'Important Notes',

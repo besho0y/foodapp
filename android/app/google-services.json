@@ -4,15 +4,21 @@
     "project_id": "foodapp-94323",
     "storage_bucket": "foodapp-94323.firebasestorage.app"
   },
-  "client": [
-    {
+  "client": [{
       "client_info": {
         "mobilesdk_app_id": "1:167788515229:android:78a7e3967605540890e974",
         "android_client_info": {
           "package_name": "com.besho0y.foodapp"
         }
       },
-      "oauth_client": [
+      "oauth_client": [{
+          "client_id": "167788515229-3be135uqmumoma8p82g0i3elvhlgotbr.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.besho0y.foodapp",
+            "certificate_hash": "20b713db4041dc5708d863efd39b43eaee8ab5f2"
+          }
+        },
         {
           "client_id": "167788515229-9qpntrgankbbi2gvpqc7i92c8l13ioiu.apps.googleusercontent.com",
           "client_type": 1,
@@ -22,19 +28,24 @@
           }
         },
         {
+          "client_id": "167788515229-u2cosdvskqaa9kofre7kv8o5b62e7mn5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.besho0y.foodapp",
+            "certificate_hash": "0d31707a242988eec4be87409b8c251a1f797e66"
+          }
+        },
+        {
           "client_id": "167788515229-rgte7v6ed48014l93j5nfke5neehrn8p.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
-      "api_key": [
-        {
-          "current_key": "AIzaSyAbyg1aBQe_jELXU0qc_gT373hnbtS52BU"
-        }
-      ],
+      "api_key": [{
+        "current_key": "AIzaSyAbyg1aBQe_jELXU0qc_gT373hnbtS52BU"
+      }],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
+          "other_platform_oauth_client": [{
               "client_id": "167788515229-rgte7v6ed48014l93j5nfke5neehrn8p.apps.googleusercontent.com",
               "client_type": 3
             },
@@ -56,21 +67,16 @@
           "package_name": "com.example.foodapp"
         }
       },
-      "oauth_client": [
-        {
-          "client_id": "167788515229-rgte7v6ed48014l93j5nfke5neehrn8p.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
-      "api_key": [
-        {
-          "current_key": "AIzaSyAbyg1aBQe_jELXU0qc_gT373hnbtS52BU"
-        }
-      ],
+      "oauth_client": [{
+        "client_id": "167788515229-rgte7v6ed48014l93j5nfke5neehrn8p.apps.googleusercontent.com",
+        "client_type": 3
+      }],
+      "api_key": [{
+        "current_key": "AIzaSyAbyg1aBQe_jELXU0qc_gT373hnbtS52BU"
+      }],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
+          "other_platform_oauth_client": [{
               "client_id": "167788515229-rgte7v6ed48014l93j5nfke5neehrn8p.apps.googleusercontent.com",
               "client_type": 3
             },
