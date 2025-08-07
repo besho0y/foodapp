@@ -109,54 +109,21 @@ class Logincubit extends Cubit<LoginStates> {
     });
   }
 
-  // Check if Google Sign-In is configured properly
-  Future<bool> isGoogleSignInConfigured({BuildContext? context}) async {
-    try {
-      // Check if Firebase project has Google Sign-In method enabled
-      var methods = await FirebaseAuth.instance.fetchSignInMethodsForEmail(
-        "test@example.com",
-      );
-      print("Available sign-in methods: $methods");
-
-      // Try to initialize GoogleSignIn to check if it's configured
-      final GoogleSignIn googleSignIn = GoogleSignIn.instance;
-      return true; // If we can create an instance, it's likely configured
-    } catch (e) {
-      print("Google Sign-In configuration error: $e");
-      if (context != null) {
-        showToast(
-          "Google Sign-In is not properly configured",
-          context: context,
-          duration: const Duration(seconds: 3),
-          backgroundColor: Colors.amber,
-          textStyle: const TextStyle(color: Colors.black, fontSize: 16.0),
-          position: StyledToastPosition.bottom,
-        );
-      }
-      return false;
-    }
-  }
-
   Future<void> signinwithgoogle({BuildContext? context}) async {
     emit(LoginLoadingState());
 
-    // First, check if Google Sign-In is configured
-    if (context != null) {
-      bool isConfigured = await isGoogleSignInConfigured(context: context);
-      if (!isConfigured) {
-        emit(LoginErrorlState());
-        return;
-      }
-    }
-
     try {
+      print("Starting Google Sign-In");
       // Initialize and authenticate with Google Sign-In
       final GoogleSignIn googleSignIn = GoogleSignIn.instance;
+      await googleSignIn.initialize(clientId: '167788515229-rgte7v6ed48014l93j5nfke5neehrn8p.apps.googleusercontent.com'); // Ensure previous sessions are cleared
       final GoogleSignInAccount googleSignInAccount = await googleSignIn.authenticate();
+      print("Google Sign-In successful: ${googleSignInAccount.email} (${googleSignInAccount.displayName})");
 
       try {
         // Get authentication tokens
         final GoogleSignInAuthentication googleSignInAuthentication = googleSignInAccount.authentication;
+        print("Google Sign-In Authentication successful: ${googleSignInAuthentication.idToken}");
 
         // Create Firebase credential
         final AuthCredential credential = GoogleAuthProvider.credential(
@@ -165,6 +132,7 @@ class Logincubit extends Cubit<LoginStates> {
 
         // Sign in to Firebase
         final UserCredential userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+        print("Firebase Sign-In successful: ${userCredential.user?.email} (${userCredential.user?.displayName})");
 
         final User? user = userCredential.user;
 
