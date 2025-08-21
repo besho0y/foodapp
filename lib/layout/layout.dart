@@ -107,14 +107,15 @@ class _LayoutState extends State<Layout> {
                                         : Colors.black),
                               ),
                             ),
-                                        ElevatedButton(
-              onPressed: () => Navigator.pop(context, true),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color.fromARGB(255, 74, 26, 15),
-                foregroundColor: Colors.white,
-              ),
-              child: Text(S.of(context).yes),
-            ),
+                            ElevatedButton(
+                              onPressed: () => Navigator.pop(context, true),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor:
+                                    const Color.fromARGB(255, 74, 26, 15),
+                                foregroundColor: Colors.white,
+                              ),
+                              child: Text(S.of(context).yes),
+                            ),
                           ],
                         ),
                       ) ??
@@ -146,13 +147,23 @@ class _LayoutState extends State<Layout> {
                                           MainAxisAlignment.center,
                                       children: [
                                         SizedBox(height: 10.h),
-                                        Text(
-                                          isLoggedIn &&
-                                                  profileState is ProfileLoaded
-                                              ? "${S.of(context).hello}, ${profileCubit.user.name}"
-                                              : "${S.of(context).hello}, ${S.of(context).user}",
-                                          style: TextStyle(fontSize: 22.sp),
-                                        ),
+                                        Builder(builder: (context) {
+                                          final bool isTablet =
+                                              MediaQuery.of(context)
+                                                      .size
+                                                      .width >=
+                                                  600;
+                                          return Text(
+                                            isLoggedIn &&
+                                                    profileState
+                                                        is ProfileLoaded
+                                                ? "${S.of(context).hello}, ${profileCubit.user.name}"
+                                                : "${S.of(context).hello}, ${S.of(context).user}",
+                                            style: TextStyle(
+                                                fontSize:
+                                                    isTablet ? 14.sp : 22.sp),
+                                          );
+                                        }),
                                         Text(
                                           S
                                               .of(context)
@@ -228,51 +239,58 @@ class _LayoutState extends State<Layout> {
                                 ),
                                 SizedBox(height: 8.h),
                                 // Location Selection Button
-                                SizedBox(
-                                  width: double.infinity,
-                                  child: ElevatedButton.icon(
-                                    onPressed: () =>
-                                        _showLocationSelectionDialog(context),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor:
-                                          const Color.fromARGB(255, 74, 26, 15),
-                                      foregroundColor: Colors.white,
-                                      elevation: 0,
-                                      padding: EdgeInsets.symmetric(
-                                          vertical: 12.h, horizontal: 16.w),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(12.r),
-                                        side: BorderSide(
-                                          color: const Color.fromARGB(
-                                                  255, 74, 26, 15)
-                                              .withOpacity(0.3),
-                                          width: 1,
+                                Builder(builder: (context) {
+                                  final bool isTablet =
+                                      MediaQuery.of(context).size.width >= 600;
+                                  return SizedBox(
+                                    width: isTablet ? 420.w : double.infinity,
+                                    child: ElevatedButton.icon(
+                                      onPressed: () =>
+                                          _showLocationSelectionDialog(context),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: const Color.fromARGB(
+                                            255, 74, 26, 15),
+                                        foregroundColor: Colors.white,
+                                        elevation: 0,
+                                        padding: EdgeInsets.symmetric(
+                                            vertical: isTablet ? 8.h : 12.h,
+                                            horizontal: isTablet ? 12.w : 16.w),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(12.r),
+                                          side: BorderSide(
+                                            color: const Color.fromARGB(
+                                                    255, 74, 26, 15)
+                                                .withOpacity(0.3),
+                                            width: 1,
+                                          ),
                                         ),
                                       ),
+                                      icon: Icon(Icons.location_on,
+                                          color: Colors.white,
+                                          size: isTablet ? 14.sp : 20.sp),
+                                      label: BlocBuilder<Restuarantscubit,
+                                          ResturantsStates>(
+                                        builder: (context, state) {
+                                          final restCubit =
+                                              Restuarantscubit.get(context);
+                                          final isRTL =
+                                              Directionality.of(context) ==
+                                                  TextDirection.rtl;
+                                          return Text(
+                                            isRTL
+                                                ? 'الموقع: ${restCubit.selectedArea}'
+                                                : 'Location: ${restCubit.selectedArea}',
+                                            style: TextStyle(
+                                                fontSize:
+                                                    isTablet ? 10.sp : 14.sp,
+                                                color: Colors.white),
+                                          );
+                                        },
+                                      ),
                                     ),
-                                    icon: const Icon(Icons.location_on,
-                                        color: Colors.white),
-                                    label: BlocBuilder<Restuarantscubit,
-                                        ResturantsStates>(
-                                      builder: (context, state) {
-                                        final restCubit =
-                                            Restuarantscubit.get(context);
-                                        final isRTL =
-                                            Directionality.of(context) ==
-                                                TextDirection.rtl;
-                                        return Text(
-                                          isRTL
-                                              ? 'الموقع: ${restCubit.selectedArea}'
-                                              : 'Location: ${restCubit.selectedArea}',
-                                          style: TextStyle(
-                                              fontSize: 14.sp,
-                                              color: Colors.white),
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                ),
+                                  );
+                                }),
                                 SizedBox(
                                   height: 5.h,
                                 )
@@ -296,7 +314,13 @@ class _LayoutState extends State<Layout> {
                                         print('Error changing language: $e');
                                       }
                                     },
-                                    icon: Icon(Icons.language, size: 25.sp),
+                                    icon: Builder(builder: (context) {
+                                      final bool isTablet =
+                                          MediaQuery.of(context).size.width >=
+                                              600;
+                                      return Icon(Icons.language,
+                                          size: isTablet ? 16.sp : 25.sp);
+                                    }),
                                     tooltip: 'Toggle Language',
                                   ),
                                   IconButton(
@@ -307,8 +331,13 @@ class _LayoutState extends State<Layout> {
                                         print('Error toggling theme: $e');
                                       }
                                     },
-                                    icon: Icon(Icons.brightness_6_outlined,
-                                        size: 25.sp),
+                                    icon: Builder(builder: (context) {
+                                      final bool isTablet =
+                                          MediaQuery.of(context).size.width >=
+                                              600;
+                                      return Icon(Icons.brightness_6_outlined,
+                                          size: isTablet ? 16.sp : 25.sp);
+                                    }),
                                     tooltip: 'Toggle Theme',
                                   ),
                                 ]
@@ -345,7 +374,14 @@ class _LayoutState extends State<Layout> {
                                           Layoutcubit, Layoutstates>(
                                         builder: (context, state) {
                                           var cubit = Layoutcubit.get(context);
-                                          return Container(
+                                          final bool isTablet =
+                                              MediaQuery.of(context)
+                                                      .size
+                                                      .width >=
+                                                  600;
+                                          final double iconScale =
+                                              isTablet ? (10.sp / 16.sp) : 1.0;
+                                          final Widget content = Container(
                                             padding: EdgeInsets.all(20.w),
                                             height: 600.h,
                                             child: Column(
@@ -369,8 +405,10 @@ class _LayoutState extends State<Layout> {
                                                       onPressed: () =>
                                                           Navigator.of(context)
                                                               .pop(),
-                                                      icon: const Icon(
-                                                          Icons.close),
+                                                      icon: Icon(
+                                                        Icons.close,
+                                                        size: 24.sp * iconScale,
+                                                      ),
                                                     ),
                                                   ],
                                                 ),
@@ -386,7 +424,8 @@ class _LayoutState extends State<Layout> {
                                                               Icon(
                                                                 Icons
                                                                     .shopping_cart_outlined,
-                                                                size: 80.sp,
+                                                                size: 80.sp *
+                                                                    iconScale,
                                                                 color:
                                                                     Colors.grey,
                                                               ),
@@ -428,6 +467,12 @@ class _LayoutState extends State<Layout> {
                                                               .cartitems.length,
                                                           itemBuilder:
                                                               (context, index) {
+                                                            final isTablet =
+                                                                MediaQuery.of(
+                                                                            context)
+                                                                        .size
+                                                                        .width >=
+                                                                    600;
                                                             return Container(
                                                               margin: EdgeInsets
                                                                   .only(
@@ -510,6 +555,12 @@ class _LayoutState extends State<Layout> {
                                                                               fontSize: 16.sp,
                                                                               fontWeight: FontWeight.bold,
                                                                             ),
+                                                                            maxLines: isTablet
+                                                                                ? 1
+                                                                                : null,
+                                                                            overflow: isTablet
+                                                                                ? TextOverflow.ellipsis
+                                                                                : TextOverflow.visible,
                                                                           );
                                                                         }),
                                                                         SizedBox(
@@ -528,63 +579,89 @@ class _LayoutState extends State<Layout> {
                                                                       ],
                                                                     ),
                                                                   ),
-                                                                  Row(
-                                                                    children: [
-                                                                      IconButton(
-                                                                        onPressed:
-                                                                            () {
-                                                                          cubit.decreaseQuantity(
-                                                                              index);
-                                                                        },
-                                                                        icon:
-                                                                            Icon(
-                                                                          Icons
-                                                                              .remove,
-                                                                          size:
-                                                                              24.sp,
+                                                                  Builder(builder:
+                                                                      (context) {
+                                                                    final isTablet =
+                                                                        MediaQuery.of(context).size.width >=
+                                                                            600;
+                                                                    if (isTablet) {
+                                                                      return Column(
+                                                                        mainAxisSize:
+                                                                            MainAxisSize.min,
+                                                                        crossAxisAlignment:
+                                                                            CrossAxisAlignment.end,
+                                                                        children: [
+                                                                          Row(
+                                                                            children: [
+                                                                              IconButton(
+                                                                                onPressed: () {
+                                                                                  cubit.decreaseQuantity(index);
+                                                                                },
+                                                                                icon: Icon(Icons.remove, size: 24.sp * iconScale),
+                                                                              ),
+                                                                              Text(
+                                                                                "${cubit.cartitems[index].quantity}",
+                                                                                style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
+                                                                              ),
+                                                                              IconButton(
+                                                                                onPressed: () {
+                                                                                  cubit.increaseQuantity(index);
+                                                                                },
+                                                                                icon: Icon(Icons.add, size: 24.sp * iconScale),
+                                                                              ),
+                                                                            ],
+                                                                          ),
+                                                                          IconButton(
+                                                                            onPressed:
+                                                                                () {
+                                                                              cubit.removeItemFromCart(index);
+                                                                            },
+                                                                            icon: Icon(Icons.delete_outline,
+                                                                                color: Colors.red,
+                                                                                size: 24.sp * iconScale),
+                                                                          ),
+                                                                        ],
+                                                                      );
+                                                                    }
+                                                                    return Row(
+                                                                      children: [
+                                                                        IconButton(
+                                                                          onPressed:
+                                                                              () {
+                                                                            cubit.decreaseQuantity(index);
+                                                                          },
+                                                                          icon: Icon(
+                                                                              Icons.remove,
+                                                                              size: 24.sp * iconScale),
                                                                         ),
-                                                                      ),
-                                                                      Text(
-                                                                        "${cubit.cartitems[index].quantity}",
-                                                                        style:
-                                                                            TextStyle(
-                                                                          fontSize:
-                                                                              16.sp,
-                                                                          fontWeight:
-                                                                              FontWeight.bold,
+                                                                        Text(
+                                                                          "${cubit.cartitems[index].quantity}",
+                                                                          style: TextStyle(
+                                                                              fontSize: 16.sp,
+                                                                              fontWeight: FontWeight.bold),
                                                                         ),
-                                                                      ),
-                                                                      IconButton(
-                                                                        onPressed:
-                                                                            () {
-                                                                          cubit.increaseQuantity(
-                                                                              index);
-                                                                        },
-                                                                        icon:
-                                                                            Icon(
-                                                                          Icons
-                                                                              .add,
-                                                                          size:
-                                                                              24.sp,
+                                                                        IconButton(
+                                                                          onPressed:
+                                                                              () {
+                                                                            cubit.increaseQuantity(index);
+                                                                          },
+                                                                          icon: Icon(
+                                                                              Icons.add,
+                                                                              size: 24.sp * iconScale),
                                                                         ),
-                                                                      ),
-                                                                    ],
-                                                                  ),
-                                                                  IconButton(
-                                                                    onPressed:
-                                                                        () {
-                                                                      cubit.removeItemFromCart(
-                                                                          index);
-                                                                    },
-                                                                    icon: Icon(
-                                                                      Icons
-                                                                          .delete_outline,
-                                                                      color: Colors
-                                                                          .red,
-                                                                      size:
-                                                                          24.sp,
-                                                                    ),
-                                                                  ),
+                                                                        IconButton(
+                                                                          onPressed:
+                                                                              () {
+                                                                            cubit.removeItemFromCart(index);
+                                                                          },
+                                                                          icon: Icon(
+                                                                              Icons.delete_outline,
+                                                                              color: Colors.red,
+                                                                              size: 24.sp * iconScale),
+                                                                        ),
+                                                                      ],
+                                                                    );
+                                                                  }),
                                                                 ],
                                                               ),
                                                             );
@@ -760,46 +837,72 @@ class _LayoutState extends State<Layout> {
                                                             ),
                                                             SizedBox(
                                                                 height: 10.h),
-                                                            Padding(
-                                                              padding: EdgeInsets
-                                                                  .symmetric(
-                                                                      horizontal:
-                                                                          16.w),
-                                                              child: SizedBox(
-                                                                width: double
-                                                                    .infinity,
-                                                                child:
-                                                                    ElevatedButton(
-                                                                  onPressed:
-                                                                      () {
-                                                                    Navigator.pop(
-                                                                        context); // Close the cart sheet
-                                                                    Navigator
-                                                                        .push(
-                                                                      context,
-                                                                      MaterialPageRoute(
-                                                                        builder:
-                                                                            (_) =>
-                                                                                const CheckoutScreen(),
+                                                            Builder(
+                                                              builder:
+                                                                  (context) {
+                                                                final isTablet =
+                                                                    MediaQuery.of(context)
+                                                                            .size
+                                                                            .width >=
+                                                                        600;
+                                                                return Padding(
+                                                                  padding:
+                                                                      EdgeInsets
+                                                                          .symmetric(
+                                                                    horizontal:
+                                                                        isTablet
+                                                                            ? 0
+                                                                            : 16.w,
+                                                                  ),
+                                                                  child: Align(
+                                                                    alignment:
+                                                                        Alignment
+                                                                            .center,
+                                                                    child:
+                                                                        SizedBox(
+                                                                      width: isTablet
+                                                                          ? 360
+                                                                              .w
+                                                                          : double
+                                                                              .infinity,
+                                                                      child:
+                                                                          ElevatedButton(
+                                                                        onPressed:
+                                                                            () {
+                                                                          Navigator.pop(
+                                                                              context); // Close the cart sheet
+                                                                          Navigator
+                                                                              .push(
+                                                                            context,
+                                                                            MaterialPageRoute(
+                                                                              builder: (_) => const CheckoutScreen(),
+                                                                            ),
+                                                                          );
+                                                                        },
+                                                                        style: ElevatedButton
+                                                                            .styleFrom(
+                                                                          padding:
+                                                                              EdgeInsets.symmetric(
+                                                                            vertical: isTablet
+                                                                                ? 10.h
+                                                                                : 12.h,
+                                                                          ),
+                                                                        ),
+                                                                        child:
+                                                                            Text(
+                                                                          S.of(context).checkout,
+                                                                          style:
+                                                                              TextStyle(
+                                                                            fontSize: isTablet
+                                                                                ? 10.sp
+                                                                                : 16.sp,
+                                                                          ),
+                                                                        ),
                                                                       ),
-                                                                    );
-                                                                  },
-                                                                  style: ElevatedButton
-                                                                      .styleFrom(
-                                                                    padding: EdgeInsets.symmetric(
-                                                                        vertical:
-                                                                            12.h),
+                                                                    ),
                                                                   ),
-                                                                  child: Text(
-                                                                    S
-                                                                        .of(context)
-                                                                        .checkout,
-                                                                    style: TextStyle(
-                                                                        fontSize:
-                                                                            16.sp),
-                                                                  ),
-                                                                ),
-                                                              ),
+                                                                );
+                                                              },
                                                             ),
                                                           ],
                                                         ),
@@ -810,6 +913,19 @@ class _LayoutState extends State<Layout> {
                                               ],
                                             ),
                                           );
+                                          if (isTablet) {
+                                            final mq = MediaQuery.of(context);
+                                            final double scale =
+                                                (10.sp) / (16.sp);
+                                            return MediaQuery(
+                                              data: mq.copyWith(
+                                                textScaler:
+                                                    TextScaler.linear(scale),
+                                              ),
+                                              child: content,
+                                            );
+                                          }
+                                          return content;
                                         },
                                       ),
                                     );

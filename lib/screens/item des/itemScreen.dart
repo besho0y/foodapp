@@ -192,7 +192,8 @@ class _ItemscreenState extends State<Itemscreen> {
   Widget build(BuildContext context) {
     final cubit = Layoutcubit.get(context);
     final isRTL = Directionality.of(context) == TextDirection.rtl;
-
+    final bool isTablet = MediaQuery.of(context).size.width >= 600;
+    final double scale = isTablet ? 0.75 : 1.0;
     return Scaffold(
       body: Stack(
         children: [
@@ -224,7 +225,7 @@ class _ItemscreenState extends State<Itemscreen> {
                               },
                               icon: Icon(
                                 Icons.arrow_back_ios_new_rounded,
-                                size: 30.sp,
+                                size: 30.sp * scale,
                               ),
                             ),
                           ),

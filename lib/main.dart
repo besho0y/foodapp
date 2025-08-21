@@ -94,7 +94,8 @@ void main() async {
 
   await SentryFlutter.init(
     (options) {
-      options.dsn = 'https://a77c9d0abb052cdf70a3b630ce3f8896@o4509861345951744.ingest.us.sentry.io/4509861350539264';
+      options.dsn =
+          'https://a77c9d0abb052cdf70a3b630ce3f8896@o4509861345951744.ingest.us.sentry.io/4509861350539264';
       options.sendDefaultPii = true;
     },
     appRunner: () => runApp(
@@ -162,7 +163,9 @@ class MyApp extends StatelessWidget {
           return BlocBuilder<Layoutcubit, Layoutstates>(
             builder: (context, state) {
               return MaterialApp(
-                locale: Layoutcubit.get(context).isArabic ? const Locale('ar') : const Locale('en'),
+                locale: Layoutcubit.get(context).isArabic
+                    ? const Locale('ar')
+                    : const Locale('en'),
                 localizationsDelegates: const [
                   S.delegate,
                   GlobalMaterialLocalizations.delegate,

@@ -30,6 +30,8 @@ class _ProfilescreenState extends State<Profilescreen> {
       listener: (context, state) {},
       builder: (context, state) {
         var cubit = ProfileCubit.get(context);
+        final bool isTablet = MediaQuery.of(context).size.width >= 600;
+        final double scale = isTablet ? 0.75 : 1.0;
 
         // Add loading and error states
         if (state is ProfileLoading) {
@@ -98,7 +100,7 @@ class _ProfilescreenState extends State<Profilescreen> {
                             icon: Icon(
                               Icons.arrow_back_ios_new,
                               color: Colors.white,
-                              size: 24.sp,
+                              size: 24.sp * scale,
                             ),
                           ),
                         ),
@@ -111,7 +113,7 @@ class _ProfilescreenState extends State<Profilescreen> {
                             icon: Icon(
                               Icons.edit,
                               color: Colors.white,
-                              size: 24.sp,
+                              size: 24.sp * scale,
                             ),
                           ),
                         ),
@@ -124,7 +126,7 @@ class _ProfilescreenState extends State<Profilescreen> {
                                 backgroundColor: Colors.white,
                                 child: Icon(
                                   Icons.person,
-                                  size: 50.sp,
+                                  size: 50.sp * scale,
                                   color: const Color.fromARGB(255, 74, 26, 15),
                                 ),
                               ),
@@ -133,7 +135,7 @@ class _ProfilescreenState extends State<Profilescreen> {
                                 cubit.user.name,
                                 style: TextStyle(
                                   color: Colors.white,
-                                  fontSize: 20.sp,
+                                  fontSize: 20.sp * scale,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -146,14 +148,14 @@ class _ProfilescreenState extends State<Profilescreen> {
 
                   // User Information
                   Padding(
-                    padding: EdgeInsets.all(20.w),
+                    padding: EdgeInsets.all(20.w * scale),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           S.of(context).PersonalInformation,
                           style: TextStyle(
-                            fontSize: 18.sp,
+                            fontSize: 18.sp * scale,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -178,14 +180,14 @@ class _ProfilescreenState extends State<Profilescreen> {
                         ),
 
                         // Addresses Section
-                        SizedBox(height: 30.h),
+                        SizedBox(height: 30.h * scale),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
                               S.of(context).Address,
                               style: TextStyle(
-                                fontSize: 18.sp,
+                                fontSize: 18.sp * scale,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -196,7 +198,7 @@ class _ProfilescreenState extends State<Profilescreen> {
                             ),
                           ],
                         ),
-                        SizedBox(height: 10.h),
+                        SizedBox(height: 10.h * scale),
 
                         // Address Cards
                         cubit.user.addresses.isEmpty
@@ -232,7 +234,7 @@ class _ProfilescreenState extends State<Profilescreen> {
                               ),
 
                         // Account Actions (Delete Account and Logout)
-                        SizedBox(height: 30.h),
+                        SizedBox(height: 30.h * scale),
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
@@ -240,12 +242,13 @@ class _ProfilescreenState extends State<Profilescreen> {
                                 _showDeleteAccountConfirmation(context),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.red[700],
-                              padding: EdgeInsets.symmetric(vertical: 12.h),
+                              padding:
+                                  EdgeInsets.symmetric(vertical: 12.h * scale),
                             ),
                             child: Text(
                               S.of(context).delete_account,
                               style: TextStyle(
-                                fontSize: 16.sp,
+                                fontSize: 16.sp * scale,
                                 color: Colors.white,
                               ),
                             ),
@@ -269,26 +272,29 @@ class _ProfilescreenState extends State<Profilescreen> {
     required String label,
     required String value,
   }) {
+    final bool isTablet = MediaQuery.of(context).size.width >= 600;
+    final double scale = isTablet ? 0.85 : 1.0;
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 8.h),
+      padding: EdgeInsets.symmetric(vertical: 8.h * scale),
       child: Row(
         children: [
-          Icon(icon, size: 24.sp, color: Theme.of(context).primaryColor),
-          SizedBox(width: 10.w),
+          Icon(icon,
+              size: 24.sp * scale, color: Theme.of(context).primaryColor),
+          SizedBox(width: 10.w * scale),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 label,
                 style: TextStyle(
-                  fontSize: 12.sp,
+                  fontSize: 12.sp * scale,
                   color: Colors.grey,
                 ),
               ),
               Text(
                 value,
                 style: TextStyle(
-                  fontSize: 16.sp,
+                  fontSize: 16.sp * scale,
                   fontWeight: FontWeight.w500,
                 ),
               ),

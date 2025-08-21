@@ -47,61 +47,64 @@ class _SignupscreenState extends State<Signupscreen> {
           }
         },
         builder: (context, state) {
+          final bool isTablet = MediaQuery.of(context).size.width >= 600;
+          final double scale = isTablet ? 0.75 : 1.0;
           return Scaffold(
             backgroundColor: backgroundColor,
             body: SafeArea(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
                 child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
+                  padding: EdgeInsets.symmetric(
+                      horizontal: 24.w * scale, vertical: 16.h * scale),
                   child: Column(
                     children: [
                       // Logo or illustration
                       Center(
                         child: Image.asset(
                           "assets/logo/logo.png", // Correct logo path
-                          width: 150.w,
-                          height: 150.h,
+                          width: 150.w * scale,
+                          height: 150.h * scale,
                           fit: BoxFit.contain,
                           errorBuilder: (context, error, stackTrace) {
                             // Fallback to food icon if logo doesn't exist
                             return Icon(
                               Icons.restaurant_menu,
-                              size: 50.sp,
+                              size: 50.sp * scale,
                               color: primaryColor,
                             );
                           },
                         ),
                       ),
-                      SizedBox(height: 20.h),
+                      SizedBox(height: 20.h * scale),
                       Text(
                         S.of(context).create_account,
                         style: TextStyle(
-                          fontSize: 28.sp,
+                          fontSize: 28.sp * scale,
                           fontWeight: FontWeight.bold,
                           color: textColor,
                         ),
                       ),
-                      SizedBox(height: 8.h),
+                      SizedBox(height: 8.h * scale),
                       Text(
                         S.of(context).sign_up_to_get_started,
                         style: TextStyle(
-                          fontSize: 16.sp,
+                          fontSize: 16.sp * scale,
                           color: secondaryTextColor,
                         ),
                       ),
-                      SizedBox(height: 20.h),
+                      SizedBox(height: 20.h * scale),
 
                       // Social login options
                       Text(
                         S.of(context).sign_up_with,
                         style: TextStyle(
-                          fontSize: 14.sp,
+                          fontSize: 14.sp * scale,
                           color: secondaryTextColor,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
-                      SizedBox(height: 16.h),
+                      SizedBox(height: 16.h * scale),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -111,11 +114,12 @@ class _SignupscreenState extends State<Signupscreen> {
                               cubit.signinwithgoogle(context: context);
                             },
                             child: Container(
-                              width: 120.w,
-                              height: 50.h,
+                              width: 120.w * scale,
+                              height: 50.h * scale,
                               decoration: BoxDecoration(
                                 color: Colors.white,
-                                borderRadius: BorderRadius.circular(12.r),
+                                borderRadius:
+                                    BorderRadius.circular(12.r * scale),
                                 boxShadow: [
                                   BoxShadow(
                                     color: Colors.black.withOpacity(0.05),
@@ -129,15 +133,15 @@ class _SignupscreenState extends State<Signupscreen> {
                                 children: [
                                   Image.asset(
                                     "assets/images/signinLogos/google.png",
-                                    width: 24.w,
-                                    height: 24.h,
+                                    width: 24.w * scale,
+                                    height: 24.h * scale,
                                   ),
-                                  SizedBox(width: 8.w),
+                                  SizedBox(width: 8.w * scale),
                                   Text(
                                     S.of(context).google,
                                     style: TextStyle(
                                       color: textColor,
-                                      fontSize: 14.sp,
+                                      fontSize: 14.sp * scale,
                                       fontWeight: FontWeight.w500,
                                     ),
                                   ),
@@ -145,18 +149,19 @@ class _SignupscreenState extends State<Signupscreen> {
                               ),
                             ),
                           ),
-                          SizedBox(width: 20.w),
+                          SizedBox(width: 20.w * scale),
                           // Apple button
                           GestureDetector(
                             onTap: () {
                               cubit.signinwithapple(context: context);
                             },
                             child: Container(
-                              width: 120.w,
-                              height: 50.h,
+                              width: 120.w * scale,
+                              height: 50.h * scale,
                               decoration: BoxDecoration(
                                 color: Colors.white,
-                                borderRadius: BorderRadius.circular(12.r),
+                                borderRadius:
+                                    BorderRadius.circular(12.r * scale),
                                 boxShadow: [
                                   BoxShadow(
                                     color: Colors.black.withOpacity(0.05),
@@ -170,15 +175,15 @@ class _SignupscreenState extends State<Signupscreen> {
                                 children: [
                                   Image.asset(
                                     "assets/images/signinLogos/apple.png",
-                                    width: 24.w,
-                                    height: 24.h,
+                                    width: 24.w * scale,
+                                    height: 24.h * scale,
                                   ),
-                                  SizedBox(width: 8.w),
+                                  SizedBox(width: 8.w * scale),
                                   Text(
                                     S.of(context).apple,
                                     style: TextStyle(
                                       color: textColor,
-                                      fontSize: 14.sp,
+                                      fontSize: 14.sp * scale,
                                       fontWeight: FontWeight.w500,
                                     ),
                                   ),
@@ -188,43 +193,44 @@ class _SignupscreenState extends State<Signupscreen> {
                           ),
                         ],
                       ),
-                      SizedBox(height: 20.h),
+                      SizedBox(height: 20.h * scale),
 
                       // OR divider
                       Row(
                         children: [
                           Expanded(
                             child: Container(
-                              height: 1.h,
+                              height: 1.h * scale,
                               color: Colors.grey[300],
                             ),
                           ),
                           Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 16.w),
+                            padding:
+                                EdgeInsets.symmetric(horizontal: 16.w * scale),
                             child: Text(
                               S.of(context).or,
                               style: TextStyle(
                                 color: secondaryTextColor,
-                                fontSize: 14.sp,
+                                fontSize: 14.sp * scale,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
                           ),
                           Expanded(
                             child: Container(
-                              height: 1.h,
+                              height: 1.h * scale,
                               color: Colors.grey[300],
                             ),
                           ),
                         ],
                       ),
-                      SizedBox(height: 20.h),
+                      SizedBox(height: 20.h * scale),
 
                       // Signup form
                       Container(
                         decoration: BoxDecoration(
                           color: cardColor,
-                          borderRadius: BorderRadius.circular(20.r),
+                          borderRadius: BorderRadius.circular(20.r * scale),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withOpacity(0.05),
@@ -233,7 +239,7 @@ class _SignupscreenState extends State<Signupscreen> {
                             ),
                           ],
                         ),
-                        padding: EdgeInsets.all(20.w),
+                        padding: EdgeInsets.all(20.w * scale),
                         child: Form(
                           key: formkey,
                           child: Column(
@@ -245,15 +251,19 @@ class _SignupscreenState extends State<Signupscreen> {
                                 decoration: InputDecoration(
                                   labelText: S.of(context).Name,
                                   hintText: S.of(context).enter_full_name,
-                                  labelStyle: const TextStyle(color: secondaryTextColor),
-                                  prefixIcon: const Icon(Icons.person, color: primaryColor),
+                                  labelStyle: const TextStyle(
+                                      color: secondaryTextColor),
+                                  prefixIcon: const Icon(Icons.person,
+                                      color: primaryColor),
                                   border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12.r),
+                                    borderRadius:
+                                        BorderRadius.circular(12.r * scale),
                                     borderSide: BorderSide.none,
                                   ),
                                   filled: true,
                                   fillColor: Colors.grey[100],
-                                  contentPadding: EdgeInsets.symmetric(vertical: 16.h),
+                                  contentPadding: EdgeInsets.symmetric(
+                                      vertical: 16.h * scale),
                                 ),
                                 validator: (value) {
                                   if (value != null && value.isNotEmpty) {
@@ -262,7 +272,7 @@ class _SignupscreenState extends State<Signupscreen> {
                                   return S.of(context).name_required;
                                 },
                               ),
-                              SizedBox(height: 16.h),
+                              SizedBox(height: 16.h * scale),
 
                               // Email field
                               TextFormField(
@@ -271,15 +281,19 @@ class _SignupscreenState extends State<Signupscreen> {
                                 decoration: InputDecoration(
                                   labelText: S.of(context).Email,
                                   hintText: S.of(context).enter_email,
-                                  labelStyle: const TextStyle(color: secondaryTextColor),
-                                  prefixIcon: const Icon(Icons.email_outlined, color: primaryColor),
+                                  labelStyle: const TextStyle(
+                                      color: secondaryTextColor),
+                                  prefixIcon: const Icon(Icons.email_outlined,
+                                      color: primaryColor),
                                   border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12.r),
+                                    borderRadius:
+                                        BorderRadius.circular(12.r * scale),
                                     borderSide: BorderSide.none,
                                   ),
                                   filled: true,
                                   fillColor: Colors.grey[100],
-                                  contentPadding: EdgeInsets.symmetric(vertical: 16.h),
+                                  contentPadding: EdgeInsets.symmetric(
+                                      vertical: 16.h * scale),
                                 ),
                                 validator: (value) {
                                   if (value != null && value.isNotEmpty) {
@@ -288,7 +302,7 @@ class _SignupscreenState extends State<Signupscreen> {
                                   return S.of(context).email_required;
                                 },
                               ),
-                              SizedBox(height: 16.h),
+                              SizedBox(height: 16.h * scale),
 
                               // Phone field
                               TextFormField(
@@ -297,15 +311,19 @@ class _SignupscreenState extends State<Signupscreen> {
                                 decoration: InputDecoration(
                                   labelText: S.of(context).Phone,
                                   hintText: S.of(context).enter_phone,
-                                  labelStyle: const TextStyle(color: secondaryTextColor),
-                                  prefixIcon: const Icon(Icons.phone_iphone_outlined, color: primaryColor),
+                                  labelStyle: const TextStyle(
+                                      color: secondaryTextColor),
+                                  prefixIcon: const Icon(
+                                      Icons.phone_iphone_outlined,
+                                      color: primaryColor),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12.r),
                                     borderSide: BorderSide.none,
                                   ),
                                   filled: true,
                                   fillColor: Colors.grey[100],
-                                  contentPadding: EdgeInsets.symmetric(vertical: 16.h),
+                                  contentPadding: EdgeInsets.symmetric(
+                                      vertical: 16.h * scale),
                                 ),
                                 validator: (value) {
                                   if (value != null && value.isNotEmpty) {
@@ -317,7 +335,7 @@ class _SignupscreenState extends State<Signupscreen> {
                                   return S.of(context).phone_required;
                                 },
                               ),
-                              SizedBox(height: 16.h),
+                              SizedBox(height: 16.h * scale),
 
                               // Password field
                               TextFormField(
@@ -327,25 +345,31 @@ class _SignupscreenState extends State<Signupscreen> {
                                 decoration: InputDecoration(
                                   labelText: S.of(context).password,
                                   hintText: S.of(context).create_password,
-                                  labelStyle: const TextStyle(color: secondaryTextColor),
+                                  labelStyle: const TextStyle(
+                                      color: secondaryTextColor),
                                   prefixIcon: const Icon(Icons.lock_outline),
                                   suffixIcon: IconButton(
                                     icon: Icon(
-                                      _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                                      _isPasswordVisible
+                                          ? Icons.visibility
+                                          : Icons.visibility_off,
                                     ),
                                     onPressed: () {
                                       setState(() {
-                                        _isPasswordVisible = !_isPasswordVisible;
+                                        _isPasswordVisible =
+                                            !_isPasswordVisible;
                                       });
                                     },
                                   ),
                                   border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12.r),
+                                    borderRadius:
+                                        BorderRadius.circular(12.r * scale),
                                     borderSide: BorderSide.none,
                                   ),
                                   filled: true,
                                   fillColor: Colors.grey[100],
-                                  contentPadding: EdgeInsets.symmetric(vertical: 16.h),
+                                  contentPadding: EdgeInsets.symmetric(
+                                      vertical: 16.h * scale),
                                 ),
                                 validator: (value) {
                                   if (value != null && value.isNotEmpty) {
@@ -357,7 +381,7 @@ class _SignupscreenState extends State<Signupscreen> {
                                   return S.of(context).password_required;
                                 },
                               ),
-                              SizedBox(height: 16.h),
+                              SizedBox(height: 16.h * scale),
 
                               // Confirm Password field
                               TextFormField(
@@ -367,25 +391,31 @@ class _SignupscreenState extends State<Signupscreen> {
                                 decoration: InputDecoration(
                                   labelText: S.of(context).confirm_password,
                                   hintText: S.of(context).confirm_password,
-                                  labelStyle: const TextStyle(color: secondaryTextColor),
+                                  labelStyle: const TextStyle(
+                                      color: secondaryTextColor),
                                   prefixIcon: const Icon(Icons.lock_outline),
                                   suffixIcon: IconButton(
                                     icon: Icon(
-                                      _isConfirmPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                                      _isConfirmPasswordVisible
+                                          ? Icons.visibility
+                                          : Icons.visibility_off,
                                     ),
                                     onPressed: () {
                                       setState(() {
-                                        _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
+                                        _isConfirmPasswordVisible =
+                                            !_isConfirmPasswordVisible;
                                       });
                                     },
                                   ),
                                   border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12.r),
+                                    borderRadius:
+                                        BorderRadius.circular(12.r * scale),
                                     borderSide: BorderSide.none,
                                   ),
                                   filled: true,
                                   fillColor: Colors.grey[100],
-                                  contentPadding: EdgeInsets.symmetric(vertical: 16.h),
+                                  contentPadding: EdgeInsets.symmetric(
+                                      vertical: 16.h * scale),
                                 ),
                                 validator: (value) {
                                   if (value != null && value.isNotEmpty) {
@@ -394,37 +424,41 @@ class _SignupscreenState extends State<Signupscreen> {
                                     }
                                     return S.of(context).passwords_not_match;
                                   }
-                                  return S.of(context).password_confirm_required;
+                                  return S
+                                      .of(context)
+                                      .password_confirm_required;
                                 },
                               ),
-                              SizedBox(height: 16.h),
+                              SizedBox(height: 16.h * scale),
 
                               // Terms and conditions
                               Row(
                                 children: [
                                   SizedBox(
-                                    width: 24.w,
-                                    height: 24.h,
+                                    width: 24.w * scale,
+                                    height: 24.h * scale,
                                     child: Checkbox(
                                       value: false,
                                       onChanged: (value) {},
                                       activeColor: primaryColor,
                                       shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(4.r),
+                                        borderRadius:
+                                            BorderRadius.circular(4.r * scale),
                                       ),
                                     ),
                                   ),
-                                  SizedBox(width: 8.w),
+                                  SizedBox(width: 8.w * scale),
                                   Expanded(
                                     child: GestureDetector(
                                       onTap: () {
-                                        navigateTo(context, const TermsScreen());
+                                        navigateTo(
+                                            context, const TermsScreen());
                                       },
                                       child: Text(
                                         S.of(context).terms_and_conditions,
                                         style: TextStyle(
                                           color: primaryColor,
-                                          fontSize: 14.sp,
+                                          fontSize: 14.sp * scale,
                                           decoration: TextDecoration.underline,
                                           decorationColor: primaryColor,
                                         ),
@@ -433,12 +467,12 @@ class _SignupscreenState extends State<Signupscreen> {
                                   ),
                                 ],
                               ),
-                              SizedBox(height: 24.h),
+                              SizedBox(height: 24.h * scale),
 
                               // Sign up button
                               SizedBox(
                                 width: double.infinity,
-                                height: 50.h,
+                                height: 50.h * scale,
                                 child: ElevatedButton(
                                   onPressed: () {
                                     if (formkey.currentState!.validate()) {
@@ -454,7 +488,8 @@ class _SignupscreenState extends State<Signupscreen> {
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: primaryColor,
                                     shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12.r),
+                                      borderRadius:
+                                          BorderRadius.circular(12.r * scale),
                                     ),
                                     elevation: 0,
                                   ),
@@ -462,7 +497,7 @@ class _SignupscreenState extends State<Signupscreen> {
                                     S.of(context).sign_up_button,
                                     style: TextStyle(
                                       color: Colors.white,
-                                      fontSize: 16.sp,
+                                      fontSize: isTablet ? 10.sp : 16.sp,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
@@ -472,7 +507,7 @@ class _SignupscreenState extends State<Signupscreen> {
                           ),
                         ),
                       ),
-                      SizedBox(height: 20.h),
+                      SizedBox(height: 20.h * scale),
 
                       // Login link
                       Row(
@@ -482,7 +517,7 @@ class _SignupscreenState extends State<Signupscreen> {
                             S.of(context).already_have_account,
                             style: TextStyle(
                               color: secondaryTextColor,
-                              fontSize: 14.sp,
+                              fontSize: 14.sp * scale,
                             ),
                           ),
                           TextButton(
@@ -495,13 +530,13 @@ class _SignupscreenState extends State<Signupscreen> {
                               style: TextStyle(
                                 color: primaryColor,
                                 fontWeight: FontWeight.bold,
-                                fontSize: 14.sp,
+                                fontSize: 14.sp * scale,
                               ),
                             ),
                           ),
                         ],
                       ),
-                      SizedBox(height: 10.h),
+                      SizedBox(height: 10.h * scale),
                     ],
                   ),
                 ),

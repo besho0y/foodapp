@@ -29,7 +29,7 @@ class _ResturantscreenState extends State<Resturantscreen> {
   Widget build(BuildContext context) {
     var cubit = Restuarantscubit.get(context);
     bool isArabic = Localizations.localeOf(context).languageCode == 'ar';
-
+    bool isTablet = MediaQuery.of(context).size.width >= 600;
     return MultiBlocListener(
       listeners: [
         BlocListener<Restuarantscubit, ResturantsStates>(
@@ -64,6 +64,8 @@ class _ResturantscreenState extends State<Resturantscreen> {
       ],
       child: BlocBuilder<Restuarantscubit, ResturantsStates>(
         builder: (context, state) {
+          final bool isTablet = MediaQuery.of(context).size.width >= 600;
+          final double scale = isTablet ? 0.75 : 1.0;
           return ThemeBasedBackground(
             child: Scaffold(
               backgroundColor: Colors
@@ -132,7 +134,7 @@ class _ResturantscreenState extends State<Resturantscreen> {
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 10),
                         child: SizedBox(
-                          height: 90.h,
+                          height: 90.h * scale,
                           child: ListView.separated(
                             scrollDirection: Axis.horizontal,
                             itemCount: cubit.categories.length,
@@ -146,16 +148,16 @@ class _ResturantscreenState extends State<Resturantscreen> {
                                 child: Column(
                                   children: [
                                     Container(
-                                      height: 60.h,
-                                      width: 65.w,
-                                      padding: EdgeInsets.all(6.w),
+                                      height: 60.h * scale,
+                                      width: 65.w * scale,
+                                      padding: EdgeInsets.all(6.w * scale),
                                       decoration: BoxDecoration(
                                           color: Theme.of(context).brightness ==
                                                   Brightness.dark
                                               ? AppColors.darkCard
                                               : AppColors.primaryBrown,
-                                          borderRadius:
-                                              BorderRadius.circular(10.r),
+                                          borderRadius: BorderRadius.circular(
+                                              10.r * scale),
                                           boxShadow: [
                                             BoxShadow(
                                               color: Theme.of(context)
@@ -170,17 +172,21 @@ class _ResturantscreenState extends State<Resturantscreen> {
                                           ]),
                                       child: CategoryImageWidget(
                                         imageUrl: category.img,
-                                        size: 50.w,
+                                        size: 50.w * scale,
                                       ),
                                     ),
-                                    SizedBox(height: 6.h),
+                                    SizedBox(height: 6.h * scale),
                                     Flexible(
                                       child: Text(
                                         cubit.getCategoryName(
                                             category, isArabic),
                                         style: Theme.of(context)
                                             .textTheme
-                                            .labelMedium,
+                                            .labelMedium
+                                            ?.copyWith(
+                                                fontSize: isTablet
+                                                    ? 10.sp * scale
+                                                    : 14.sp * scale),
                                         textAlign: TextAlign.center,
                                       ),
                                     ),
@@ -208,7 +214,11 @@ class _ResturantscreenState extends State<Resturantscreen> {
                                 crossAxisCount: 2,
                                 mainAxisSpacing: 10.h,
                                 crossAxisSpacing: 10.w,
-                                childAspectRatio: 0.8,
+                                // Make items shorter on tablets to remove empty space
+                                childAspectRatio:
+                                    MediaQuery.of(context).size.width >= 600
+                                        ? 1.25
+                                        : 0.8,
                               ),
                               delegate: SliverChildBuilderDelegate(
                                 (context, index) {
@@ -229,6 +239,4 @@ class _ResturantscreenState extends State<Resturantscreen> {
       ),
     );
   }
-
-
 }

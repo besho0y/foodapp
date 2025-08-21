@@ -64,7 +64,7 @@ class _OrderCardState extends State<OrderCard> {
       print('🔄 === STARTING REORDER ===');
 
       final layoutCubit = Layoutcubit.get(context);
-      final profileCubit = ProfileCubit.get(context);
+      ProfileCubit.get(context);
       final model = widget.model;
 
       print('📝 Reordering ${model.items.length} items');
@@ -204,27 +204,32 @@ class _OrderCardState extends State<OrderCard> {
   @override
   Widget build(BuildContext context) {
     final model = widget.model;
+    final bool isTablet = MediaQuery.of(context).size.width >= 600;
+    final double scale = isTablet ? 0.8 : 1.0;
 
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 5.h),
+      padding: EdgeInsets.symmetric(vertical: 5.h * scale),
       child: Card(
         child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 10.w),
+          padding: EdgeInsets.symmetric(horizontal: 10.w * scale),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(height: 10.h),
+              SizedBox(height: 10.h * scale),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   SizedBox(
-                    width: 180.w,
+                    width: 180.w * scale,
                     child: Text(
                       model.address != null && model.address['address'] != null
                           ? "${model.address['address']}"
                           : "No address",
-                      style: Theme.of(context).textTheme.bodyLarge,
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyLarge
+                          ?.copyWith(fontSize: 14.sp * scale),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -233,23 +238,26 @@ class _OrderCardState extends State<OrderCard> {
                   Expanded(
                     child: Text(
                       _formatDate(model.date),
-                      style: Theme.of(context).textTheme.bodyLarge,
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyLarge
+                          ?.copyWith(fontSize: 14.sp * scale),
                     ),
                   ),
                   SizedBox(width: 8.w),
                   // Compact reorder button at the top
                   SizedBox(
-                    height: 32.h,
+                    height: 32.h * scale,
                     child: ElevatedButton.icon(
                       onPressed: () => _reorderItems(context),
                       icon: Icon(
                         Icons.refresh,
-                        size: 14.sp,
+                        size: 14.sp * scale,
                       ),
                       label: Text(
                         'Reorder',
                         style: TextStyle(
-                          fontSize: 11.sp,
+                          fontSize: 11.sp * scale,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -262,17 +270,17 @@ class _OrderCardState extends State<OrderCard> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(6.r),
                         ),
-                        padding:
-                            EdgeInsets.symmetric(horizontal: 8.w, vertical: 0),
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 8.w * scale, vertical: 0),
                         elevation: 1,
-                        minimumSize: Size(0, 32.h),
+                        minimumSize: Size(0, 32.h * scale),
                       ),
                     ),
                   ),
                 ],
               ),
               Padding(
-                padding: EdgeInsets.symmetric(vertical: 5.h),
+                padding: EdgeInsets.symmetric(vertical: 5.h * scale),
                 child: Row(
                   children: [
                     Text(
@@ -285,7 +293,7 @@ class _OrderCardState extends State<OrderCard> {
                           .substring(0, 8), // Show first 8 chars of order ID
                       style: Theme.of(
                         context,
-                      ).textTheme.bodyLarge!.copyWith(fontSize: 18.sp),
+                      ).textTheme.bodyLarge!.copyWith(fontSize: 18.sp * scale),
                     ),
                   ],
                 ),
@@ -293,7 +301,7 @@ class _OrderCardState extends State<OrderCard> {
               // Show username if available
               if (model.userName != null && model.userName!.isNotEmpty)
                 Padding(
-                  padding: EdgeInsets.symmetric(vertical: 5.h),
+                  padding: EdgeInsets.symmetric(vertical: 5.h * scale),
                   child: Row(
                     children: [
                       Text(
@@ -306,7 +314,10 @@ class _OrderCardState extends State<OrderCard> {
                           "${model.userName}",
                           style: Theme.of(
                             context,
-                          ).textTheme.bodyLarge!.copyWith(fontSize: 16.sp),
+                          )
+                              .textTheme
+                              .bodyLarge!
+                              .copyWith(fontSize: 16.sp * scale),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
@@ -314,7 +325,7 @@ class _OrderCardState extends State<OrderCard> {
                   ),
                 ),
               Padding(
-                padding: EdgeInsets.symmetric(vertical: 5.h),
+                padding: EdgeInsets.symmetric(vertical: 5.h * scale),
                 child: Row(
                   children: [
                     Text(
@@ -327,7 +338,7 @@ class _OrderCardState extends State<OrderCard> {
                       style: Theme.of(
                         context,
                       ).textTheme.bodyLarge!.copyWith(
-                            fontSize: 18.sp,
+                            fontSize: 18.sp * scale,
                             color: _getStatusColor(model.status),
                           ),
                     ),
@@ -335,7 +346,7 @@ class _OrderCardState extends State<OrderCard> {
                     Icon(
                       _getStatusIcon(model.status),
                       color: _getStatusColor(model.status),
-                      size: 20.sp,
+                      size: 20.sp * scale,
                     ),
                   ],
                 ),
@@ -345,7 +356,7 @@ class _OrderCardState extends State<OrderCard> {
               AnimatedCrossFade(
                 firstChild: const SizedBox.shrink(),
                 secondChild: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 8.h),
+                  padding: EdgeInsets.symmetric(vertical: 8.h * scale),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -353,7 +364,7 @@ class _OrderCardState extends State<OrderCard> {
                         children: [
                           Icon(
                             Icons.receipt_long,
-                            size: 20.sp,
+                            size: 20.sp * scale,
                           ),
                           SizedBox(width: 5.w),
                           Text(
@@ -366,13 +377,14 @@ class _OrderCardState extends State<OrderCard> {
                           ),
                         ],
                       ),
-                      SizedBox(height: 10.h),
+                      SizedBox(height: 10.h * scale),
                       ...List.generate(
                         model.items.length,
                         (index) {
                           // Handle both the new and old model formats
                           var item = model.items[index];
-                          String itemName = "";
+                          // Local variables for item details
+                          String itemName = '';
                           double itemPrice = 0.0;
                           int quantity = 1;
                           String? comment;
@@ -404,7 +416,8 @@ class _OrderCardState extends State<OrderCard> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Padding(
-                                padding: EdgeInsets.symmetric(vertical: 4.h),
+                                padding:
+                                    EdgeInsets.symmetric(vertical: 4.h * scale),
                                 child: Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
@@ -420,11 +433,12 @@ class _OrderCardState extends State<OrderCard> {
                                             : (item is Map
                                                 ? item['name']
                                                 : item.name),
-                                        style: Theme.of(
-                                          context,
-                                        ).textTheme.bodyLarge!.copyWith(
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyLarge!
+                                            .copyWith(
                                               fontWeight: FontWeight.w600,
-                                              fontSize: 16.sp,
+                                              fontSize: 16.sp * scale,
                                             ),
                                         overflow: TextOverflow.ellipsis,
                                       ),
@@ -433,22 +447,24 @@ class _OrderCardState extends State<OrderCard> {
                                       flex: 1,
                                       child: Text(
                                         "x$quantity",
-                                        style: Theme.of(
-                                          context,
-                                        ).textTheme.bodySmall!.copyWith(
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall!
+                                            .copyWith(
                                               color: Colors.grey[600],
-                                              fontSize: 14.sp,
+                                              fontSize: 14.sp * scale,
                                             ),
                                         textAlign: TextAlign.center,
                                       ),
                                     ),
                                     Text(
                                       "${itemPrice.toStringAsFixed(2)} ${S.of(context).egp}",
-                                      style: Theme.of(
-                                        context,
-                                      ).textTheme.bodySmall!.copyWith(
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall!
+                                          .copyWith(
                                             color: Colors.grey[600],
-                                            fontSize: 14.sp,
+                                            fontSize: 14.sp * scale,
                                           ),
                                     ),
                                   ],
@@ -458,11 +474,13 @@ class _OrderCardState extends State<OrderCard> {
                               if (comment != null && comment.isNotEmpty)
                                 Padding(
                                   padding: EdgeInsets.only(
-                                      left: 8.w, right: 8.w, bottom: 8.h),
+                                      left: 8.w,
+                                      right: 8.w,
+                                      bottom: 8.h * scale),
                                   child: Row(
                                     children: [
                                       Icon(Icons.comment,
-                                          size: 14.sp,
+                                          size: 14.sp * scale,
                                           color: Theme.of(context)
                                               .colorScheme
                                               .secondary),
@@ -471,7 +489,7 @@ class _OrderCardState extends State<OrderCard> {
                                         child: Text(
                                           "${S.of(context).note}: $comment",
                                           style: TextStyle(
-                                            fontSize: 12.sp,
+                                            fontSize: 12.sp * scale,
                                             fontStyle: FontStyle.italic,
                                             color:
                                                 Theme.of(context).brightness ==
@@ -517,7 +535,7 @@ class _OrderCardState extends State<OrderCard> {
                                 children: [
                                   Icon(
                                     Icons.local_offer,
-                                    size: 14.sp,
+                                    size: 14.sp * scale,
                                     color: Colors.green,
                                   ),
                                   SizedBox(width: 4.w),
@@ -525,7 +543,7 @@ class _OrderCardState extends State<OrderCard> {
                                     "${widget.model.promocode}",
                                     style: TextStyle(
                                       color: Colors.green,
-                                      fontSize: 12.sp,
+                                      fontSize: 12.sp * scale,
                                       fontWeight: FontWeight.w500,
                                     ),
                                   ),
@@ -537,7 +555,7 @@ class _OrderCardState extends State<OrderCard> {
                                   Text(
                                     "Subtotal: ${widget.model.getOriginalPrice().toStringAsFixed(2)} ${S.of(context).egp}",
                                     style: TextStyle(
-                                      fontSize: 12.sp,
+                                      fontSize: 12.sp * scale,
                                       decoration: TextDecoration.lineThrough,
                                       color: Colors.grey,
                                     ),
@@ -547,7 +565,7 @@ class _OrderCardState extends State<OrderCard> {
                                     "-${widget.model.promoDiscount!.toStringAsFixed(2)}",
                                     style: TextStyle(
                                       color: Colors.green,
-                                      fontSize: 12.sp,
+                                      fontSize: 12.sp * scale,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
@@ -561,7 +579,7 @@ class _OrderCardState extends State<OrderCard> {
                         Text(
                           "${S.of(context).items}: ${calculatedTotal.toStringAsFixed(2)} ${S.of(context).egp}",
                           style: TextStyle(
-                            fontSize: 12.sp,
+                            fontSize: 12.sp * scale,
                             color: Colors.grey[700],
                           ),
                         ),
@@ -570,7 +588,7 @@ class _OrderCardState extends State<OrderCard> {
                         Text(
                           "${S.of(context).delivery_fee}: ${(widget.model.total - calculatedTotal - (widget.model.outOfAreaFee ?? 0.0)).toStringAsFixed(2)} ${S.of(context).egp}",
                           style: TextStyle(
-                            fontSize: 12.sp,
+                            fontSize: 12.sp * scale,
                             color: Colors.grey[700],
                           ),
                         ),
@@ -581,7 +599,7 @@ class _OrderCardState extends State<OrderCard> {
                           Text(
                             "${S.of(context).out_of_area_fee}: ${widget.model.outOfAreaFee!.toStringAsFixed(2)} ${S.of(context).egp}",
                             style: TextStyle(
-                              fontSize: 13.sp,
+                              fontSize: 13.sp * scale,
                               color: Colors.grey[600],
                             ),
                           ),
@@ -598,14 +616,14 @@ class _OrderCardState extends State<OrderCard> {
                               children: [
                                 Icon(
                                   Icons.confirmation_number,
-                                  size: 14.sp,
+                                  size: 14.sp * scale,
                                   color: Colors.blue.shade700,
                                 ),
                                 SizedBox(width: 4.w),
                                 Text(
                                   "Ref: ${widget.model.paymentReference}",
                                   style: TextStyle(
-                                    fontSize: 12.sp,
+                                    fontSize: 12.sp * scale,
                                     color: Colors.blue.shade700,
                                     fontWeight: FontWeight.w500,
                                   ),
@@ -624,14 +642,14 @@ class _OrderCardState extends State<OrderCard> {
                               children: [
                                 Icon(
                                   Icons.credit_card,
-                                  size: 14.sp,
+                                  size: 14.sp * scale,
                                   color: Colors.green.shade700,
                                 ),
                                 SizedBox(width: 4.w),
                                 Text(
                                   "Transaction: ${widget.model.transactionId!.length > 10 ? widget.model.transactionId!.substring(0, 10) + '...' : widget.model.transactionId}",
                                   style: TextStyle(
-                                    fontSize: 12.sp,
+                                    fontSize: 12.sp * scale,
                                     color: Colors.green.shade700,
                                     fontWeight: FontWeight.w500,
                                   ),
@@ -646,7 +664,7 @@ class _OrderCardState extends State<OrderCard> {
                           textAlign: TextAlign.end,
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            fontSize: 16.sp,
+                            fontSize: 16.sp * scale,
                           ),
                         ),
                       ],
@@ -661,13 +679,13 @@ class _OrderCardState extends State<OrderCard> {
                         isExpanded
                             ? Icons.keyboard_arrow_up_rounded
                             : Icons.keyboard_arrow_down_rounded,
-                        size: 25.sp,
+                        size: 25.sp * scale,
                       ),
                     ),
                   ],
                 ),
               ),
-              SizedBox(height: 10.h),
+              SizedBox(height: 10.h * scale),
             ],
           ),
         ),

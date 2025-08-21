@@ -437,7 +437,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   Widget build(BuildContext context) {
     final layoutCubit = Layoutcubit.get(context);
     final cartItems = layoutCubit.cartitems;
-
+    final bool isTablet = MediaQuery.of(context).size.width >= 600;
+    final double scale = isTablet ? 0.75 : 1.0;
     return Scaffold(
       appBar: AppBar(
         title: Text(S.of(context).checkout),
@@ -469,8 +470,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           children: [
                             // Number indicator
                             Container(
-                              width: 30.r,
-                              height: 30.r,
+                              width: 30.r * scale,
+                              height: 30.r * scale,
                               decoration: BoxDecoration(
                                 color: _currentStep >= 0
                                     ? Theme.of(context).primaryColor
@@ -482,7 +483,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                     ? Icon(
                                         Icons.check,
                                         color: Colors.white,
-                                        size: 18.sp,
+                                        size: 18.sp * scale,
                                       )
                                     : Text(
                                         "1",
@@ -492,7 +493,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                               ? Colors.black
                                               : Colors.white,
                                           fontWeight: FontWeight.bold,
-                                          fontSize: 14.sp,
+                                          fontSize: 14.sp * scale,
                                         ),
                                       ),
                               ),
@@ -502,7 +503,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                             Text(
                               S.of(context).select_delivery_address,
                               style: TextStyle(
-                                fontSize: 11.sp,
+                                fontSize: 11.sp * scale,
                                 fontWeight: _currentStep >= 0
                                     ? FontWeight.bold
                                     : FontWeight.normal,
@@ -519,8 +520,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       ),
                       // Divider line
                       Container(
-                        width: 30.w,
-                        height: 2.h,
+                        width: 30.w * scale,
+                        height: 2.h * scale,
                         color: _currentStep > 0
                             ? Theme.of(context).primaryColor
                             : Colors.grey.shade300,
@@ -532,8 +533,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           children: [
                             // Number indicator
                             Container(
-                              width: 30.r,
-                              height: 30.r,
+                              width: 30.r * scale,
+                              height: 30.r * scale,
                               decoration: BoxDecoration(
                                 color: _currentStep >= 1
                                     ? Theme.of(context).primaryColor
@@ -548,7 +549,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                                 Brightness.dark
                                             ? AppColors.primaryBrown
                                             : Colors.white,
-                                        size: 18.sp,
+                                        size: 18.sp * scale,
                                       )
                                     : Text(
                                         "2",
@@ -558,7 +559,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                               ? Colors.black
                                               : Colors.white,
                                           fontWeight: FontWeight.bold,
-                                          fontSize: 14.sp,
+                                          fontSize: 14.sp * scale,
                                         ),
                                       ),
                               ),
@@ -568,7 +569,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                             Text(
                               S.of(context).select_payment_method,
                               style: TextStyle(
-                                fontSize: 11.sp,
+                                fontSize: 11.sp * scale,
                                 fontWeight: _currentStep >= 1
                                     ? FontWeight.bold
                                     : FontWeight.normal,
@@ -595,7 +596,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   child: SingleChildScrollView(
                     physics: const BouncingScrollPhysics(),
                     child: Padding(
-                      padding: EdgeInsets.all(16.r),
+                      padding: EdgeInsets.all(16.r * scale),
                       child: _currentStep == 0
                           ? _buildAddressStep()
                           : _buildPaymentStep(),
@@ -609,7 +610,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 // Buttons
                 Padding(
                   padding:
-                      EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+                      EdgeInsets.symmetric(horizontal: 16.w * scale, vertical: 16.h * scale),
                   child: Row(
                     children: [
                       if (_currentStep > 0)
@@ -622,11 +623,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               });
                             },
                             style: OutlinedButton.styleFrom(
-                              padding: EdgeInsets.symmetric(vertical: 12.h),
+                              padding: EdgeInsets.symmetric(vertical: 12.h * scale),
                               side: BorderSide(
                                   color: Theme.of(context).primaryColor),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8.r),
+                                borderRadius: BorderRadius.circular(8.r * scale),
                               ),
                             ),
                             child: Text(S.of(context).back,
@@ -683,9 +684,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Theme.of(context).primaryColor,
-                            padding: EdgeInsets.symmetric(vertical: 12.h),
+                            padding: EdgeInsets.symmetric(vertical: 12.h * scale),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8.r),
+                              borderRadius: BorderRadius.circular(8.r * scale),
                             ),
                           ),
                           child: Text(
@@ -708,7 +709,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 // Order Summary Section
                 Container(
                   padding:
-                      EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+                      EdgeInsets.symmetric(horizontal: 14.w * scale, vertical: 12.h * scale),
                   decoration: BoxDecoration(
                     color: Theme.of(context).cardColor,
                     boxShadow: [
@@ -728,11 +729,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       children: [
                         // Order summary header with styled text
                         Container(
-                          margin: EdgeInsets.only(bottom: 8.h),
+                          margin: EdgeInsets.only(bottom: 8.h * scale),
                           child: Text(
                             S.of(context).order_summary,
                             style: TextStyle(
-                              fontSize: 16.sp,
+                              fontSize: 16.sp * scale ,
                               fontWeight: FontWeight.bold,
                               color: Theme.of(context).primaryColor,
                             ),
@@ -794,7 +795,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           ),
 
                         // Divider before total
-                        Divider(height: 16.h, thickness: 1),
+                        Divider(height: 16.h * scale, thickness: 1),
 
                         // Total row with larger text and bold styling
                         Row(
@@ -803,7 +804,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                             Text(
                               S.of(context).total,
                               style: TextStyle(
-                                fontSize: 16.sp,
+                                fontSize: 16.sp * scale,
                                 fontWeight: FontWeight.bold,
                                 color: Theme.of(context).primaryColor,
                               ),
@@ -811,7 +812,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                             Text(
                               '${layoutCubit.calculateTotalPrice(promoDiscount: _promoDiscount).toStringAsFixed(2)} ${S.of(context).egp}',
                               style: TextStyle(
-                                fontSize: 16.sp,
+                                fontSize: 16.sp * scale     ,
                                 fontWeight: FontWeight.bold,
                                 color: Theme.of(context).primaryColor,
                               ),
@@ -1103,17 +1104,18 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   Widget _buildAddressStep() {
     final profileCubit = ProfileCubit.get(context);
     final addresses = profileCubit.user.addresses;
-
+    final bool isTablet = MediaQuery.of(context).size.width >= 600;
+    final double scale = isTablet ? 0.75 : 1.0;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Promocode section
         Container(
-          margin: EdgeInsets.only(bottom: 16.h),
-          padding: EdgeInsets.all(10.r),
+          margin: EdgeInsets.only(bottom: 16.h * scale),
+          padding: EdgeInsets.all(10.r * scale),
           decoration: BoxDecoration(
             color: Theme.of(context).cardColor,
-            borderRadius: BorderRadius.circular(8.r),
+            borderRadius: BorderRadius.circular(8.r * scale),
             border: Border.all(
               color: _appliedPromocode != null
                   ? Colors.green
@@ -1130,13 +1132,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   Icon(
                     Icons.local_offer_outlined,
                     color: Theme.of(context).primaryColor,
-                    size: 16.sp,
+                    size: 16.sp * scale,
                   ),
                   SizedBox(width: 6.w),
                   Text(
                     S.of(context).promocode,
                     style: TextStyle(
-                      fontSize: 14.sp,
+                      fontSize: 14.sp * scale,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -1153,7 +1155,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     child: Container(
                       height: 40.h,
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(8.r),
+                        borderRadius: BorderRadius.circular(8.r * scale),
                         border: Border.all(
                           color: _appliedPromocode != null
                               ? Colors.green
@@ -1167,12 +1169,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         decoration: InputDecoration(
                           hintText: S.of(context).enter_promocode,
                           contentPadding:
-                              EdgeInsets.symmetric(horizontal: 10.w),
+                              EdgeInsets.symmetric(horizontal: 10.w * scale),
                           border: InputBorder.none,
                           enabled: _appliedPromocode == null,
-                          hintStyle: TextStyle(fontSize: 13.sp),
+                          hintStyle: TextStyle(fontSize: 13.sp * scale),
                         ),
-                        style: TextStyle(fontSize: 13.sp),
+                        style: TextStyle(fontSize: 13.sp * scale),
                         onSubmitted: (_) {
                           if (_appliedPromocode == null) {
                             _validatePromocode();
@@ -1183,12 +1185,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       ),
                     ),
                   ),
-                  SizedBox(width: 8.w),
+                  SizedBox(width: 8.w * scale),
                   _isPromoLoading
                       ? Container(
-                          width: 40.w,
-                          height: 40.h,
-                          padding: EdgeInsets.all(6.r),
+                          width: 40.w * scale,
+                          height: 40.h * scale,
+                          padding: EdgeInsets.all(6.r * scale),
                           child:
                               const CircularProgressIndicator(strokeWidth: 2),
                         )
@@ -1208,7 +1210,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.red,
                                     shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8.r),
+                                      borderRadius: BorderRadius.circular(8.r * scale),
                                     ),
                                     padding: EdgeInsets.zero,
                                   ),
@@ -1216,7 +1218,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                     fit: BoxFit.scaleDown,
                                     child: Text(
                                       'Remove',
-                                      style: TextStyle(fontSize: 12.sp),
+                                      style: TextStyle(fontSize: 12.sp * scale),
                                     ),
                                   ),
                                 ),
@@ -1232,7 +1234,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                     backgroundColor:
                                         Theme.of(context).primaryColor,
                                     shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8.r),
+                                      borderRadius: BorderRadius.circular(8.r * scale),
                                     ),
                                     padding: EdgeInsets.zero,
                                   ),
@@ -1241,7 +1243,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                     child: Text(
                                       S.of(context).apply,
                                       style: TextStyle(
-                                          fontSize: 12.sp,
+                                          fontSize: 12.sp * scale,
                                           color: Theme.of(context).brightness ==
                                                   Brightness.dark
                                               ? AppColors.primaryBrown
@@ -1258,10 +1260,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               if (_appliedPromocode != null) ...[
                 SizedBox(height: 8.h),
                 Container(
-                  padding: EdgeInsets.symmetric(vertical: 4.h, horizontal: 8.w),
+                  padding: EdgeInsets.symmetric(vertical: 4.h * scale, horizontal: 8.w * scale),
                   decoration: BoxDecoration(
                     color: Colors.green.shade50,
-                    borderRadius: BorderRadius.circular(4.r),
+                    borderRadius: BorderRadius.circular(4.r * scale),
                   ),
                   child: Row(
                     children: [
@@ -1272,7 +1274,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         child: Text(
                           'Code "$_appliedPromocode" applied!',
                           style: TextStyle(
-                            fontSize: 11.sp,
+                            fontSize: 11.sp * scale,
                             color: Colors.green.shade800,
                           ),
                           maxLines: 1,
@@ -1294,18 +1296,18 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   children: [
                     Icon(
                       Icons.location_off,
-                      size: 60.sp,
+                      size: 60.sp * scale,
                       color: Colors.grey.shade400,
                     ),
-                    SizedBox(height: 16.h),
+                    SizedBox(height: 16.h * scale),
                     Text(
                       'No saved addresses found',
                       style: TextStyle(
-                        fontSize: 16.sp,
+                        fontSize: 16.sp * scale,
                         color: Colors.grey.shade600,
                       ),
                     ),
-                    SizedBox(height: 16.h),
+                    SizedBox(height: 16.h * scale),
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton.icon(
@@ -1314,9 +1316,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         label: Text(S.of(context).add_address),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Theme.of(context).primaryColor,
-                          padding: EdgeInsets.symmetric(vertical: 12.h),
+                          padding: EdgeInsets.symmetric(vertical: 12.h * scale),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8.r),
+                            borderRadius: BorderRadius.circular(8.r * scale),
                           ),
                         ),
                       ),
@@ -1329,10 +1331,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   ...addresses.map((address) {
                     final isSelected = selectedAddress == address;
                     return Card(
-                      margin: EdgeInsets.only(bottom: 12.h),
+                      margin: EdgeInsets.only(bottom: 12.h * scale),
                       elevation: isSelected ? 2 : 0,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10.r),
+                        borderRadius: BorderRadius.circular(10.r * scale),
                         side: BorderSide(
                           color: isSelected
                               ? Theme.of(context).primaryColor
@@ -1346,9 +1348,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                             selectedAddress = address;
                           });
                         },
-                        borderRadius: BorderRadius.circular(10.r),
+                        borderRadius: BorderRadius.circular(10.r * scale),
                         child: Padding(
-                          padding: EdgeInsets.all(12.r),
+                          padding: EdgeInsets.all(12.r * scale),
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -1362,7 +1364,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                   });
                                 },
                               ),
-                              SizedBox(width: 8.w),
+                              SizedBox(width: 8.w* scale),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1374,7 +1376,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                             address.title,
                                             style: TextStyle(
                                               fontWeight: FontWeight.bold,
-                                              fontSize: 16.sp,
+                                              fontSize: 16.sp* scale,
                                               color: isSelected
                                                   ? Theme.of(context)
                                                       .primaryColor
@@ -1385,8 +1387,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                         if (address.isDefault)
                                           Container(
                                             padding: EdgeInsets.symmetric(
-                                              horizontal: 8.w,
-                                              vertical: 2.h,
+                                              horizontal: 8.w* scale,
+                                              vertical: 2.h* scale,
                                             ),
                                             decoration: BoxDecoration(
                                               color: Colors.green,
@@ -1397,19 +1399,19 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                               'Default',
                                               style: TextStyle(
                                                 color: Colors.white,
-                                                fontSize: 10.sp,
+                                                fontSize: 10.sp* scale,
                                                 fontWeight: FontWeight.w500,
                                               ),
                                             ),
                                           ),
                                       ],
                                     ),
-                                    SizedBox(height: 8.h),
+                                    SizedBox(height: 8.h* scale),
                                     Text(
                                       address.address,
                                       style: TextStyle(
                                         color: Colors.grey.shade700,
-                                        fontSize: 14.sp,
+                                        fontSize: 14.sp* scale,
                                       ),
                                     ),
                                   ],
@@ -1421,7 +1423,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       ),
                     );
                   }),
-                  SizedBox(height: 16.h),
+                  SizedBox(height: 16.h* scale),
                   // Add new address button
                   SizedBox(
                     width: double.infinity,
@@ -1438,10 +1440,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                   ? Colors.white
                                   : AppColors.primaryBrown)),
                       style: OutlinedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(vertical: 12.h),
+                        padding: EdgeInsets.symmetric(vertical: 12.h* scale),
                         side: BorderSide(color: Theme.of(context).primaryColor),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8.r),
+                          borderRadius: BorderRadius.circular(8.r* scale),
                         ),
                       ),
                     ),
@@ -1455,6 +1457,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   // Added missing method - Build payment step UI
   Widget _buildPaymentStep() {
+      final bool isTablet = MediaQuery.of(context).size.width >= 600;
+    final double scale = isTablet ? 0.75 : 1.0;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1466,7 +1470,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             color: Theme.of(context).primaryColor,
           ),
         ),
-        SizedBox(height: 16.h),
+        SizedBox(height: 16.h* scale),
 
         // Cash on delivery payment method
         _buildPaymentMethodCard(
@@ -1475,7 +1479,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           icon: Icons.payments_outlined,
           value: 'cash',
         ),
-        SizedBox(height: 12.h),
+        SizedBox(height: 12.h* scale),
 
         // Credit card payment method
         _buildPaymentMethodCard(
@@ -1484,7 +1488,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           icon: Icons.credit_card,
           value: 'card',
         ),
-        SizedBox(height: 12.h),
+        SizedBox(height: 12.h* scale),
 
         // InstaPay payment method
         _buildPaymentMethodCard(
@@ -1508,16 +1512,17 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     required String value,
   }) {
     bool isSelected = paymentMethod == value;
-
+  final bool isTablet = MediaQuery.of(context).size.width >= 600;
+    final double scale = isTablet ? 0.75 : 1.0;
     return Card(
-      elevation: isSelected ? 2 : 0,
+      elevation: isSelected ? 2 : 0* scale,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(10.r),
         side: BorderSide(
           color: isSelected
               ? Theme.of(context).primaryColor
               : Colors.grey.shade300,
-          width: isSelected ? 2 : 1,
+          width: isSelected ? 2 : 1* scale,
         ),
       ),
       child: InkWell(
@@ -1526,9 +1531,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             paymentMethod = value;
           });
         },
-        borderRadius: BorderRadius.circular(10.r),
+        borderRadius: BorderRadius.circular(10.r* scale),
         child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 12.h),
+          padding: EdgeInsets.symmetric(horizontal: 8.w* scale, vertical: 12.h* scale),
           child: Row(
             children: [
               Radio<String>(
@@ -1541,24 +1546,24 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   });
                 },
               ),
-              SizedBox(width: 8.w),
+              SizedBox(width: 8.w* scale),
               Container(
-                padding: EdgeInsets.all(8.r),
+                padding: EdgeInsets.all(8.r* scale),
                 decoration: BoxDecoration(
                   color: isSelected
                       ? Theme.of(context).primaryColor.withOpacity(0.1)
                       : Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(8.r),
+                  borderRadius: BorderRadius.circular(8.r* scale),
                 ),
                 child: Icon(
                   icon,
                   color: isSelected
                       ? Theme.of(context).primaryColor
                       : Colors.grey.shade700,
-                  size: 24.sp,
+                  size: 24.sp* scale,
                 ),
               ),
-              SizedBox(width: 12.w),
+              SizedBox(width: 12.w* scale),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1567,17 +1572,17 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       title,
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        fontSize: 16.sp,
+                        fontSize: 16.sp* scale,
                         color:
                             isSelected ? Theme.of(context).primaryColor : null,
                       ),
                     ),
-                    SizedBox(height: 4.h),
+                    SizedBox(height: 4.h* scale),
                     Text(
                       subtitle,
                       style: TextStyle(
                         color: Colors.grey.shade600,
-                        fontSize: 12.sp,
+                        fontSize: 12.sp* scale,
                       ),
                     ),
                   ],
@@ -1592,12 +1597,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   // Added missing method - Build Instapay information section
   Widget _buildInstapayInfo() {
+      final bool isTablet = MediaQuery.of(context).size.width >= 600;
+    final double scale = isTablet ? 0.75 : 1.0;
     return Container(
-      margin: EdgeInsets.only(top: 16.h),
+      margin: EdgeInsets.only(top: 16.h* scale),
       padding: EdgeInsets.all(16.r),
       decoration: BoxDecoration(
         color: Colors.blue.shade50,
-        borderRadius: BorderRadius.circular(10.r),
+        borderRadius: BorderRadius.circular(10.r* scale),
         border: Border.all(color: Colors.blue.shade200),
       ),
       child: Column(
@@ -1608,14 +1615,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               Icon(
                 Icons.info_outline,
                 color: Colors.blue.shade700,
-                size: 20.sp,
+                size: 20.sp* scale,
               ),
-              SizedBox(width: 8.w),
+              SizedBox(width: 8.w* scale),
               Expanded(
                 child: Text(
                   S.of(context).instapay_details,
                   style: TextStyle(
-                    fontSize: 16.sp,
+                    fontSize: 16.sp* scale,
                     fontWeight: FontWeight.bold,
                     color: Colors.blue.shade700,
                   ),
@@ -1626,14 +1633,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             ],
           ),
 
-          SizedBox(height: 16.h),
+          SizedBox(height: 16.h* scale),
 
           // Instapay steps with nice formatting
           Container(
-            padding: EdgeInsets.all(12.r),
+            padding: EdgeInsets.all(12.r* scale),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(8.r),
+              borderRadius: BorderRadius.circular(8.r* scale),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1659,7 +1666,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             ),
           ),
 
-          SizedBox(height: 16.h),
+          SizedBox(height: 16.h* scale),
 
           // Copy phone number button
           SizedBox(
@@ -1677,17 +1684,17 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               icon: const Icon(Icons.copy),
               label: Text(S.of(context).copy_phone_number),
               style: OutlinedButton.styleFrom(
-                padding: EdgeInsets.symmetric(vertical: 12.h),
+                padding: EdgeInsets.symmetric(vertical: 12.h* scale),
                 side: BorderSide(color: Colors.blue.shade700),
                 foregroundColor: Colors.blue.shade700,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8.r),
+                  borderRadius: BorderRadius.circular(8.r* scale),
                 ),
               ),
             ),
           ),
 
-          SizedBox(height: 16.h),
+          SizedBox(height: 16.h* scale),
 
           // Reference input
           Container(
@@ -1711,7 +1718,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 border: InputBorder.none,
                 prefixIcon: const Icon(Icons.numbers, color: Colors.grey),
                 contentPadding:
-                    EdgeInsets.symmetric(horizontal: 12.w, vertical: 16.h),
+                    EdgeInsets.symmetric(horizontal: 12.w* scale, vertical: 16.h* scale),
                 labelStyle: TextStyle(
                   color: paymentVerified ? Colors.green : Colors.grey.shade600,
                 ),
@@ -1723,7 +1730,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             ),
           ),
 
-          SizedBox(height: 16.h),
+          SizedBox(height: 16.h* scale),
 
           // Verify payment button
           SizedBox(
@@ -1737,9 +1744,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor:
                     paymentVerified ? Colors.green : Colors.blue.shade700,
-                padding: EdgeInsets.symmetric(vertical: 12.h),
+                padding: EdgeInsets.symmetric(vertical: 12.h* scale),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8.r),
+                  borderRadius: BorderRadius.circular(8.r* scale),
                 ),
               ),
             ),
@@ -1747,18 +1754,18 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
           // Payment verified message
           if (paymentVerified) ...[
-            SizedBox(height: 16.h),
+            SizedBox(height: 16.h* scale),
             Container(
-              padding: EdgeInsets.all(12.r),
+              padding: EdgeInsets.all(12.r* scale),
               decoration: BoxDecoration(
                 color: Colors.green.shade50,
-                borderRadius: BorderRadius.circular(8.r),
+                borderRadius: BorderRadius.circular(8.r* scale),
                 border: Border.all(color: Colors.green),
               ),
               child: Row(
                 children: [
                   const Icon(Icons.check_circle, color: Colors.green),
-                  SizedBox(width: 8.w),
+                  SizedBox(width: 8.w* scale),
                   Expanded(
                     child: Text(
                       S.of(context).payment_verified,
@@ -1783,14 +1790,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     required String text,
     String? highlight,
   }) {
+      final bool isTablet = MediaQuery.of(context).size.width >= 600;
+    final double scale = isTablet ? 0.75 : 1.0;
     return Padding(
       padding: EdgeInsets.only(bottom: 10.h),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 24.r,
-            height: 24.r,
+            width: 24.r* scale,
+            height: 24.r* scale,
             alignment: Alignment.center,
             decoration: BoxDecoration(
               color: Colors.blue.shade700,
@@ -1801,18 +1810,18 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               style: TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
-                fontSize: 12.sp,
+                fontSize: 12.sp* scale,
               ),
             ),
           ),
-          SizedBox(width: 12.w),
+          SizedBox(width: 12.w* scale),
           Expanded(
             child: highlight == null
                 ? Text(
                     text,
                     style: TextStyle(
-                      fontSize: 14.sp,
-                      height: 1.4,
+                      fontSize: 14.sp* scale,
+                      height: 1.4* scale,
                       color: Theme.of(context).brightness == Brightness.dark
                           ? Colors.black87
                           : Colors.black87,
@@ -1826,8 +1835,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         color: Theme.of(context).brightness == Brightness.dark
                             ? Colors.black87
                             : Colors.black87,
-                        fontSize: 14.sp,
-                        height: 1.4,
+                        fontSize: 14.sp* scale,
+                        height: 1.4* scale,
                       ),
                       children: [
                         TextSpan(text: text),
@@ -1854,19 +1863,20 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     final titleController = TextEditingController();
     final addressController = TextEditingController();
     bool isDefault = false;
-
+  final bool isTablet = MediaQuery.of(context).size.width >= 600;
+    final double scale = isTablet ? 0.75 : 1.0;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r* scale)),
       ),
       builder: (context) => Padding(
         padding: EdgeInsets.only(
           bottom: MediaQuery.of(context).viewInsets.bottom,
-          left: 20.w,
-          right: 20.w,
-          top: 20.h,
+          left: 20.w* scale,
+          right: 20.w* scale,
+          top: 20.h* scale,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -1875,11 +1885,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             Text(
               S.of(context).add_address,
               style: TextStyle(
-                fontSize: 18.sp,
+                fontSize: 18.sp* scale,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            SizedBox(height: 20.h),
+            SizedBox(height: 20.h* scale),
             TextField(
               controller: titleController,
               decoration: InputDecoration(
@@ -1887,7 +1897,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 border: const OutlineInputBorder(),
               ),
             ),
-            SizedBox(height: 12.h),
+            SizedBox(height: 12.h* scale),
             TextField(
               controller: addressController,
               decoration: InputDecoration(
@@ -1896,7 +1906,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               ),
               maxLines: 3,
             ),
-            SizedBox(height: 12.h),
+            SizedBox(height: 12.h* scale),
             StatefulBuilder(
               builder: (context, setState) => CheckboxListTile(
                 title: Text(S.of(context).Setdefaultaddress),
@@ -1909,7 +1919,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 contentPadding: EdgeInsets.zero,
               ),
             ),
-            SizedBox(height: 12.h),
+            SizedBox(height: 12.h* scale),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -1940,7 +1950,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 child: Text(S.of(context).SaveAddress),
               ),
             ),
-            SizedBox(height: 20.h),
+            SizedBox(height: 20.h* scale),
           ],
         ),
       ),
@@ -1955,7 +1965,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       );
       return;
     }
-
+  final bool isTablet = MediaQuery.of(context).size.width >= 600;
+    final double scale = isTablet ? 0.75 : 1.0;
     // Show loading dialog
     showDialog(
       context: context,
@@ -1966,7 +1977,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               const CircularProgressIndicator(),
-              SizedBox(height: 16.h),
+              SizedBox(height: 16.h* scale),
               Text(S.of(context).verifying_payment),
             ],
           ),
@@ -2260,6 +2271,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     required String title,
     required String description,
   }) {
+      final bool isTablet = MediaQuery.of(context).size.width >= 600;
+    final double scale = isTablet ? 0.75 : 1.0;
     return Row(
       children: [
         Icon(icon, size: 20.sp, color: Colors.grey[600]),
@@ -2271,14 +2284,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               Text(
                 title,
                 style: TextStyle(
-                  fontSize: 14.sp,
+                  fontSize: 14.sp* scale,
                   fontWeight: FontWeight.w600,
                 ),
               ),
               Text(
                 description,
                 style: TextStyle(
-                  fontSize: 12.sp,
+                  fontSize: 12.sp* scale,
                   color: Colors.grey[600],
                 ),
               ),
@@ -2395,7 +2408,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               ),
             ),
           );
-
+  final bool isTablet = MediaQuery.of(context).size.width >= 600;
+    final double scale = isTablet ? 0.75 : 1.0;
           // Show dialog for transaction declined
           showDialog(
             context: context,
@@ -2404,7 +2418,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 title: Row(
                   children: [
                     const Icon(Icons.error, color: Colors.red),
-                    SizedBox(width: 8.w),
+                    SizedBox(width: 8.w* scale),
                     Text(S.of(context).transaction_declined),
                   ],
                 ),
@@ -2413,18 +2427,18 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(S.of(context).transaction_declined_message),
-                    SizedBox(height: 8.h),
+                    SizedBox(height: 8.h* scale),
                     Text(
                       "Reason: $message",
                       style: TextStyle(
                         color: Colors.grey[600],
-                        fontSize: 14.sp,
+                        fontSize: 14.sp* scale,
                       ),
                     ),
-                    SizedBox(height: 16.h),
+                    SizedBox(height: 16.h* scale),
                     Text(
                       S.of(context).check_card_details,
-                      style: TextStyle(fontSize: 14.sp),
+                      style: TextStyle(fontSize: 14.sp* scale),
                     ),
                   ],
                 ),
@@ -2474,11 +2488,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       showDialog(
         context: context,
         builder: (BuildContext context) {
+            final bool isTablet = MediaQuery.of(context).size.width >= 600;
+    final double scale = isTablet ? 0.75 : 1.0;
           return AlertDialog(
             title: Row(
               children: [
                 const Icon(Icons.warning, color: Colors.orange),
-                SizedBox(width: 8.w),
+                SizedBox(width: 8.w* scale),
                 Text(S.of(context).payment_error),
               ],
             ),
@@ -2486,10 +2502,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(S.of(context).payment_error_message),
-                SizedBox(height: 8.h),
+                SizedBox(height: 8.h* scale),
                 Text(
                   S.of(context).check_card_details,
-                  style: TextStyle(fontSize: 14.sp),
+                  style: TextStyle(fontSize: 14.sp* scale),
                 ),
               ],
             ),

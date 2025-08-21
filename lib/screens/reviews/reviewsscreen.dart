@@ -201,6 +201,8 @@ class _ReviewsscreenState extends State<Reviewsscreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isTablet = MediaQuery.of(context).size.width >= 600;
+    final double scale = isTablet ? 0.75 : 1.0;
     return Scaffold(
       appBar: AppBar(
         title: Text(S.of(context).reviews),
@@ -213,7 +215,7 @@ class _ReviewsscreenState extends State<Reviewsscreen> {
         children: [
           // Rating Summary
           Container(
-            padding: EdgeInsets.all(16.w),
+            padding: EdgeInsets.all(16.w * scale),
             decoration: BoxDecoration(
               color: Theme.of(context).cardColor,
               boxShadow: const [
@@ -232,22 +234,22 @@ class _ReviewsscreenState extends State<Reviewsscreen> {
                     Text(
                       S.of(context).average_rating,
                       style: TextStyle(
-                        fontSize: 16.sp,
+                        fontSize: 16.sp * scale,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    SizedBox(height: 5.h),
+                    SizedBox(height: 5.h * scale),
                     Row(
                       children: [
                         Text(
                           _averageRating.toStringAsFixed(1),
                           style: TextStyle(
-                            fontSize: 24.sp,
+                            fontSize: 24.sp * scale,
                             fontWeight: FontWeight.bold,
                             color: Colors.amber,
                           ),
                         ),
-                        SizedBox(width: 8.w),
+                        SizedBox(width: 8.w * scale),
                         _buildRatingStars(_averageRating),
                       ],
                     ),
@@ -267,7 +269,7 @@ class _ReviewsscreenState extends State<Reviewsscreen> {
 
           // Add New Review
           Container(
-            padding: EdgeInsets.all(16.w),
+            padding: EdgeInsets.all(16.w * scale),
             decoration: BoxDecoration(
               color: Theme.of(context).cardColor,
               border: Border(
@@ -280,13 +282,13 @@ class _ReviewsscreenState extends State<Reviewsscreen> {
                 Text(
                   S.of(context).write_review,
                   style: TextStyle(
-                    fontSize: 16.sp,
+                    fontSize: 16.sp * scale,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                SizedBox(height: 8.h),
-                _buildRatingStars(_rating, interactive: true, size: 30),
-                SizedBox(height: 10.h),
+                SizedBox(height: 8.h * scale),
+                _buildRatingStars(_rating, interactive: true, size: 30 * scale),
+                SizedBox(height: 10.h * scale),
                 TextField(
                   controller: _reviewController,
                   maxLines: 3,
@@ -295,7 +297,7 @@ class _ReviewsscreenState extends State<Reviewsscreen> {
                     border: const OutlineInputBorder(),
                   ),
                 ),
-                SizedBox(height: 10.h),
+                SizedBox(height: 10.h * scale),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
@@ -307,8 +309,8 @@ class _ReviewsscreenState extends State<Reviewsscreen> {
                       ),
                       child: _isLoading
                           ? SizedBox(
-                              width: 20.w,
-                              height: 20.h,
+                              width: 20.w * scale,
+                              height: 20.h * scale,
                               child: const CircularProgressIndicator(
                                 color: Colors.white,
                                 strokeWidth: 2,
@@ -332,8 +334,8 @@ class _ReviewsscreenState extends State<Reviewsscreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(Icons.rate_review_outlined,
-                                size: 50.sp, color: Colors.grey),
-                            SizedBox(height: 10.h),
+                                size: 50.sp * scale, color: Colors.grey),
+                            SizedBox(height: 10.h * scale),
                             Text(
                               S.of(context).no_reviews,
                               style: const TextStyle(color: Colors.grey),
@@ -342,7 +344,7 @@ class _ReviewsscreenState extends State<Reviewsscreen> {
                         ),
                       )
                     : ListView.builder(
-                        padding: EdgeInsets.all(12.w),
+                        padding: EdgeInsets.all(12.w * scale),
                         itemCount: _reviews.length,
                         itemBuilder: (context, index) {
                           final review = _reviews[index];
@@ -372,12 +374,14 @@ class ReviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isTablet = MediaQuery.of(context).size.width >= 600;
+    final double scale = isTablet ? 0.75 : 1.0;
     return Container(
-      margin: EdgeInsets.only(bottom: 12.h),
-      padding: EdgeInsets.all(16.w),
+      margin: EdgeInsets.only(bottom: 12.h * scale),
+      padding: EdgeInsets.all(16.w * scale),
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(8.r),
+        borderRadius: BorderRadius.circular(8.r * scale),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
@@ -395,7 +399,7 @@ class ReviewCard extends StatelessWidget {
                 backgroundColor: Colors.deepOrange.withOpacity(0.2),
                 child: const Icon(Icons.person, color: Colors.deepOrange),
               ),
-              SizedBox(width: 8.w),
+              SizedBox(width: 8.w * scale),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -404,14 +408,14 @@ class ReviewCard extends StatelessWidget {
                       review.name,
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        fontSize: 14.sp,
+                        fontSize: 14.sp * scale,
                       ),
                     ),
                     Text(
                       review.date,
                       style: TextStyle(
                         color: Colors.grey,
-                        fontSize: 12.sp,
+                        fontSize: 12.sp * scale,
                       ),
                     ),
                   ],
@@ -419,17 +423,17 @@ class ReviewCard extends StatelessWidget {
               ),
               Container(
                 padding: EdgeInsets.symmetric(
-                  horizontal: 8.w,
-                  vertical: 4.h,
+                  horizontal: 8.w * scale,
+                  vertical: 4.h * scale,
                 ),
                 decoration: BoxDecoration(
                   color: Colors.amber,
-                  borderRadius: BorderRadius.circular(16.r),
+                  borderRadius: BorderRadius.circular(16.r * scale),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.star, color: Colors.white, size: 14.sp),
-                    SizedBox(width: 2.w),
+                    Icon(Icons.star, color: Colors.white, size: 14.sp * scale),
+                    SizedBox(width: 2.w * scale),
                     Text(
                       review.rating,
                       style: const TextStyle(
@@ -442,10 +446,10 @@ class ReviewCard extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: 12.h),
+          SizedBox(height: 12.h * scale),
           Text(
             review.review,
-            style: TextStyle(fontSize: 14.sp),
+            style: TextStyle(fontSize: 14.sp * scale),
           ),
         ],
       ),

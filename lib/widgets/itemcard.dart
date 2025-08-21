@@ -13,6 +13,8 @@ import 'package:foodapp/shared/optimized_image.dart';
 Widget itemcard(context, bool fromFavourites, Item model, dynamic items) {
   var cubit = Favouritecubit.get(context);
   final isRTL = Directionality.of(context) == TextDirection.rtl;
+  final bool isTablet = MediaQuery.of(context).size.width >= 600;
+  final double scale = isTablet ? 0.75 : 1.0;
 
   // Get the restaurant from the items list
   Restuarants? restaurant;
@@ -31,7 +33,7 @@ Widget itemcard(context, bool fromFavourites, Item model, dynamic items) {
   print("Item ${model.name} - nameAr: '${model.nameAr}' - RTL: $isRTL");
 
   return Padding(
-    padding: EdgeInsets.only(bottom: 12.h),
+    padding: EdgeInsets.only(bottom: 12.h * scale),
     child: GestureDetector(
       onTap: () {
         navigateTo(
@@ -55,10 +57,10 @@ Widget itemcard(context, bool fromFavourites, Item model, dynamic items) {
       },
       child: Container(
         width: double.infinity,
-        height: 130.h,
+        height: 130.h * scale,
         decoration: BoxDecoration(
           color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(12.r),
+          borderRadius: BorderRadius.circular(12.r * scale),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.1),
@@ -68,21 +70,21 @@ Widget itemcard(context, bool fromFavourites, Item model, dynamic items) {
           ],
         ),
         child: Padding(
-          padding: EdgeInsets.all(12.w),
+          padding: EdgeInsets.all(12.w * scale),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             textDirection: isRTL ? TextDirection.rtl : TextDirection.ltr,
             children: [
               // Image Section
               ClipRRect(
-                borderRadius: BorderRadius.circular(10.r),
+                borderRadius: BorderRadius.circular(10.r * scale),
                 child: ItemImageWidget(
                   imageUrl: model.img,
-                  width: 100.w,
-                  height: 100.h,
+                  width: 100.w * scale,
+                  height: 100.h * scale,
                 ),
               ),
-              SizedBox(width: 12.w),
+              SizedBox(width: 12.w * scale),
 
               // Content Section
               Expanded(
@@ -99,13 +101,13 @@ Widget itemcard(context, bool fromFavourites, Item model, dynamic items) {
                           style:
                               Theme.of(context).textTheme.bodyLarge?.copyWith(
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 16.sp,
+                                    fontSize: 16.sp * scale,
                                   ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           textAlign: isRTL ? TextAlign.right : TextAlign.left,
                         ),
-                        SizedBox(height: 6.h),
+                        SizedBox(height: 6.h * scale),
                         Text(
                           isRTL ? model.descriptionAr : model.description,
                           style:
@@ -115,7 +117,7 @@ Widget itemcard(context, bool fromFavourites, Item model, dynamic items) {
                                         .bodySmall
                                         ?.color
                                         ?.withOpacity(0.8),
-                                    fontSize: 12.sp,
+                                    fontSize: 12.sp * scale,
                                   ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
@@ -136,7 +138,7 @@ Widget itemcard(context, bool fromFavourites, Item model, dynamic items) {
                                 .labelLarge
                                 ?.copyWith(
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 15.sp,
+                                  fontSize: 15.sp * scale,
                                   color: Theme.of(context).primaryColor,
                                 ),
                             maxLines: 1,
@@ -171,12 +173,12 @@ Widget itemcard(context, bool fromFavourites, Item model, dynamic items) {
                                         .textTheme
                                         .bodyMedium
                                         ?.color,
-                                size: 22.sp,
+                                size: 22.sp * scale,
                               ),
                               padding: EdgeInsets.zero,
                               constraints: BoxConstraints(
-                                minWidth: 35.w,
-                                minHeight: 35.h,
+                                minWidth: 35.w * scale,
+                                minHeight: 35.h * scale,
                               ),
                             );
                           },

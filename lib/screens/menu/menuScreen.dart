@@ -441,7 +441,9 @@ class _MenuscreenState extends State<Menuscreen> {
         }
       },
       builder: (context, state) {
-        var cubit = Restuarantscubit.get(context);
+        Restuarantscubit.get(context);
+        final bool isTablet = MediaQuery.of(context).size.width >= 600;
+        final double scale = isTablet ? 0.75 : 1.0;
         return SafeArea(
           child: Scaffold(
             body: Column(
@@ -464,7 +466,7 @@ class _MenuscreenState extends State<Menuscreen> {
                         },
                         icon: Icon(
                           Icons.arrow_back_ios_new_rounded,
-                          size: 28.sp,
+                          size: 28.sp * scale,
                           color: Colors.white,
                         ),
                       ),
@@ -601,75 +603,85 @@ class _MenuscreenState extends State<Menuscreen> {
                 ),
 
                 // 🟧 Category Tabs - Optimized for horizontal scrolling without overflow
-                Container(
-                  height: 60.h,
-                  margin: EdgeInsets.symmetric(vertical: 4.h),
-                  child: isLoadingCategories
-                      ? const Center(child: CircularProgressIndicator())
-                      : ListView.builder(
-                          scrollDirection: Axis.horizontal,
-                          padding: EdgeInsets.symmetric(horizontal: 10.w),
-                          itemCount: menuCategories.length,
-                          itemBuilder: (context, index) {
-                            final category = getLocalizedCategoryName(index);
-                            final isSelected = category == selectedCategory;
+                Builder(builder: (context) {
+                  final bool isTablet =
+                      MediaQuery.of(context).size.width >= 600;
+                  return Container(
+                    height: isTablet ? 42.h : 60.h,
+                    margin:
+                        EdgeInsets.symmetric(vertical: isTablet ? 2.h : 4.h),
+                    child: isLoadingCategories
+                        ? const Center(child: CircularProgressIndicator())
+                        : ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            padding: EdgeInsets.symmetric(
+                                horizontal: isTablet ? 6.w : 10.w),
+                            itemCount: menuCategories.length,
+                            itemBuilder: (context, index) {
+                              final category = getLocalizedCategoryName(index);
+                              final isSelected = category == selectedCategory;
 
-                            return Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 4.w),
-                              child: GestureDetector(
-                                onTap: () {
-                                  if (!mounted) return; // Safety check
-                                  setState(() {
-                                    selectedCategory = category;
-                                  });
-                                },
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 200),
-                                  margin: EdgeInsets.symmetric(
-                                      vertical: 8.h, horizontal: 4.w),
-                                  padding: EdgeInsets.symmetric(
-                                      horizontal: 16.w, vertical: 8.h),
-                                  decoration: BoxDecoration(
-                                    color: isSelected
-                                        ? const Color.fromARGB(255, 74, 26, 15)
-                                        : Theme.of(context).cardColor,
-                                    borderRadius: BorderRadius.circular(25.r),
-                                    boxShadow: isSelected
-                                        ? [
-                                            BoxShadow(
-                                              color:
-                                                  Colors.black.withOpacity(0.1),
-                                              spreadRadius: 1,
-                                              blurRadius: 3,
-                                              offset: const Offset(0, 2),
-                                            )
-                                          ]
-                                        : null,
-                                  ),
-                                  child: Center(
-                                    child: Text(
-                                      category,
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        fontSize: 14.sp,
-                                        fontWeight: isSelected
-                                            ? FontWeight.bold
-                                            : FontWeight.normal,
-                                        color: isSelected
-                                            ? Colors.white
-                                            : Theme.of(context)
-                                                .textTheme
-                                                .bodyLarge
-                                                ?.color,
+                              return Padding(
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: isTablet ? 3.w : 4.w),
+                                child: GestureDetector(
+                                  onTap: () {
+                                    if (!mounted) return; // Safety check
+                                    setState(() {
+                                      selectedCategory = category;
+                                    });
+                                  },
+                                  child: AnimatedContainer(
+                                    duration: const Duration(milliseconds: 200),
+                                    margin: EdgeInsets.symmetric(
+                                        vertical: isTablet ? 6.h : 8.h,
+                                        horizontal: isTablet ? 3.w : 4.w),
+                                    padding: EdgeInsets.symmetric(
+                                        horizontal: isTablet ? 12.w : 16.w,
+                                        vertical: isTablet ? 6.h : 8.h),
+                                    decoration: BoxDecoration(
+                                      color: isSelected
+                                          ? const Color.fromARGB(
+                                              255, 74, 26, 15)
+                                          : Theme.of(context).cardColor,
+                                      borderRadius: BorderRadius.circular(25.r),
+                                      boxShadow: isSelected
+                                          ? [
+                                              BoxShadow(
+                                                color: Colors.black
+                                                    .withOpacity(0.1),
+                                                spreadRadius: 1,
+                                                blurRadius: 3,
+                                                offset: const Offset(0, 2),
+                                              )
+                                            ]
+                                          : null,
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        category,
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          fontSize: isTablet ? 11.sp : 14.sp,
+                                          fontWeight: isSelected
+                                              ? FontWeight.bold
+                                              : FontWeight.normal,
+                                          color: isSelected
+                                              ? Colors.white
+                                              : Theme.of(context)
+                                                  .textTheme
+                                                  .bodyLarge
+                                                  ?.color,
+                                        ),
                                       ),
                                     ),
                                   ),
                                 ),
-                              ),
-                            );
-                          },
-                        ),
-                ),
+                              );
+                            },
+                          ),
+                  );
+                }),
 
                 // 🟧 Items - No change needed here as itemcard is already fixed
                 Expanded(
