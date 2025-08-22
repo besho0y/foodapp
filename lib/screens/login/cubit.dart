@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'dart:convert';
 import 'dart:math' as math;
 
@@ -116,7 +118,7 @@ class Logincubit extends Cubit<LoginStates> {
       print("Starting Google Sign-In");
       // Initialize and authenticate with Google Sign-In
       final GoogleSignIn googleSignIn = GoogleSignIn.instance;
-      await googleSignIn.initialize(clientId: '167788515229-rgte7v6ed48014l93j5nfke5neehrn8p.apps.googleusercontent.com'); // Ensure previous sessions are cleared
+      await googleSignIn.initialize(clientId: '167788515229-fo7rsgf1tqo7oo9q5i3buj3354l1jf97.apps.googleusercontent.com'); // Ensure previous sessions are cleared
       final GoogleSignInAccount googleSignInAccount = await googleSignIn.authenticate();
       print("Google Sign-In successful: ${googleSignInAccount.email} (${googleSignInAccount.displayName})");
 
@@ -318,6 +320,7 @@ class Logincubit extends Cubit<LoginStates> {
       final oauthCredential = OAuthProvider("apple.com").credential(
         idToken: appleCredential.identityToken,
         rawNonce: rawNonce,
+        accessToken: appleCredential.authorizationCode,
       );
       print("OAuth credential created successfully");
 

@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print, use_build_context_synchronously
+
 import 'dart:convert';
 import 'dart:math' as math;
 
@@ -123,7 +125,7 @@ class Signupcubit extends Cubit<SignupStates> {
       try {
         // Get authentication tokens
         final GoogleSignInAuthentication googleSignInAuthentication = googleSignInAccount.authentication;
-        await googleSignIn.initialize(clientId: '167788515229-rgte7v6ed48014l93j5nfke5neehrn8p.apps.googleusercontent.com'); // Ensure previous sessions are cleared
+        await googleSignIn.initialize(clientId: '167788515229-fo7rsgf1tqo7oo9q5i3buj3354l1jf97.apps.googleusercontent.com'); // Ensure previous sessions are cleared
 
         // Create Firebase credential
         final AuthCredential credential = GoogleAuthProvider.credential(
@@ -288,6 +290,7 @@ class Signupcubit extends Cubit<SignupStates> {
       final oauthCredential = OAuthProvider("apple.com").credential(
         idToken: appleCredential.identityToken,
         rawNonce: rawNonce,
+        accessToken: appleCredential.authorizationCode,
       );
       print("OAuth credential created successfully");
 
